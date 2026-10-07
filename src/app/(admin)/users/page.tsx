@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Ban, Check, RotateCcw } from "lucide-react";
 import { PageHeader } from "@/shared/components/PageHeader";
+import { AdminPagination } from "@/shared/components/AdminPagination";
 import { useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
 import type { AdminMessages } from "@/shared/i18n/adminMessages";
 
@@ -30,6 +32,7 @@ const accounts: Account[] = [
 ];
 
 const fieldClassName = "h-10 rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#343630] outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
+const pageSize = 5;
 
 function exportAccounts(rows: Account[], messages: AdminMessages["users"]) {
 	const header = [messages.id, messages.columns.account, messages.email, messages.columns.role, messages.columns.status, messages.columns.joined, messages.columns.activity];
@@ -56,15 +59,25 @@ export default function UsersPage() {
 	const [query, setQuery] = useState("");
 	const [role, setRole] = useState("");
 	const [status, setStatus] = useState("");
+	const [accountRows, setAccountRows] = useState(accounts);
+	const [page, setPage] = useState(1);
 	const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
 	const normalizedQuery = query.trim().toLowerCase();
-	const filteredAccounts = accounts.filter((account) => {
+	const filteredAccounts = accountRows.filter((account) => {
 		const matchesQuery = `${account.name} ${account.email} ${account.id}`.toLowerCase().includes(normalizedQuery);
 		return matchesQuery && (!role || account.role === role) && (!status || account.status === status);
 	});
-	const activeCount = accounts.filter((account) => account.status === "Active").length;
-	const pendingCount = accounts.filter((account) => account.status === "Pending").length;
-	const providerCount = accounts.filter((account) => account.role === "Provider").length;
+	const activeCount = accountRows.filter((account) => account.status === "Active").length;
+	const pendingCount = accountRows.filter((account) => account.status === "Pending").length;
+	const providerCount = accountRows.filter((account) => account.role === "Provider").length;
+	const totalPages = Math.max(1, Math.ceil(filteredAccounts.length / pageSize));
+	const currentPage = Math.min(page, totalPages);
+	const visibleAccounts = filteredAccounts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+	function updateAccountStatus(account: Account, nextStatus: AccountStatus) {
+		setAccountRows((current) => current.map((item) => item.id === account.id ? { ...item, status: nextStatus } : item));
+		setSelectedAccount({ ...account, status: nextStatus });
+	}
 
 	return (
 		<div className="mx-auto max-w-375">
@@ -78,14 +91,15 @@ export default function UsersPage() {
 
 			<section aria-label="Account summary" className="-mt-2 grid gap-3 sm:grid-cols-3">
 				{[
-					{ label: t.totalAccounts, value: accounts.length.toString(), helper: t.allRolesHelper },
-					{ label: t.activeAccounts, value: activeCount.toString(), helper: t.accessEnabled },
-					{ label: t.providerReviews, value: pendingCount.toString(), helper: `${providerCount} ${t.providersInSample}` },
-				].map((metric) => (
-					<article key={metric.label} className="rounded-lg border border-[#e0e0da] bg-white p-4">
+					{ label: t.totalAccounts, value: accounts.length.toString(), helper: t.allRolesHelper, percentage: 100, color: "bg-[#647c98]" },
+					{ label: t.activeAccounts, value: activeCount.toString(), helper: t.accessEnabled, percentage: (activeCount / accounts.length) * 100, color: "bg-[#39724b]" },
+					{ label: t.providerReviews, value: pendingCount.toString(), helper: `${providerCount} ${t.providersInSample}`, percentage: (pendingCount / providerCount) * 100, color: "bg-[#d4a33b]" },
+				].map((metric, metricIndex) => (
+					<article key={metric.label} style={{ animationDelay: `${metricIndex * 100}ms` }} className="admin-metric rounded-lg border border-[#e0e0da] bg-white p-4">
 						<p className="text-sm text-[#686a64]">{metric.label}</p>
 						<p className="mt-2 text-2xl font-semibold text-[#20221f]">{metric.value}</p>
 						<p className="mt-1 text-xs text-[#858680]">{metric.helper}</p>
+						<div className="admin-meter-track mt-4 h-1.5 overflow-hidden rounded-full bg-[#eeeee9]" role="img" aria-label={`${metric.label}: ${Math.round(metric.percentage)}%`}><div className={`admin-meter h-full rounded-full ${metric.color}`} style={{ width: `${metric.percentage}%`, animationDelay: `${metricIndex * 120 + 180}ms` }} /></div>
 					</article>
 				))}
 			</section>
@@ -98,13 +112,13 @@ export default function UsersPage() {
 					</div>
 					<div className="grid gap-2 sm:grid-cols-[minmax(180px,250px)_150px_155px]">
 						<label className="sr-only" htmlFor="account-search">{messages.common.search}</label>
-						<input id="account-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t.searchPlaceholder} className={fieldClassName} />
+						<input id="account-search" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder={t.searchPlaceholder} className={fieldClassName} />
 						<label className="sr-only" htmlFor="role-filter">{t.columns.role}</label>
-						<select id="role-filter" value={role} onChange={(event) => setRole(event.target.value)} className={fieldClassName}>
+						<select id="role-filter" value={role} onChange={(event) => { setRole(event.target.value); setPage(1); }} className={fieldClassName}>
 							<option value="">{t.allRoles}</option><option value="Provider">{t.roles.Provider}</option><option value="Customer">{t.roles.Customer}</option><option value="Moderator">{t.roles.Moderator}</option><option value="Admin">{t.roles.Admin}</option>
 						</select>
 						<label className="sr-only" htmlFor="status-filter">{t.columns.status}</label>
-						<select id="status-filter" value={status} onChange={(event) => setStatus(event.target.value)} className={fieldClassName}>
+						<select id="status-filter" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }} className={fieldClassName}>
 							<option value="">{t.allStatuses}</option><option value="Active">{t.statuses.Active}</option><option value="Pending">{t.statuses.Pending}</option><option value="Suspended">{t.statuses.Suspended}</option>
 						</select>
 					</div>
@@ -116,7 +130,7 @@ export default function UsersPage() {
 							<tr><th className="px-5 py-3">{t.columns.account}</th><th className="px-4 py-3">{t.columns.role}</th><th className="px-4 py-3">{t.columns.status}</th><th className="px-4 py-3">{t.columns.joined}</th><th className="px-4 py-3">{t.columns.activity}</th><th className="px-5 py-3 text-right">{t.columns.details}</th></tr>
 						</thead>
 						<tbody className="divide-y divide-[#eeeeea]">
-							{filteredAccounts.map((account) => (
+							{visibleAccounts.map((account) => (
 								<tr key={account.id} className="transition-colors hover:bg-[#fcfcfa]">
 									<td className="px-5 py-3.5"><div className="flex items-center gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e9eee7] text-xs font-semibold text-[#45644a]">{account.name.split(" ").map((part) => part[0]).join("")}</span><div><p className="text-sm font-semibold text-[#292b27]">{account.name}</p><p className="mt-0.5 text-xs text-[#777973]">{account.email}</p></div></div></td>
 									<td className="px-4 py-3.5 text-sm text-[#4c4e48]">{t.roles[account.role]}</td>
@@ -130,6 +144,7 @@ export default function UsersPage() {
 						</tbody>
 					</table>
 				</div>
+				<AdminPagination page={currentPage} pageSize={pageSize} total={filteredAccounts.length} onPageChange={setPage} messages={messages.common} />
 			</section>
 
 			{selectedAccount && (
@@ -139,7 +154,11 @@ export default function UsersPage() {
 						<dl className="mt-6 divide-y divide-[#eeeeea] text-sm">
 							{[ [t.id, selectedAccount.id], [t.email, selectedAccount.email], [t.columns.role, t.roles[selectedAccount.role]], [t.columns.status, t.statuses[selectedAccount.status]], [t.columns.joined, selectedAccount.joined], [t.columns.activity, t.activity[selectedAccount.activity]] ].map(([label, value]) => <div key={label} className="flex justify-between gap-4 py-3"><dt className="text-[#777973]">{label}</dt><dd className="text-right font-medium text-[#343630]">{value}</dd></div>)}
 						</dl>
-						<p className="mt-4 text-xs text-[#858680]">{t.actionsUnavailable}</p>
+						<div className="mt-6 flex flex-wrap gap-2">
+							{selectedAccount.role === "Provider" && selectedAccount.status === "Pending" && <button type="button" onClick={() => updateAccountStatus(selectedAccount, "Active")} className="inline-flex h-9 items-center gap-2 rounded-md bg-[#39724b] px-3 text-sm font-semibold text-white hover:bg-[#315f3e]"><Check size={16} />{t.approveProvider}</button>}
+							{selectedAccount.status === "Suspended" ? <button type="button" onClick={() => updateAccountStatus(selectedAccount, "Active")} className="inline-flex h-9 items-center gap-2 rounded-md bg-[#39724b] px-3 text-sm font-semibold text-white hover:bg-[#315f3e]"><RotateCcw size={16} />{t.activateAccount}</button> : <button type="button" onClick={() => updateAccountStatus(selectedAccount, "Suspended")} className="inline-flex h-9 items-center gap-2 rounded-md border border-[#d8d8d1] px-3 text-sm font-semibold text-[#a34d42] hover:bg-[#f5e4e1]"><Ban size={16} />{t.suspendAccount}</button>}
+						</div>
+						<p className="mt-4 text-xs text-[#858680]">{t.actionsSampled}</p>
 					</section>
 				</div>
 			)}

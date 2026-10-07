@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { distributeTotal, formatChartCurrency, formatChartNumber } from "@/shared/utils/adminCharts";
 import { useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
 
 type Period = "7d" | "30d" | "90d";
@@ -23,6 +24,8 @@ const periodData: Record<Period, { bookings: string; revenue: string; bars: numb
 		bars: [38, 54, 62, 48, 72, 84, 96],
 	},
 };
+
+const metricTrends = [[18, 24, 21, 31, 27, 38, 44], [22, 19, 30, 27, 36, 32, 46], [16, 20, 19, 25, 23, 34, 39], [14, 18, 26, 24, 35, 38, 48]];
 
 const activity = [
 	{ initials: "MC", name: "Maya Chen", detail: "booking", time: 0, tone: "bg-[#e5f0e8] text-[#39724b]" },
@@ -65,16 +68,18 @@ function donutSegmentPath(startPercentage: number, endPercentage: number) {
 export default function AdminDashboardPage() {
 	const [period, setPeriod] = useState<Period>("30d");
 	const [hoveredStatus, setHoveredStatus] = useState<string | null>(null);
-	const { messages } = useAdminLanguage();
+	const { locale, messages } = useAdminLanguage();
 	const t = messages.dashboard;
 	const periodKey = period === "7d" ? "d7" : period === "30d" ? "d30" : "d90";
 	const current = periodData[period];
+	const reservationValues = distributeTotal(Number(current.bookings.replaceAll(",", "")), current.bars);
+	const revenueValues = distributeTotal(Number(current.revenue.replace(/[^\d]/g, "")), current.bars);
 
 	const metrics = [
-		{ label: t.metricRevenue, value: current.revenue, change: "+8.6%", note: t.previousPeriod, color: "text-[#39724b]" },
-		{ label: t.metricReservations, value: current.bookings, change: "+12.8%", note: t.previousPeriod, color: "text-[#39724b]" },
-		{ label: t.metricStudios, value: "86", change: "+5.2%", note: t.studiosAdded, color: "text-[#39724b]" },
-		{ label: t.metricMembers, value: "2,408", change: "+16.4%", note: t.membersJoined, color: "text-[#39724b]" },
+		{ label: t.metricRevenue, value: current.revenue, change: "+8.6%", note: t.previousPeriod, color: "text-[#39724b]", trend: metricTrends[0] },
+		{ label: t.metricReservations, value: current.bookings, change: "+12.8%", note: t.previousPeriod, color: "text-[#39724b]", trend: metricTrends[1] },
+		{ label: t.metricStudios, value: "86", change: "+5.2%", note: t.studiosAdded, color: "text-[#39724b]", trend: metricTrends[2] },
+		{ label: t.metricMembers, value: "2,408", change: "+16.4%", note: t.membersJoined, color: "text-[#39724b]", trend: metricTrends[3] },
 	];
 	const statusSegments = [
 		{ label: t.statuses.confirmed, percentage: 68, color: "#39724b" },
@@ -126,11 +131,12 @@ export default function AdminDashboardPage() {
 			</header>
 
 			<section aria-label="Platform metrics" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-				{metrics.map((metric) => (
-					<article key={metric.label} className="rounded-lg border border-[#e0e0da] bg-white p-5">
+				{metrics.map((metric, metricIndex) => (
+					<article key={metric.label} style={{ animationDelay: `${metricIndex * 90}ms` }} className="admin-metric group relative overflow-hidden rounded-lg border border-[#e0e0da] bg-white p-5 transition-transform hover:-translate-y-0.5 hover:shadow-md">
 						<p className="text-sm font-medium text-[#686a64]">{metric.label}</p>
 						<p className="mt-3 text-[28px] font-semibold leading-none text-[#20221f]">{metric.value}</p>
-						<p className="mt-3 text-xs text-[#777973]"><span className={`mr-1.5 font-semibold ${metric.color}`}>{metric.change}</span>{metric.note}</p>
+						<p className="mt-3 max-w-[72%] text-xs text-[#777973]"><span className={`mr-1.5 font-semibold ${metric.color}`}>{metric.change}</span>{metric.note}</p>
+						<svg aria-hidden="true" viewBox="0 0 100 36" className="admin-sparkline pointer-events-none absolute bottom-4 right-4 h-9 w-20 opacity-60 transition-opacity group-hover:opacity-100"><polyline points={metric.trend.map((point, index) => `${index * 16.5},${34 - point * 0.62}`).join(" ")} fill="none" stroke="#39724b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
 					</article>
 				))}
 			</section>
@@ -147,14 +153,18 @@ export default function AdminDashboardPage() {
 								<span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm bg-[#d4a33b]" />{t.legendValue}</span>
 						</div>
 					</div>
-					<div className="mt-7 grid h-48 grid-cols-7 items-end gap-2 border-b border-[#e8e8e2] px-1 sm:gap-4">
+					<div className="admin-chart-grid mt-7 grid h-48 grid-cols-7 items-end gap-2 border-b border-[#e8e8e2] px-1 sm:gap-4">
 						{current.bars.map((height, index) => (
-							<div key={`${period}-${index}`} className="flex h-full flex-col items-center justify-end gap-2">
-								<div className="flex h-[86%] w-full max-w-12 items-end justify-center gap-1">
-									<span className="w-2/5 rounded-t-sm bg-[#39724b]" style={{ height: `${height}%` }} />
-									<span className="w-2/5 rounded-t-sm bg-[#d4a33b]" style={{ height: `${Math.max(16, height - 17)}%` }} />
+							<div key={`${period}-${index}`} className="flex h-full min-w-0 flex-col items-center justify-end gap-1">
+								<div className="flex h-[68%] w-full max-w-12 items-end justify-center gap-1">
+									<span title={`${t.legendReservations}: ${formatChartNumber(reservationValues[index], locale)}`} aria-label={`${t.legendReservations}: ${formatChartNumber(reservationValues[index], locale)}`} className="admin-chart-bar w-2/5 rounded-t-sm bg-[#39724b]" style={{ height: `${height}%`, animationDelay: `${index * 70}ms` }} />
+									<span title={`${t.legendValue}: ${formatChartCurrency(revenueValues[index], locale)}`} aria-label={`${t.legendValue}: ${formatChartCurrency(revenueValues[index], locale)}`} className="admin-chart-bar w-2/5 rounded-t-sm bg-[#d4a33b]" style={{ height: `${Math.max(16, height - 17)}%`, animationDelay: `${index * 70 + 45}ms` }} />
 								</div>
-								<span className="h-6 text-[10px] text-[#82837d] sm:text-xs">{t.chartLabels[periodKey][index]}</span>
+								<div className="flex min-h-10 w-full flex-col items-center justify-end leading-tight">
+									<span title={`${t.legendReservations}: ${formatChartNumber(reservationValues[index], locale)}`} className="max-w-full truncate text-[9px] font-semibold text-[#39724b]">{formatChartNumber(reservationValues[index], locale)}</span>
+									<span title={`${t.legendValue}: ${formatChartCurrency(revenueValues[index], locale)}`} className="max-w-full truncate text-[9px] font-semibold text-[#9a6a20]">{formatChartCurrency(revenueValues[index], locale)}</span>
+									<span className="mt-0.5 max-w-full truncate text-[10px] text-[#82837d] sm:text-xs">{t.chartLabels[periodKey][index]}</span>
+								</div>
 							</div>
 						))}
 					</div>
@@ -171,8 +181,8 @@ export default function AdminDashboardPage() {
 					</div>
 					<div className="mt-6 flex flex-col items-center gap-6 sm:flex-row sm:justify-center xl:gap-4">
 						<div className="relative h-40 w-40 shrink-0">
-							<svg viewBox="0 0 180 180" role="group" aria-label={t.statusTitle} className="h-full w-full overflow-visible">
-								{chartSegments.map((segment) => (
+							<svg key={period} viewBox="0 0 180 180" role="group" aria-label={t.statusTitle} className="admin-donut-chart h-full w-full overflow-visible">
+								{chartSegments.map((segment, index) => (
 									<path
 										key={segment.label}
 										d={donutSegmentPath(segment.start, segment.end)}
@@ -182,7 +192,8 @@ export default function AdminDashboardPage() {
 										role="img"
 										tabIndex={0}
 										aria-label={`${segment.label}: ${segment.count} ${t.metricReservations.toLowerCase()}, ${segment.percentage}%`}
-										className="cursor-pointer outline-none transition-opacity hover:opacity-80 focus:opacity-80"
+										className="admin-donut-segment cursor-pointer outline-none transition-opacity hover:opacity-80 focus:opacity-80"
+										style={{ animationDelay: `${index * 90}ms` }}
 										onPointerEnter={() => setHoveredStatus(segment.label)}
 										onPointerLeave={() => setHoveredStatus(null)}
 										onFocus={() => setHoveredStatus(segment.label)}

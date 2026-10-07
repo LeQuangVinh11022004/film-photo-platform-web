@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Aperture, Bug, CalendarDays, Camera, ChartNoAxesCombined, LayoutDashboard, Package, Settings2, UsersRound, type LucideIcon } from "lucide-react";
+import { Aperture, Bug, CalendarDays, Camera, ChartNoAxesCombined, CreditCard, LayoutDashboard, MessageSquareWarning, Package, Settings2, UsersRound, type LucideIcon } from "lucide-react";
 import { useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
 import { useProviderLanguage } from "../providers/ProviderLanguageProvider";
 
@@ -11,6 +11,8 @@ const iconByPath: Record<string, LucideIcon> = {
   "/admin/dashboard": LayoutDashboard,
   "/moderator/dashboard": LayoutDashboard,
   "/users": UsersRound,
+  "/transactions": CreditCard,
+  "/disputes": MessageSquareWarning,
   "/reports": ChartNoAxesCombined,
   "/errors": Bug,
   "/settings/profile": Settings2,
@@ -35,6 +37,8 @@ export function Sidebar({ role, collapsed = false, onNavigate }: { role: "provid
     ? [
         { label: adminMessages.nav.dashboard, href: "/admin/dashboard" },
         { label: adminMessages.nav.users, href: "/users" },
+        { label: adminMessages.nav.transactions, href: "/transactions" },
+        { label: adminMessages.nav.disputes, href: "/disputes" },
         { label: adminMessages.nav.reports, href: "/reports" },
         { label: adminMessages.nav.settings, href: "/settings/profile" },
       ]
