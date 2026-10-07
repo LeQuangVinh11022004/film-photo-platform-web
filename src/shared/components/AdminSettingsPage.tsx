@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { useState, type FormEvent, type ReactNode } from "react";
-import { Bell, Monitor, Palette, Shield, UserRound } from "lucide-react";
+import { Bell, Layers3, Monitor, Moon, Palette, Plus, Save, Shield, Sun, Trash2, UserRound } from "lucide-react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
+import { useAdminTheme } from "@/shared/layouts/AdminWorkspaceShell";
 import { useAdminProfile } from "@/shared/providers/AdminProfileProvider";
 import type { AdminLocale } from "@/shared/i18n/adminMessages";
 import { useAuthStore } from "@/store/authStore";
 
-export type SettingsSection = "profile" | "account" | "appearance" | "notifications" | "display";
+export type SettingsSection = "profile" | "account" | "appearance" | "notifications" | "display" | "platform";
 
 const sectionIcons = {
   profile: UserRound,
@@ -17,18 +18,26 @@ const sectionIcons = {
   appearance: Palette,
   notifications: Bell,
   display: Monitor,
+  platform: Layers3,
 };
 
 const inputClassName = "h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200";
 
 export function AdminSettingsPage({ section }: { section: SettingsSection }) {
   const { locale, messages, setLocale } = useAdminLanguage();
+  const { theme, setTheme } = useAdminTheme();
   const t = messages.settings;
   const { displayName, setDisplayName } = useAdminProfile();
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
   const setSession = useAuthStore((state) => state.setSession);
   const [saved, setSaved] = useState(false);
+  const [categories, setCategories] = useState<string[]>(t.defaultCategories);
+  const [categoryDraft, setCategoryDraft] = useState("");
+  const [aiServices, setAiServices] = useState({ spaceMatching: true, imageReview: false });
+  const [confidenceThreshold, setConfidenceThreshold] = useState(82);
+  const [platformPolicies, setPlatformPolicies] = useState({ providerVerification: true, contentModeration: true, disputeWindow: true });
+  const [platformSaved, setPlatformSaved] = useState(false);
   const [density, setDensity] = useState<"comfortable" | "compact">("comfortable");
   const [notifications, setNotifications] = useState({ bookings: true, security: true, reviews: false });
   const sectionNames = t.sections;
@@ -38,6 +47,7 @@ export function AdminSettingsPage({ section }: { section: SettingsSection }) {
     { key: "appearance", label: sectionNames.appearance, icon: sectionIcons.appearance },
     { key: "notifications", label: sectionNames.notifications, icon: sectionIcons.notifications },
     { key: "display", label: sectionNames.display, icon: sectionIcons.display },
+    { key: "platform", label: sectionNames.platform, icon: sectionIcons.platform },
   ];
 
   function saveProfile(event: FormEvent<HTMLFormElement>) {
@@ -55,6 +65,25 @@ export function AdminSettingsPage({ section }: { section: SettingsSection }) {
 
   function toggleNotification(key: keyof typeof notifications) {
     setNotifications((current) => ({ ...current, [key]: !current[key] }));
+  }
+
+  function addCategory(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const nextCategory = categoryDraft.trim();
+    if (!nextCategory || categories.some((category) => category.toLowerCase() === nextCategory.toLowerCase())) return;
+    setCategories((current) => [...current, nextCategory]);
+    setCategoryDraft("");
+    setPlatformSaved(false);
+  }
+
+  function toggleAiService(key: keyof typeof aiServices) {
+    setAiServices((current) => ({ ...current, [key]: !current[key] }));
+    setPlatformSaved(false);
+  }
+
+  function togglePlatformPolicy(key: keyof typeof platformPolicies) {
+    setPlatformPolicies((current) => ({ ...current, [key]: !current[key] }));
+    setPlatformSaved(false);
   }
 
   return (
@@ -94,6 +123,16 @@ export function AdminSettingsPage({ section }: { section: SettingsSection }) {
       {section === "appearance" && (
         <SettingsPanel title={sectionNames.appearance} description={t.appearanceDescription}>
           <div className="max-w-xl">
+            <p className="mb-3 text-sm font-medium text-slate-800">{t.theme}</p>
+            <div className="mb-6 grid gap-3 sm:grid-cols-2" role="group" aria-label={t.theme}>
+              {(["light", "dark"] as const).map((option) => {
+                const Icon = option === "light" ? Sun : Moon;
+                return <button key={option} type="button" aria-pressed={theme === option} onClick={() => setTheme(option)} className={`flex min-h-20 items-center gap-3 rounded-md border p-4 text-left transition-colors ${theme === option ? "border-emerald-700 bg-emerald-50 text-emerald-950" : "border-slate-200 text-slate-700 hover:bg-slate-50"}`}>
+                  <Icon size={19} aria-hidden="true" />
+                  <span><span className="block text-sm font-semibold">{option === "light" ? t.lightTheme : t.darkTheme}</span><span className="mt-1 block text-xs opacity-75">{option === "light" ? t.lightThemeDescription : t.darkThemeDescription}</span></span>
+                </button>;
+              })}
+            </div>
             <p className="mb-3 text-sm font-medium text-slate-800">{t.language}</p>
             <div role="group" aria-label={t.language} className="inline-flex rounded-md border border-slate-200 bg-slate-50 p-1">
               {(["en", "vi"] as const).map((language) => <button key={language} type="button" lang={language} aria-pressed={locale === language} onClick={() => chooseLanguage(language)} className={`rounded px-4 py-2 text-sm font-medium transition-colors ${locale === language ? "bg-white text-slate-950 shadow-sm" : "text-slate-600 hover:text-slate-950"}`}>{messages.common.languages[language]}</button>)}
@@ -120,6 +159,48 @@ export function AdminSettingsPage({ section }: { section: SettingsSection }) {
               {(["comfortable", "compact"] as const).map((option) => <button key={option} type="button" aria-pressed={density === option} onClick={() => setDensity(option)} className={`rounded px-4 py-2 text-sm font-medium transition-colors ${density === option ? "bg-white text-slate-950 shadow-sm" : "text-slate-600 hover:text-slate-950"}`}>{option === "comfortable" ? t.comfortable : t.compact}</button>)}
             </div>
           </div>
+        </SettingsPanel>
+      )}
+
+      {section === "platform" && (
+        <SettingsPanel title={sectionNames.platform} description={t.platformDescription}>
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
+            <p className="text-xs text-slate-500">{messages.common.sampleData}</p>
+            <button type="button" onClick={() => setPlatformSaved(true)} className="inline-flex h-9 items-center gap-2 rounded-md bg-slate-950 px-3.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"><Save size={16} />{t.savePlatform}</button>
+          </div>
+          <div className="grid gap-8 xl:grid-cols-2">
+            <section aria-labelledby="platform-categories-title">
+              <h3 id="platform-categories-title" className="text-sm font-semibold text-slate-900">{t.contentCategories}</h3>
+              <p className="mt-1 text-sm text-slate-500">{t.categoriesDescription}</p>
+              <form onSubmit={addCategory} className="mt-4 flex gap-2">
+                <label className="sr-only" htmlFor="platform-category">{t.categoryPlaceholder}</label>
+                <input id="platform-category" value={categoryDraft} onChange={(event) => { setCategoryDraft(event.target.value); setPlatformSaved(false); }} placeholder={t.categoryPlaceholder} className={`${inputClassName} min-w-0 flex-1`} />
+                <button type="submit" className="inline-flex h-10 shrink-0 items-center gap-2 rounded-md border border-slate-200 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"><Plus size={16} />{t.addCategory}</button>
+              </form>
+              <ul className="mt-3 divide-y divide-slate-100 rounded-md border border-slate-200">
+                {categories.map((category) => <li key={category} className="flex items-center justify-between gap-3 px-3 py-2.5"><span className="text-sm font-medium text-slate-700">{category}</span><button type="button" aria-label={t.removeCategory.replace("{category}", category)} title={t.removeCategory.replace("{category}", category)} onClick={() => { setCategories((current) => current.filter((item) => item !== category)); setPlatformSaved(false); }} className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-rose-50 hover:text-rose-700"><Trash2 size={15} /></button></li>)}
+              </ul>
+            </section>
+            <section aria-labelledby="platform-ai-title">
+              <h3 id="platform-ai-title" className="text-sm font-semibold text-slate-900">{t.aiServices}</h3>
+              <p className="mt-1 text-sm text-slate-500">{t.aiServicesDescription}</p>
+              <div className="mt-2 divide-y divide-slate-100">
+                <NotificationToggle label={t.spaceMatching} checked={aiServices.spaceMatching} onChange={() => toggleAiService("spaceMatching")} />
+                <NotificationToggle label={t.imageReview} checked={aiServices.imageReview} onChange={() => toggleAiService("imageReview")} />
+              </div>
+              <label htmlFor="image-review-threshold" className="mt-5 flex items-center justify-between gap-3 text-sm font-medium text-slate-700"><span>{t.confidenceThreshold}</span><span className="font-semibold tabular-nums">{confidenceThreshold}%</span></label>
+              <input id="image-review-threshold" type="range" min="50" max="99" value={confidenceThreshold} onChange={(event) => { setConfidenceThreshold(Number(event.target.value)); setPlatformSaved(false); }} className="mt-3 w-full accent-emerald-700" />
+            </section>
+          </div>
+          <section aria-labelledby="platform-policies-title" className="mt-8 border-t border-slate-200 pt-6">
+            <h3 id="platform-policies-title" className="text-sm font-semibold text-slate-900">{t.systemPolicies}</h3>
+            <div className="mt-2 divide-y divide-slate-100">
+              <NotificationToggle label={t.providerVerification} checked={platformPolicies.providerVerification} onChange={() => togglePlatformPolicy("providerVerification")} />
+              <NotificationToggle label={t.contentModeration} checked={platformPolicies.contentModeration} onChange={() => togglePlatformPolicy("contentModeration")} />
+              <NotificationToggle label={t.disputeWindow} checked={platformPolicies.disputeWindow} onChange={() => togglePlatformPolicy("disputeWindow")} />
+            </div>
+          </section>
+          {platformSaved && <p role="status" className="mt-4 text-sm text-emerald-700">{t.platformSaved}</p>}
         </SettingsPanel>
       )}
     </div>

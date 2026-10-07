@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { AdminSettingsPage, type SettingsSection } from "@/shared/components/AdminSettingsPage";
 
-const sections: SettingsSection[] = ["profile", "account", "appearance", "notifications", "display"];
+const sections: SettingsSection[] = ["profile", "account", "appearance", "notifications", "display", "platform"];
 
 export default async function SettingsSectionPage({ params }: { params: Promise<{ section: string }> }) {
   const { section } = await params;
