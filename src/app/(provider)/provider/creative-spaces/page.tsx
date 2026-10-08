@@ -5,6 +5,7 @@ import { PageHeader } from "@/shared/components/PageHeader";
 import type { CreativeSpace } from "@/features/creative-space";
 import { Pagination } from "@/shared/components/Pagination";
 import { CreativeSpaceModal } from "@/features/creative-space/components/CreativeSpaceModal";
+import { LayoutGrid, MapPin, Table2 } from "lucide-react";
 
 type CreativeSpaceRow = CreativeSpace;
 
@@ -151,6 +152,14 @@ const spaces: CreativeSpaceRow[] = [
   },
 ];
 
+const spaceImages = [
+  "https://images.unsplash.com/photo-1471341971476-ae15ff5dd4ea?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  "https://images.unsplash.com/photo-1603425013520-e0b30e6e37dc?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  "https://images.unsplash.com/photo-1698899114708-36cc73fb5654?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  "https://images.unsplash.com/photo-1610719885572-e032f944dcf9?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  "https://images.unsplash.com/photo-1787572972355-aaa6ae7433fe?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+];
+
 const fieldClassName =
   "h-10 rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#343630] outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
 
@@ -199,6 +208,7 @@ function exportSpaces(rows: CreativeSpaceRow[]) {
 
 export default function CreativeSpacesPage() {
   const tableRef = useRef<HTMLElement | null>(null);
+  const [viewMode, setViewMode] = useState<"table" | "grid">("grid");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [selectedSpace, setSelectedSpace] = useState<CreativeSpaceRow | null>(
@@ -396,112 +406,214 @@ export default function CreativeSpacesPage() {
               <button
                 type="button"
                 onClick={handleAddSpace}
-                className="h-9 w-fit rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#2f603e]">
+                className="h-9 w-fit shrink-0 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#2f603e]">
                 + Add new space
               </button>
 
-              <div className="grid gap-2 sm:grid-cols-[minmax(180px,260px)_150px]">
-                <label className="sr-only" htmlFor="space-search">
-                  Search creative spaces
-                </label>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="grid gap-2 sm:grid-cols-[minmax(180px,260px)_150px]">
+                  <label className="sr-only" htmlFor="space-search">
+                    Search creative spaces
+                  </label>
 
-                <input
-                  id="space-search"
-                  value={query}
-                  onChange={(event) => {
-                    setQuery(event.target.value);
-                    setCurrentPage(1);
-                  }}
-                  placeholder="Search name, address or ID..."
-                  className={fieldClassName}
-                />
+                  <input
+                    id="space-search"
+                    value={query}
+                    onChange={(event) => {
+                      setQuery(event.target.value);
+                      setCurrentPage(1);
+                    }}
+                    placeholder="Search name, address or ID..."
+                    className={fieldClassName}
+                  />
 
-                <label className="sr-only" htmlFor="space-status">
-                  Filter by status
-                </label>
+                  <label className="sr-only" htmlFor="space-status">
+                    Filter by status
+                  </label>
 
-                <select
-                  id="space-status"
-                  value={status}
-                  onChange={(event) => {
-                    setStatus(event.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className={fieldClassName}>
-                  <option value="">All statuses</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+                  <select
+                    id="space-status"
+                    value={status}
+                    onChange={(event) => {
+                      setStatus(event.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className={fieldClassName}>
+                    <option value="">All statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setViewMode((current) =>
+                      current === "table" ? "grid" : "table",
+                    )
+                  }
+                  aria-label={
+                    viewMode === "table"
+                      ? "Switch to grid view"
+                      : "Switch to table view"
+                  }
+                  title={
+                    viewMode === "table"
+                      ? "Switch to grid view"
+                      : "Switch to table view"
+                  }
+                  className="flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-md border border-[#d8d8d1] bg-white text-[#343630] transition-colors hover:bg-[#f3f5ef] sm:self-auto">
+                  {viewMode === "table" ? (
+                    <LayoutGrid size={18} strokeWidth={1.8} />
+                  ) : (
+                    <Table2 size={18} strokeWidth={1.8} />
+                  )}
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Table of creative spaces */}
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-205 border-collapse text-left">
-              <thead className="bg-[#f8f8f5] text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]">
-                <tr>
-                  <th className="px-5 py-3">Space</th>
-                  <th className="px-4 py-3">Address</th>
-                  <th className="px-4 py-3">Capacity</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-5 py-3 text-right">Details</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#eeeeea]">
-                {paginatedSpaces.map((space) => (
-                  <tr
-                    key={space.id}
-                    className="transition-colors hover:bg-[#fcfcfa]">
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e9eee7] text-xs font-semibold text-[#45644a]">
-                          SP
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-[#292b27]">
-                            {space.name}
-                          </p>
-                          <p className="mt-0.5 text-xs text-[#777973]">
-                            {space.id}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5 text-sm text-[#686a64]">
-                      {space.address}
-                    </td>
-                    <td className="px-4 py-3.5 text-sm text-[#686a64]">
-                      {space.capacity} people
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(space.isActive)}`}>
-                        {statusLabel(space.isActive)}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedSpace(space)}
-                        className="text-sm font-semibold text-[#39724b] hover:cursor-pointer hover:underline">
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {filteredSpaces.length === 0 && (
+          {/* List of creative spaces */}
+          {/* Creative spaces: Table / Grid */}
+          {viewMode === "table" ? (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-205 border-collapse text-left">
+                <thead className="bg-[#f8f8f5] text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]">
                   <tr>
-                    <td
-                      colSpan={5}
-                      className="px-5 py-12 text-center text-sm text-[#777973]">
-                      No creative spaces match your filters.
-                    </td>
+                    <th className="px-5 py-3">Space</th>
+                    <th className="px-4 py-3">Address</th>
+                    <th className="px-4 py-3">Capacity</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-5 py-3 text-right">Details</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody className="divide-y divide-[#eeeeea]">
+                  {paginatedSpaces.map((space) => (
+                    <tr
+                      key={space.id}
+                      className="transition-colors hover:bg-[#fcfcfa]">
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e9eee7] text-xs font-semibold text-[#45644a]">
+                            SP
+                          </span>
+
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-[#292b27]">
+                              {space.name}
+                            </p>
+                            <p className="mt-0.5 text-xs text-[#777973]">
+                              {space.id}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-3.5 text-sm text-[#686a64]">
+                        {space.address}
+                      </td>
+
+                      <td className="px-4 py-3.5 text-sm text-[#686a64]">
+                        {space.capacity} people
+                      </td>
+
+                      <td className="px-4 py-3.5">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(space.isActive)}`}>
+                          {statusLabel(space.isActive)}
+                        </span>
+                      </td>
+
+                      <td className="px-5 py-3.5 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedSpace(space)}
+                          className="text-sm font-semibold text-[#39724b] hover:underline">
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+
+                  {paginatedSpaces.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="px-5 py-12 text-center text-sm text-[#777973]">
+                        No creative spaces match your filters.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 bg-[#fafaf8] p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {paginatedSpaces.map((space) => (
+                <article
+                  key={space.id}
+                  className="group overflow-hidden rounded-lg border border-[#e0e0da] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md">
+                  {/* Thumbnail */}
+                  <div className="relative aspect-4/3 overflow-hidden bg-[#e9eee7]">
+                    <img
+                      src={
+                        spaceImages[
+                          Number(space.id.split("-")[1]) % spaceImages.length
+                        ]
+                      }
+                      alt={space.name}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover"
+                    />
+
+                    <span
+                      className={`absolute right-3 top-3 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm ${statusClass(space.isActive)}`}>
+                      {statusLabel(space.isActive)}
+                    </span>
+                  </div>
+
+                  {/* Card content */}
+                  <div className="p-4">
+                    <p className="text-xs font-medium text-[#858680]">
+                      {space.id}
+                    </p>
+
+                    <h3 className="mt-1 truncate text-base font-semibold text-[#20221f]">
+                      {space.name}
+                    </h3>
+
+                    <p className="mt-2 flex min-h-10 items-start gap-2 text-sm leading-5 text-[#686a64]">
+                      <span className="shrink-0" aria-hidden="true">
+                        <MapPin name="map-pin" size="16px" />
+                      </span>
+                      <span>{space.address}</span>
+                    </p>
+
+                    <div className="mt-3 flex items-center justify-between border-t border-[#eeeeea] pt-3">
+                      <span className="text-sm text-[#686a64]">Capacity</span>
+                      <span className="text-sm font-semibold text-[#343630]">
+                        {space.capacity} people
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSpace(space)}
+                      className="mt-4 h-9 w-full rounded-md border border-[#39724b] text-sm font-semibold text-[#39724b] transition-colors hover:bg-[#39724b] hover:text-white">
+                      View details
+                    </button>
+                  </div>
+                </article>
+              ))}
+
+              {paginatedSpaces.length === 0 && (
+                <div className="col-span-full px-5 py-12 text-center text-sm text-[#777973]">
+                  No creative spaces match your filters.
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Pagination controls at the bottom */}
           <div className="border-t border-[#e8e8e2] px-5 py-4">
