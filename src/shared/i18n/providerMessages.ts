@@ -26,6 +26,9 @@ const englishMessages = {
     equipment: "Equipment",
     reservations: "Reservations",
     packages: "Packages",
+    transactions: "Transactions",
+    ratingFeedback: "Rating & Feedback",
+    pricingPolicy: "Pricing Policy",
     settings: "Settings",
   },
   settings: {
@@ -173,6 +176,9 @@ const vietnameseMessages: ProviderMessages = {
     reservations: "Đặt chỗ",
     packages: "Gói dịch vụ",
     settings: "Cài đặt",
+    transactions: "Giao dịch",
+    ratingFeedback: "Đánh giá & Phản hồi",
+    pricingPolicy: "Chính sách giá",
   },
   settings: {
     title: "Cài đặt",
