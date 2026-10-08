@@ -7,7 +7,6 @@ import { useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
 import { useProviderLanguage } from "../providers/ProviderLanguageProvider";
 
 const iconByPath: Record<string, LucideIcon> = {
-  "/dashboard": LayoutDashboard,
   "/admin/dashboard": LayoutDashboard,
   "/moderator/dashboard": LayoutDashboard,
   "/users": UsersRound,
@@ -16,17 +15,23 @@ const iconByPath: Record<string, LucideIcon> = {
   "/reports": ChartNoAxesCombined,
   "/errors": Bug,
   "/settings/profile": Settings2,
-  "/creative-spaces": Aperture,
+
+  "/provider/dashboard": LayoutDashboard,
+  "/provider/creative-spaces": Aperture,
+  "/provider/equipment": Camera,
+  "/provider/reservations": CalendarDays,
+  "/provider/packages": Package,
+  "/provider/transaction": CreditCard,
+  "/provider/rating-feedback": MessageSquareWarning,
+  "/provider/pricing-policy": Settings2,
+
   "/moderator/creative-spaces": Aperture,
-  "/equipment": Camera,
   "/moderator/equipment": Camera,
-  "/reservations": CalendarDays,
   "/moderator/reservations": CalendarDays,
-  "/packages": Package,
   "/moderator/packages": Package,
 };
 
-// const providerLinks = [["Dashboard", "/dashboard"], ["Creative spaces", "/creative-spaces"], ["Equipment", "/equipment"], ["Reservations", "/reservations"], ["Packages", "/packages"]];
+// const providerLinks = [["Dashboard", "/provider/dashboard"], ["Creative spaces", "/provider/creative-spaces"], ["Equipment", "/provider/equipment"], ["Reservations", "/provider/reservations"], ["Packages", "/provider/packages"], ["Transactions", "/provider/transaction"], ["Rating & Feedback", "/provider/rating-feedback"], ["Pricing Policy", "/provider/pricing-policy"]];
 const moderatorLinks = [["Dashboard", "/moderator/dashboard"], ["Creative spaces", "/moderator/creative-spaces"], ["Equipment", "/moderator/equipment"], ["Reservations", "/moderator/reservations"], ["Packages", "/moderator/packages"]];
 
 export function Sidebar({ role, collapsed = false, onNavigate }: { role: "provider" | "moderator" | "admin"; collapsed?: boolean; onNavigate?: () => void }) {
@@ -44,11 +49,14 @@ export function Sidebar({ role, collapsed = false, onNavigate }: { role: "provid
       ]
     : role === "provider"
       ? [
-          { label: providerMessages.nav.dashboard, href: "/dashboard" },
-          { label: providerMessages.nav.creativeSpaces, href: "/creative-spaces" },
-          { label: providerMessages.nav.equipment, href: "/equipment" },
-          { label: providerMessages.nav.reservations, href: "/reservations" },
-          { label: providerMessages.nav.packages, href: "/packages" },
+          { label: providerMessages.nav.dashboard, href: "/provider/dashboard" },
+          { label: providerMessages.nav.creativeSpaces, href: "/provider/creative-spaces" },
+          { label: providerMessages.nav.equipment, href: "/provider/equipment" },
+          { label: providerMessages.nav.reservations, href: "/provider/reservations" },
+          { label: providerMessages.nav.packages, href: "/provider/packages" },
+          { label: providerMessages.nav.transactions, href: "/provider/transaction" },
+          { label: providerMessages.nav.ratingFeedback, href: "/provider/rating-feedback" },
+          { label: providerMessages.nav.pricingPolicy, href: "/provider/pricing-policy" },
         ]
       : moderatorLinks.map(([label, href]) => ({ label, href }));
 
@@ -59,7 +67,7 @@ export function Sidebar({ role, collapsed = false, onNavigate }: { role: "provid
         {!collapsed && <span className="text-sm font-semibold tracking-tight">Film Photo</span>}
       </Link>
       {!collapsed && <p className="mb-2 mt-9 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">{role === "admin" ? adminMessages.common.general : role === "provider" ? providerMessages.common.general : 'Workplace'}</p>}
-      <nav className={`flex gap-1 overflow-x-auto ${role === "admin" ? "flex-col" : "lg:flex-col"}`}>
+      <nav className="flex flex-col gap-1 overflow-x-auto">
         {links.map(({ label, href }) => {
           const isActive = pathname === href;
           const Icon = iconByPath[href] ?? LayoutDashboard;

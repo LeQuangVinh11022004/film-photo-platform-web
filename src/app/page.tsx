@@ -9,7 +9,7 @@ export default function Home() {
         <p className="text-lg leading-8 text-stone-600">A frontend foundation for service providers, reservations, equipment and creative spaces.</p>
       </div>
       <div className="flex flex-wrap gap-3">
-        <Link href="/dashboard" className="rounded-lg bg-stone-900 px-5 py-3 text-sm font-semibold text-white hover:bg-stone-700">Open provider dashboard</Link>
+        <Link href="/provider/dashboard" className="rounded-lg bg-stone-900 px-5 py-3 text-sm font-semibold text-white hover:bg-stone-700">Open provider dashboard</Link>
         <Link href="/login" className="rounded-lg border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-800 hover:bg-white">Sign in</Link>
       </div>
     </main>
