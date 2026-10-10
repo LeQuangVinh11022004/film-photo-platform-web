@@ -7,6 +7,7 @@ export default function ResetPasswordPage() {
     <AuthPageLayout
       title="Set a new password"
       description="Choose a new password for your workspace."
+      backgroundImage="/images/auth/reset-password.jpg"
       footer={
         <p>
           Need another reset link?{" "}

@@ -7,6 +7,7 @@ export default function LoginPage() {
     <AuthPageLayout
       title="Film Photo Workspace"
       description="Sign in to manage your creative spaces."
+      backgroundImage="/images/auth/login-background.jpg"
       footer={
         <p>
           Don&apos;t have an account?{" "}
@@ -31,7 +32,7 @@ export default function LoginPage() {
             autoComplete="email"
             required
             placeholder="Enter your email"
-            className="mt-2.5 h-15 w-full rounded-[10px] border border-[#d7d7d3] bg-white px-4 text-base font-normal text-[#171715] outline-none transition focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#92928d]"
+            className="mt-2.5 h-15 w-full rounded-[10px] border border-white/35 bg-white/65 px-4 text-base font-normal text-[#171715] outline-none transition backdrop-blur-sm focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#70706b]"
           />
         </label>
         <div>
@@ -49,7 +50,7 @@ export default function LoginPage() {
             autoComplete="current-password"
             required
             placeholder="Enter your password"
-            className="mt-2.5 h-15 w-full rounded-[10px] border border-[#d7d7d3] bg-white px-4 text-base font-normal text-[#171715] outline-none transition focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#92928d]"
+            className="mt-2.5 h-15 w-full rounded-[10px] border border-white/35 bg-white/65 px-4 text-base font-normal text-[#171715] outline-none transition backdrop-blur-sm focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#70706b]"
           />
           <Link
             href="/forgot-password"
@@ -61,7 +62,7 @@ export default function LoginPage() {
         </div>
         <button
           type="submit"
-          className="h-15 w-full rounded-[10px] bg-[#111110] px-5 text-base font-semibold text-white transition-colors hover:bg-[#33332f] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#b58a2b]"
+          className="h-15 w-full rounded-[10px] bg-[#111110]/85 px-5 text-base font-semibold text-white transition-colors hover:bg-[#33332f]/90 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#b58a2b]"
         >
           Sign in
         </button>

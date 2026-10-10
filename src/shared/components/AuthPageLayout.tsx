@@ -6,12 +6,32 @@ type AuthPageLayoutProps = {
   description: string;
   footer: ReactNode;
   children: ReactNode;
+  backgroundImage?: string;
 };
 
-export function AuthPageLayout({ title, description, footer, children }: AuthPageLayoutProps) {
+export function AuthPageLayout({
+  title,
+  description,
+  footer,
+  children,
+  backgroundImage,
+}: AuthPageLayoutProps) {
+  const mainStyle = backgroundImage
+    ? {
+        backgroundImage: `linear-gradient(rgba(12, 12, 10, 0.46), rgba(12, 12, 10, 0.46)), url("${backgroundImage}")`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }
+    : undefined;
+
   return (
-    <main className="flex min-h-screen w-full items-center justify-center bg-[#f7f7f5] px-5 py-10 sm:px-8">
-      <section className="w-full max-w-140 rounded-[18px] border border-black/6 bg-white px-6 py-10 shadow-[0_2px_14px_rgba(20,20,20,0.045)] sm:px-12 sm:py-14">
+    <main
+      className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#f7f7f5] px-5 py-10 sm:px-8"
+      style={mainStyle}
+    >
+      <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
+      <section className="relative z-10 w-full max-w-140 rounded-[18px] border border-white/35 bg-white/70 px-6 py-10 shadow-[0_18px_40px_rgba(12,12,10,0.18)] backdrop-blur-[4px] sm:px-12 sm:py-14">
         <Link href="/" className="mx-auto mb-8 flex w-fit items-center gap-2.5 text-sm font-bold tracking-[0.02em] text-[#171715]">
           <span aria-hidden="true" className="h-7 w-px bg-[#d6a83f]" />
           <span>FILM PHOTO</span>
