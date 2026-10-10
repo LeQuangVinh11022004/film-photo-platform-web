@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import type { Equipment } from "@/features/equipment";
+import { Pagination } from "@/shared/components/Pagination";
+import { LayoutGrid, Table2 } from "lucide-react";
+import { EquipmentModal } from "@/features/equipment/components/EquipmentModal";
 
 type EquipmentRow = Equipment;
 
@@ -47,6 +50,46 @@ const equipment: EquipmentRow[] = [
     quantity: 2,
     isAvailable: false,
   },
+  {
+    id: "EQ-2006",
+    name: "GoPro Hero 11",
+    category: "Camera",
+    price: 450000,
+    quantity: 5,
+    isAvailable: true,
+  },
+  {
+    id: "EQ-2007",
+    name: "DJI Ronin-S",
+    category: "Stabilizer",
+    price: 550000,
+    quantity: 3,
+    isAvailable: true,
+  },
+  {
+    id: "EQ-2008",
+    name: "Neewer LED Panel",
+    category: "Lighting",
+    price: 200000,
+    quantity: 4,
+    isAvailable: true,
+  },
+  {
+    id: "EQ-2009",
+    name: "Canon EF 50mm F1.8",
+    category: "Lens",
+    price: 150000,
+    quantity: 2,
+    isAvailable: true,
+  },
+];
+
+const equipmentImages = [
+  "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1759769191433-9560758fd4b7?q=80&w=746&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  "https://images.unsplash.com/photo-1570385404967-fe4e1b48454b?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  "https://images.unsplash.com/photo-1520390138845-fd2d229dd553?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=800&q=80",
 ];
 
 const fieldClassName =
@@ -101,11 +144,26 @@ function formatPrice(value: number) {
 }
 
 export default function EquipmentPage() {
+  const tableRef = useRef<HTMLElement | null>(null);
+  const [viewMode, setViewMode] = useState<"table" | "grid">("grid");
+
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 8;
+
   const [selectedEquipment, setSelectedEquipment] =
     useState<EquipmentRow | null>(null);
+
+  const [equipmentModalOpen, setEquipmentModalOpen] = useState(false);
+  const [equipmentModalMode, setEquipmentModalMode] = useState<
+    "create" | "edit"
+  >("create");
+  const [editingEquipment, setEditingEquipment] = useState<EquipmentRow | null>(
+    null,
+  );
 
   const normalizedQuery = query.trim().toLowerCase();
   const categories = [...new Set(equipment.map((item) => item.category))];
@@ -119,12 +177,61 @@ export default function EquipmentPage() {
       (!status || item.isAvailable === (status === "available"))
     );
   });
+  const totalFilteredEquipment = filteredEquipment.length;
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedEquipment = filteredEquipment.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE,
+  );
 
   const activeCount = equipment.filter((item) => item.isAvailable).length;
   const totalQuantity = equipment.reduce(
     (total, item) => total + item.quantity,
     0,
   );
+
+  const handleAddEquipment = () => {
+    setEditingEquipment(null);
+    setEquipmentModalMode("create");
+    setEquipmentModalOpen(true);
+  };
+
+  const handleEditEquipment = (item: EquipmentRow) => {
+    setEditingEquipment(item);
+    setEquipmentModalMode("edit");
+    setEquipmentModalOpen(true);
+  };
+
+  const handleSubmitEquipment = (data: {
+    name: string;
+    category: string;
+    price: number;
+    quantity: number;
+    isAvailable: boolean;
+  }) => {
+    if (equipmentModalMode === "create") {
+      console.log("Create equipment:", data);
+    } else {
+      console.log("Update equipment:", {
+        id: editingEquipment?.id,
+        ...data,
+      });
+    }
+
+    setEquipmentModalOpen(false);
+    setEditingEquipment(null);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+
+    requestAnimationFrame(() => {
+      tableRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  };
 
   return (
     <div className="mx-auto max-w-375">
@@ -181,125 +288,276 @@ export default function EquipmentPage() {
         ))}
       </section>
 
-      <section className="mt-4 overflow-hidden rounded-lg border border-[#e0e0da] bg-white">
-        <div className="flex flex-col gap-3 border-b border-[#e8e8e2] p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-          <div>
-            <h2 className="text-base font-semibold text-[#20221f]">
-              Equipment catalogue
-            </h2>
-            <p className="mt-1 text-sm text-[#777973]">
-              Showing {filteredEquipment.length} of {equipment.length} listings
-            </p>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-[minmax(180px,240px)_135px_135px]">
-            <label className="sr-only" htmlFor="equipment-search">
-              Search equipment
-            </label>
-            <input
-              id="equipment-search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search name, category or ID..."
-              className={fieldClassName}
+      <section
+        ref={tableRef}
+        className="scroll-mt-20 mt-4 overflow-hidden rounded-lg border border-[#e0e0da] bg-white">
+        {/* Header and top pagination */}
+        <div className="flex flex-col gap-4 border-b border-[#e8e8e2] p-4 sm:px-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-[#20221f]">
+                Equipment catalogue
+              </h2>
+              <p className="mt-1 text-sm text-[#777973]">
+                Showing {filteredEquipment.length} of {equipment.length}{" "}
+                listings
+              </p>
+            </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalItems={totalFilteredEquipment}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onPageChange={handlePageChange}
             />
-            <label className="sr-only" htmlFor="equipment-category">
-              Filter by category
-            </label>
-            <select
-              id="equipment-category"
-              value={category}
-              onChange={(event) => setCategory(event.target.value)}
-              className={fieldClassName}>
-              <option value="">All categories</option>
-              {categories.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-            <label className="sr-only" htmlFor="equipment-status">
-              Filter by status
-            </label>
-            <select
-              id="equipment-status"
-              value={status}
-              onChange={(event) => setStatus(event.target.value)}
-              className={fieldClassName}>
-              <option value="">All statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <button
+              type="button"
+              onClick={handleAddEquipment}
+              className="h-9 w-fit shrink-0 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#2f603e]">
+              + Add equipment
+            </button>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="grid gap-2 sm:grid-cols-[minmax(180px,240px)_135px_135px]">
+                <label className="sr-only" htmlFor="equipment-search">
+                  Search equipment
+                </label>
+                <input
+                  id="equipment-search"
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value);
+                    setCurrentPage(1);
+                  }}
+                  placeholder="Search name, category or ID..."
+                  className={fieldClassName}
+                />
+
+                <label className="sr-only" htmlFor="equipment-category">
+                  Filter by category
+                </label>
+                <select
+                  id="equipment-category"
+                  value={category}
+                  onChange={(event) => {
+                    setCategory(event.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className={fieldClassName}>
+                  <option value="">All categories</option>
+                  {categories.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+
+                <label className="sr-only" htmlFor="equipment-status">
+                  Filter by status
+                </label>
+                <select
+                  id="equipment-status"
+                  value={status}
+                  onChange={(event) => {
+                    setStatus(event.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className={fieldClassName}>
+                  <option value="">All statuses</option>
+                  <option value="available">Available</option>
+                  <option value="inactive">Not Available</option>
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setViewMode((current) =>
+                    current === "table" ? "grid" : "table",
+                  )
+                }
+                aria-label={
+                  viewMode === "table"
+                    ? "Switch to grid view"
+                    : "Switch to table view"
+                }
+                title={
+                  viewMode === "table"
+                    ? "Switch to grid view"
+                    : "Switch to table view"
+                }
+                className="flex h-10 w-10 shrink-0 items-center justify-center self-end rounded-md border border-[#d8d8d1] bg-white text-[#343630] transition-colors hover:bg-[#f3f5ef] sm:self-auto">
+                {viewMode === "table" ? (
+                  <LayoutGrid size={18} strokeWidth={1.8} />
+                ) : (
+                  <Table2 size={18} strokeWidth={1.8} />
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-215 border-collapse text-left">
-            <thead className="bg-[#f8f8f5] text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]">
-              <tr>
-                <th className="px-5 py-3">Equipment</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Price</th>
-                <th className="px-4 py-3">Quantity</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-5 py-3 text-right">Details</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#eeeeea]">
-              {filteredEquipment.map((item) => (
-                <tr
-                  key={item.id}
-                  className="transition-colors hover:bg-[#fcfcfa]">
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e9eee7] text-xs font-semibold text-[#45644a]">
-                        EQ
-                      </span>
-                      <div>
-                        <p className="text-sm font-semibold text-[#292b27]">
-                          {item.name}
-                        </p>
-                        <p className="mt-0.5 text-xs text-[#777973]">
-                          {item.id}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3.5 text-sm text-[#686a64]">
-                    {item.category}
-                  </td>
-                  <td className="px-4 py-3.5 text-sm text-[#686a64]">
-                    {formatPrice(item.price)}
-                  </td>
-                  <td className="px-4 py-3.5 text-sm text-[#686a64]">
-                    {item.quantity}
-                  </td>
-                  <td className="px-4 py-3.5">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(item.isAvailable)}`}>
-                      {statusLabel(item.isAvailable)}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 text-right">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedEquipment(item)}
-                      className="text-sm font-semibold text-[#39724b] hover:underline">
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filteredEquipment.length === 0 && (
+        {/* Table view */}
+        {viewMode === "table" ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-215 border-collapse text-left">
+              <thead className="bg-[#f8f8f5] text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]">
                 <tr>
-                  <td
-                    colSpan={6}
-                    className="px-5 py-12 text-center text-sm text-[#777973]">
-                    No equipment matches your filters.
-                  </td>
+                  <th className="px-5 py-3">Equipment</th>
+                  <th className="px-4 py-3">Category</th>
+                  <th className="px-4 py-3">Price</th>
+                  <th className="px-4 py-3">Quantity</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-5 py-3 text-right">Details</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody className="divide-y divide-[#eeeeea]">
+                {paginatedEquipment.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="transition-colors hover:bg-[#fcfcfa]">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={
+                            equipmentImages[
+                              Number(item.id.split("-")[1]) %
+                                equipmentImages.length
+                            ]
+                          }
+                          alt={item.name}
+                          className="h-10 w-10 rounded-md bg-[#f0f1ec] object-cover"
+                          loading="lazy"
+                        />
+                        <div>
+                          <p className="text-sm font-semibold text-[#292b27]">
+                            {item.name}
+                          </p>
+                          <p className="mt-0.5 text-xs text-[#777973]">
+                            {item.id}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-4 py-3.5 text-sm text-[#686a64]">
+                      {item.category}
+                    </td>
+                    <td className="px-4 py-3.5 text-sm text-[#686a64]">
+                      {formatPrice(item.price)}
+                    </td>
+                    <td className="px-4 py-3.5 text-sm text-[#686a64]">
+                      {item.quantity}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(item.isAvailable)}`}>
+                        {statusLabel(item.isAvailable)}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedEquipment(item)}
+                        className="text-sm font-semibold text-[#39724b] hover:underline">
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+
+                {paginatedEquipment.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-5 py-12 text-center text-sm text-[#777973]">
+                      No equipment matches your filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Grid view */
+          <div className="grid grid-cols-1 gap-4 bg-[#fafaf8] p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {paginatedEquipment.map((item) => (
+              <article
+                key={item.id}
+                className="group overflow-hidden rounded-lg border border-[#e0e0da] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md">
+                <div className="relative aspect-[4/3] overflow-hidden bg-[#e9eee7]">
+                  <img
+                    src={
+                      equipmentImages[
+                        Number(item.id.split("-")[1]) % equipmentImages.length
+                      ]
+                    }
+                    alt={item.name}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+
+                  <span
+                    className={`absolute right-3 top-3 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm ${statusClass(item.isAvailable)}`}>
+                    {statusLabel(item.isAvailable)}
+                  </span>
+                </div>
+
+                <div className="p-4">
+                  <p className="text-xs font-medium text-[#858680]">
+                    {item.id}
+                  </p>
+
+                  <h3 className="mt-1 truncate text-base font-semibold text-[#20221f]">
+                    {item.name}
+                  </h3>
+
+                  <p className="mt-1 text-sm text-[#777973]">{item.category}</p>
+
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <span className="text-sm text-[#686a64]">Daily price</span>
+                    <span className="text-sm font-semibold text-[#20221f]">
+                      {formatPrice(item.price)}
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex items-center justify-between border-t border-[#eeeeea] pt-3">
+                    <span className="text-sm text-[#686a64]">Quantity</span>
+                    <span className="text-sm font-semibold text-[#343630]">
+                      {item.quantity} units
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedEquipment(item)}
+                    className="mt-4 h-9 w-full rounded-md border border-[#39724b] text-sm font-semibold text-[#39724b] transition-colors hover:bg-[#39724b] hover:text-white">
+                    View details
+                  </button>
+                </div>
+              </article>
+            ))}
+
+            {paginatedEquipment.length === 0 && (
+              <div className="col-span-full px-5 py-12 text-center text-sm text-[#777973]">
+                No equipment matches your filters.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Bottom pagination */}
+        <div className="border-t border-[#e8e8e2] px-5 py-4">
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalFilteredEquipment}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={handlePageChange}
+          />
         </div>
       </section>
 
@@ -354,6 +612,17 @@ export default function EquipmentPage() {
           </section>
         </div>
       )}
+
+      <EquipmentModal
+        open={equipmentModalOpen}
+        mode={equipmentModalMode}
+        equipment={editingEquipment}
+        onClose={() => {
+          setEquipmentModalOpen(false);
+          setEditingEquipment(null);
+        }}
+        onSubmit={handleSubmitEquipment}
+      />
     </div>
   );
 }
