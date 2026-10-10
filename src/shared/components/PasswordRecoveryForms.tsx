@@ -5,8 +5,8 @@ import { useState, type FormEvent } from "react";
 import { httpClient } from "@/services/httpClient";
 import { endpoints } from "@/services/endpoints";
 
-const inputClassName = "mt-2.5 h-15 w-full rounded-[10px] border border-[#d7d7d3] bg-white px-4 text-base font-normal text-[#171715] outline-none transition focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#92928d]";
-const buttonClassName = "h-15 w-full rounded-[10px] bg-[#111110] px-5 text-base font-semibold text-white transition-colors hover:bg-[#33332f] disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#b58a2b]";
+const inputClassName = "mt-2.5 h-15 w-full rounded-[10px] border border-white/35 bg-white/65 px-4 text-base font-normal text-[#171715] outline-none transition backdrop-blur-sm focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#70706b]";
+const buttonClassName = "h-15 w-full rounded-[10px] bg-[#111110]/85 px-5 text-base font-semibold text-white transition-colors hover:bg-[#33332f]/90 disabled:cursor-wait disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#b58a2b]";
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("");

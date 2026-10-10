@@ -7,6 +7,7 @@ export default function RegisterPage() {
     <AuthPageLayout
       title="Create your account"
       description="Set up your workspace for creative bookings."
+      backgroundImage="/images/auth/register-background.jpg"
       footer={
         <p>
           Already have an account?{" "}
@@ -25,7 +26,7 @@ export default function RegisterPage() {
             autoComplete="name"
             required
             placeholder="Enter your full name"
-            className="mt-2.5 h-15 w-full rounded-[10px] border border-[#d7d7d3] bg-white px-4 text-base font-normal text-[#171715] outline-none transition focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#92928d]"
+            className="mt-2.5 h-15 w-full rounded-[10px] border border-white/35 bg-white/65 px-4 text-base font-normal text-[#171715] outline-none transition backdrop-blur-sm focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#70706b]"
           />
         </label>
         <label htmlFor="email" className="block text-sm font-semibold text-[#3b3b38]">
@@ -36,7 +37,7 @@ export default function RegisterPage() {
             autoComplete="email"
             required
             placeholder="Enter your email"
-            className="mt-2.5 h-15 w-full rounded-[10px] border border-[#d7d7d3] bg-white px-4 text-base font-normal text-[#171715] outline-none transition focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#92928d]"
+            className="mt-2.5 h-15 w-full rounded-[10px] border border-white/35 bg-white/65 px-4 text-base font-normal text-[#171715] outline-none transition backdrop-blur-sm focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#70706b]"
           />
         </label>
         <label htmlFor="password" className="block text-sm font-semibold text-[#3b3b38]">
@@ -48,10 +49,10 @@ export default function RegisterPage() {
             minLength={8}
             required
             placeholder="Create a password"
-            className="mt-2.5 h-15 w-full rounded-[10px] border border-[#d7d7d3] bg-white px-4 text-base font-normal text-[#171715] outline-none transition focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#92928d]"
+            className="mt-2.5 h-15 w-full rounded-[10px] border border-white/35 bg-white/65 px-4 text-base font-normal text-[#171715] outline-none transition backdrop-blur-sm focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#70706b]"
           />
         </label>
-        <button type="submit" className="h-15 w-full rounded-[10px] bg-[#111110] px-5 text-base font-semibold text-white transition-colors hover:bg-[#33332f] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#b58a2b]">
+        <button type="submit" className="h-15 w-full rounded-[10px] bg-[#111110]/85 px-5 text-base font-semibold text-white transition-colors hover:bg-[#33332f]/90 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#b58a2b]">
           Create account
         </button>
       </form>
