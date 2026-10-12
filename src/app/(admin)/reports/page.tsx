@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { AdminPagination } from "@/shared/components/AdminPagination";
+import { showAdminToast } from "@/features/admin-notification/toast";
+import { ActivityHeatmap, AreaTrendChart, LollipopChart, RadialRings } from "@/shared/components/AdminCharts";
 import { useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
 import { distributeTotal, formatChartCurrency, formatChartNumber } from "@/shared/utils/adminCharts";
 import type { AdminMessages } from "@/shared/i18n/adminMessages";
@@ -28,9 +30,9 @@ const studioPerformance = [
 ];
 
 const accountActivity = [
-	{ key: "registrations", values: [18, 24, 20, 31, 26, 39, 34], color: "bg-[#39724b]" },
-	{ key: "repeatBookings", values: [12, 16, 18, 21, 24, 28, 25], color: "bg-[#d4a33b]" },
-	{ key: "providerReviews", values: [4, 6, 5, 8, 7, 9, 11], color: "bg-[#647c98]" },
+	{ key: "registrations", values: [18, 24, 20, 31, 26, 39, 34], color: "#39724b" },
+	{ key: "repeatBookings", values: [12, 16, 18, 21, 24, 28, 25], color: "#d4a33b" },
+	{ key: "providerReviews", values: [4, 6, 5, 8, 7, 9, 11], color: "#647c98" },
 ] as const;
 
 const servicePerformance = [
@@ -79,6 +81,13 @@ export default function ReportsPage() {
 	const current = periods[period];
 	const reservationValues = distributeTotal(Number(current.reservations.replaceAll(",", "")), current.values);
 	const revenueValues = distributeTotal(Number(current.revenue.replace(/[^\d]/g, "")), current.values);
+	const previousRevenueValues = revenueValues.map((value, index) => Math.round(value * [0.86, 0.92, 0.84, 0.9, 0.95, 0.82, 0.88][index % 7]));
+	const healthRings = [
+		{ key: "confirmed", percentage: 88, color: "#39724b" },
+		{ key: "completed", percentage: Math.round(parseFloat(current.completion)), color: "#647c98" },
+		{ key: "repeat", percentage: 41, color: "#d4a33b" },
+		{ key: "response", percentage: 92, color: "#bf6a59" },
+	] as const;
 	const visibleStudios = studioPerformance.slice((studioPage - 1) * studioPageSize, studioPage * studioPageSize);
 	const metrics = [
 		{ label: t.metricRevenue, value: current.revenue, change: "+8.6%", trend: reportTrends[0] },
@@ -97,7 +106,7 @@ export default function ReportsPage() {
 					<div className={fieldClassName} role="group" aria-label={t.reportingPeriod}>
 						{(Object.keys(periods) as Period[]).map((item) => <button key={item} type="button" aria-pressed={period === item} onClick={() => setPeriod(item)} className={`rounded px-3 py-1.5 text-xs font-semibold transition-colors ${period === item ? "bg-[#20221f] text-white" : "text-[#686a64] hover:bg-[#f0f0ec]"}`}>{messages.common.periods[periodKeys[item]]}</button>)}
 					</div>
-					<button type="button" onClick={() => exportReport(period, messages)} className="h-9 rounded-md bg-[#20221f] px-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#393b36]">{messages.common.exportCsv}</button>
+					<button type="button" onClick={() => { exportReport(period, messages); showAdminToast({ title: messages.toast.exported, message: messages.toast.exportedDetail, tone: "info" }); }} className="h-9 rounded-md bg-[#20221f] px-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#393b36]">{messages.common.exportCsv}</button>
 				</div>
 			</div>
 
@@ -116,26 +125,25 @@ export default function ReportsPage() {
 				<article className="rounded-lg border border-[#e0e0da] bg-white p-5 sm:p-6">
 					<div className="flex flex-wrap items-start justify-between gap-4">
 						<div><h2 className="text-base font-semibold text-[#20221f]">{t.bookingTrend}</h2><p className="mt-1 text-sm text-[#777973]">{t.bookingTrendDescription}</p></div>
-						<div className="flex items-center gap-4 text-xs text-[#686a64]"><span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm bg-[#39724b]" />{t.legendValue}</span><span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm bg-[#d4a33b]" />{t.legendReservations}</span></div>
+						<div className="flex items-center gap-4 text-xs text-[#686a64]"><span className="flex items-center gap-2"><span className="h-0.5 w-4 rounded-full bg-[#39724b]" />{t.currentPeriod}</span><span className="flex items-center gap-2"><span className="w-4 border-t-2 border-dashed border-[#9a9b94]" />{t.previousPeriodLabel}</span></div>
 					</div>
-					<div className="admin-chart-grid relative mt-7 grid h-52 grid-cols-7 items-end gap-2 border-b border-[#e8e8e2] px-1 sm:gap-4">
-						{current.values.map((height, index) => <div key={`${period}-${index}`} className="flex h-full min-w-0 flex-col items-center justify-end gap-1"><div className="flex h-[68%] w-full max-w-12 items-end justify-center gap-1"><span title={`${t.legendReservations}: ${formatChartNumber(reservationValues[index], locale)}`} className="admin-chart-bar w-2/5 rounded-t-sm bg-[#39724b]" style={{ height: `${height}%`, animationDelay: `${index * 70}ms` }} /><span title={`${t.legendValue}: ${formatChartCurrency(revenueValues[index], locale)}`} className="admin-chart-bar w-2/5 rounded-t-sm bg-[#d4a33b]" style={{ height: `${Math.max(18, height - 16)}%`, animationDelay: `${index * 70 + 45}ms` }} /></div><div className="flex min-h-10 w-full flex-col items-center justify-end leading-tight"><span title={`${t.legendReservations}: ${formatChartNumber(reservationValues[index], locale)}`} className="max-w-full truncate text-[9px] font-semibold text-[#39724b]">{formatChartNumber(reservationValues[index], locale)}</span><span title={`${t.legendValue}: ${formatChartCurrency(revenueValues[index], locale)}`} className="max-w-full truncate text-[9px] font-semibold text-[#9a6a20]">{formatChartCurrency(revenueValues[index], locale)}</span><span className="mt-0.5 max-w-full truncate text-[10px] text-[#82837d] sm:text-xs">{t.chartLabels[periodKeys[period]][index]}</span></div></div>)}
-						<svg aria-hidden="true" viewBox="0 0 700 180" preserveAspectRatio="none" className="pointer-events-none absolute inset-x-0 top-0 h-[68%] w-full overflow-visible"><polyline points={current.values.map((value, index) => `${35 + index * 105},${165 - value * 1.3}`).join(" ")} fill="none" stroke="#d4a33b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="admin-trend-line" />{current.values.map((value, index) => <circle key={`${period}-point-${index}`} cx={35 + index * 105} cy={165 - value * 1.3} r="4" fill="#d4a33b" stroke="white" strokeWidth="2" />)}</svg>
-					</div>
+					<AreaTrendChart
+						animationKey={`reports-${period}`}
+						ariaLabel={t.bookingTrend}
+						labels={t.chartLabels[periodKeys[period]]}
+						series={[
+							{ key: "previous", label: t.previousPeriodLabel, values: previousRevenueValues, color: "#9a9b94", dashed: true, format: (value) => formatChartCurrency(value, locale) },
+							{ key: "current", label: t.currentPeriod, values: revenueValues, color: "#39724b", area: true, format: (value) => formatChartCurrency(value, locale) },
+							{ key: "reservations", label: t.legendReservations, values: reservationValues, color: "#d4a33b", plot: false, format: (value) => formatChartNumber(value, locale) },
+						]}
+					/>
 					<div className="mt-5 flex flex-wrap gap-8"><div><p className="text-xs text-[#777973]">{t.metricRevenue}</p><p className="mt-1 text-lg font-semibold text-[#20221f]">{current.revenue}</p></div><div><p className="text-xs text-[#777973]">{t.metricReservations}</p><p className="mt-1 text-lg font-semibold text-[#20221f]">{current.reservations}</p></div></div>
 				</article>
 
 				<article className="rounded-lg border border-[#e0e0da] bg-white p-5 sm:p-6">
 					<h2 className="text-base font-semibold text-[#20221f]">{t.funnel}</h2>
 					<p className="mt-1 text-sm text-[#777973]">{t.funnelDescription}</p>
-					<div className="mt-6 space-y-5">
-						{[
-							{ name: t.statuses.confirmed, amount: "68%", width: "68%", count: "874", color: "bg-[#39724b]" },
-							{ name: t.statuses.pending, amount: "19%", width: "19%", count: "244", color: "bg-[#d4a33b]" },
-							{ name: t.statuses.completed, amount: "10%", width: "10%", count: "128", color: "bg-[#647c98]" },
-							{ name: t.statuses.cancelled, amount: "3%", width: "3%", count: "38", color: "bg-[#bf6a59]" },
-						].map((status) => <div key={status.name}><div className="mb-2 flex items-center justify-between text-sm"><span className="text-[#4c4e48]">{status.name}<span className="ml-2 text-xs text-[#858680]">{status.count}</span></span><span className="font-semibold text-[#292b27]">{status.amount}</span></div><div className="h-2 overflow-hidden rounded-full bg-[#eeeee9]"><div className={`h-full rounded-full ${status.color}`} style={{ width: status.width }} /></div></div>)}
-					</div>
+					<RadialRings animationKey={`health-${period}`} centerLabel={t.metricCompletion} centerValue={current.completion} items={healthRings.map((ring) => ({ label: t.health[ring.key], percentage: ring.percentage, color: ring.color, detail: `${ring.percentage}%` }))} />
 					<div className="mt-7 border-t border-[#e8e8e2] pt-5"><p className="text-xs font-semibold uppercase tracking-widest text-[#777973]">{t.insight}</p><p className="mt-2 text-sm leading-6 text-[#4c4e48]">{t.insightDescription}</p></div>
 				</article>
 			</section>
@@ -144,19 +152,12 @@ export default function ReportsPage() {
 				<article className="rounded-lg border border-[#e0e0da] bg-white p-5 sm:p-6">
 					<h2 className="text-base font-semibold text-[#20221f]">{t.userActivity}</h2>
 					<p className="mt-1 text-sm text-[#777973]">{t.userActivityDescription}</p>
-					<div className="mt-6 grid gap-5 sm:grid-cols-3">
-						{accountActivity.map((metric) => {
-							const label = t[metric.key];
-							const total = metric.values.reduce((sum, value) => sum + value, 0);
-							const peak = Math.max(...metric.values);
-							return <div key={metric.key}><p className="truncate text-xs font-medium text-[#686a64]">{label}</p><p className="mt-1 text-xl font-semibold text-[#20221f]">{formatChartNumber(total, locale)}</p><div className="admin-chart-grid mt-3 flex h-16 items-end gap-1 border-b border-[#e8e8e2] px-1">{metric.values.map((value, index) => <span key={`${metric.key}-${index}`} title={`${t.chartLabels[periodKeys[period]][index]}: ${value}`} className={`admin-chart-bar min-w-0 flex-1 rounded-t-sm ${metric.color}`} style={{ height: `${Math.max(10, (value / peak) * 100)}%`, animationDelay: `${index * 60}ms` }} />)}</div><div className="mt-2 flex justify-between gap-1 text-[9px] text-[#82837d]">{t.chartLabels[periodKeys[period]].map((labelText) => <span key={`${metric.key}-${labelText}`}>{labelText.replace("Wk ", "")}</span>)}</div></div>;
-						})}
-					</div>
+					<ActivityHeatmap animationKey={`activity-${period}`} columns={t.chartLabels[periodKeys[period]].map((label) => label.replace("Wk ", ""))} rows={accountActivity.map((metric) => ({ key: metric.key, label: t[metric.key], values: [...metric.values], color: metric.color }))} />
 				</article>
 				<article className="rounded-lg border border-[#e0e0da] bg-white p-5 sm:p-6">
 					<h2 className="text-base font-semibold text-[#20221f]">{t.servicePerformance}</h2>
 					<p className="mt-1 text-sm text-[#777973]">{t.servicePerformanceDescription}</p>
-					<div className="mt-5 space-y-4">{servicePerformance.map((service) => <div key={service.key}><div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1"><span className="text-sm font-medium text-[#4c4e48]">{t.services[service.key]}</span><span className="text-xs text-[#777973]">{formatChartNumber(service.bookings, locale)} {t.metricReservations.toLowerCase()} · <strong className="text-[#292b27]">{formatChartCurrency(service.value, locale)}</strong></span></div><div className="h-2 overflow-hidden rounded-full bg-[#eeeee9]"><div className="admin-meter h-full rounded-full bg-[#39724b]" style={{ width: `${(service.value / Math.max(...servicePerformance.map((item) => item.value))) * 100}%`, animationDelay: `${service.bookings}ms` }} /></div></div>)}</div>
+					<LollipopChart color="#39724b" items={servicePerformance.map((service) => ({ key: service.key, label: t.services[service.key], value: service.value, display: formatChartCurrency(service.value, locale), note: `${formatChartNumber(service.bookings, locale)} ${t.metricReservations.toLowerCase()}` }))} />
 				</article>
 			</section>
 

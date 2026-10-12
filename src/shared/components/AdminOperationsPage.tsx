@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { AdminPagination } from "@/shared/components/AdminPagination";
+import { showAdminToast } from "@/features/admin-notification/toast";
 import { useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
 
 type PaymentStatus = "Completed" | "Pending" | "Refunded" | "Failed";
@@ -62,11 +63,12 @@ export function AdminOperationsPage({ kind }: { kind: "transactions" | "disputes
 function TransactionsPage() {
   const { locale, messages } = useAdminLanguage();
   const t = messages.transactions;
-  const [rows] = useState(transactions);
+  const [rows, setRows] = useState(transactions);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<PaymentStatus | "">("");
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Transaction | null>(null);
+  const [refundConfirmationOpen, setRefundConfirmationOpen] = useState(false);
   const filtered = rows.filter((row) => `${row.id} ${row.customer} ${row.provider} ${row.booking}`.toLowerCase().includes(query.trim().toLowerCase()) && (!status || row.status === status));
   const currentPage = Math.min(page, Math.max(1, Math.ceil(filtered.length / pageSize)));
   const visible = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -78,6 +80,15 @@ function TransactionsPage() {
     { label: t.metrics.refunds, value: rows.filter((row) => row.status === "Refunded").length.toString() },
   ];
 
+  function updateTransactionStatus(nextStatus: PaymentStatus) {
+    if (!selected) return;
+    const updated = { ...selected, status: nextStatus };
+    setRows((current) => current.map((row) => row.id === updated.id ? updated : row));
+    setSelected(updated);
+    setRefundConfirmationOpen(false);
+    showAdminToast({ title: nextStatus === "Refunded" ? messages.toast.refundRecorded : messages.toast.paymentUpdated, message: `${updated.id} · ${messages.toast.sampleAction}`, tone: nextStatus === "Refunded" ? "warning" : "success" });
+  }
+
   return (
     <div className="mx-auto max-w-375">
       <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0 flex-1"><PageHeader eyebrow={messages.common.adminWorkspace} title={t.title} description={t.description} /></div><span className="mt-2 rounded-full border border-[#d8d8d1] bg-white px-3 py-1.5 text-xs font-medium text-[#70716b]">{messages.common.sampleData}</span></div>
@@ -87,7 +98,7 @@ function TransactionsPage() {
         <div className="overflow-x-auto"><table className="w-full min-w-220 border-collapse text-left"><thead className="bg-[#f8f8f5] text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]"><tr><th className="px-5 py-3">{t.columns.id}</th><th className="px-4 py-3">{t.columns.customer}</th><th className="px-4 py-3">{t.columns.provider}</th><th className="px-4 py-3">{t.columns.amount}</th><th className="px-4 py-3">{t.columns.method}</th><th className="px-4 py-3">{t.columns.status}</th><th className="px-4 py-3">{t.columns.date}</th><th className="px-5 py-3 text-right">{t.columns.details}</th></tr></thead><tbody className="divide-y divide-[#eeeeea]">{visible.map((row) => <tr key={row.id} className="hover:bg-[#fcfcfa]"><td className="whitespace-nowrap px-5 py-3.5 text-sm font-semibold text-[#292b27]">{row.id}</td><td className="whitespace-nowrap px-4 py-3.5 text-sm text-[#4c4e48]">{row.customer}</td><td className="whitespace-nowrap px-4 py-3.5 text-sm text-[#4c4e48]">{row.provider}</td><td className="whitespace-nowrap px-4 py-3.5 text-sm font-semibold text-[#292b27]">{currency(row.amount, locale)}</td><td className="whitespace-nowrap px-4 py-3.5 text-sm text-[#686a64]">{t.methods[row.method]}</td><td className="whitespace-nowrap px-4 py-3.5"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${paymentStatusClass(row.status)}`}>{t.statuses[row.status]}</span></td><td className="whitespace-nowrap px-4 py-3.5 text-sm text-[#686a64]">{row.date}</td><td className="px-5 py-3.5 text-right"><button type="button" onClick={() => setSelected(row)} className="text-sm font-semibold text-[#39724b] hover:underline">{t.columns.details}</button></td></tr>)}{visible.length === 0 && <tr><td colSpan={8} className="px-5 py-12 text-center text-sm text-[#777973]">{t.noMatches}</td></tr>}</tbody></table></div>
         <AdminPagination page={currentPage} pageSize={pageSize} total={filtered.length} onPageChange={setPage} messages={messages.common} />
       </section>
-      {selected && <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171815]/40 p-4" onClick={() => setSelected(null)}><section role="dialog" aria-modal="true" aria-labelledby="payment-detail-title" className="w-full max-w-lg rounded-lg border border-[#e0e0da] bg-white p-6 shadow-xl" onClick={(event) => event.stopPropagation()}><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#777973]">{selected.id}</p><h2 id="payment-detail-title" className="mt-1 text-xl font-semibold text-[#20221f]">{t.detailsTitle}</h2></div><button type="button" aria-label={messages.common.close} onClick={() => setSelected(null)} className="flex h-8 w-8 items-center justify-center rounded-md text-[#777973] hover:bg-[#f0f0ec]"><X size={17} /></button></div><dl className="mt-5 divide-y divide-[#eeeeea] text-sm">{[[t.reference, selected.booking], [t.columns.customer, selected.customer], [t.columns.provider, selected.provider], [t.columns.amount, currency(selected.amount, locale)], [t.columns.method, t.methods[selected.method]], [t.columns.status, t.statuses[selected.status]], [t.columns.date, selected.date]].map(([label, value]) => <div key={label} className="flex justify-between gap-4 py-3"><dt className="text-[#777973]">{label}</dt><dd className="text-right font-medium text-[#343630]">{value}</dd></div>)}</dl><p className="mt-4 text-xs text-[#858680]">{t.sampleNote}</p></section></div>}
+      {selected && <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171815]/40 p-4" onClick={() => { setSelected(null); setRefundConfirmationOpen(false); }}><section role="dialog" aria-modal="true" aria-labelledby="payment-detail-title" className="w-full max-w-lg rounded-lg border border-[#e0e0da] bg-white p-6 shadow-xl" onClick={(event) => event.stopPropagation()}><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#777973]">{selected.id}</p><h2 id="payment-detail-title" className="mt-1 text-xl font-semibold text-[#20221f]">{t.detailsTitle}</h2></div><button type="button" aria-label={messages.common.close} onClick={() => { setSelected(null); setRefundConfirmationOpen(false); }} className="flex h-8 w-8 items-center justify-center rounded-md text-[#777973] hover:bg-[#f0f0ec]"><X size={17} /></button></div><dl className="mt-5 divide-y divide-[#eeeeea] text-sm">{[[t.reference, selected.booking], [t.columns.customer, selected.customer], [t.columns.provider, selected.provider], [t.columns.amount, currency(selected.amount, locale)], [t.columns.method, t.methods[selected.method]], [t.columns.status, t.statuses[selected.status]], [t.columns.date, selected.date]].map(([label, value]) => <div key={label} className="flex justify-between gap-4 py-3"><dt className="text-[#777973]">{label}</dt><dd className="text-right font-medium text-[#343630]">{value}</dd></div>)}</dl><div className="mt-5 flex flex-wrap items-center gap-2">{selected.status === "Pending" && <button type="button" onClick={() => updateTransactionStatus("Completed")} className="h-9 rounded-md bg-[#39724b] px-3 text-sm font-semibold text-white">{t.markCompleted}</button>}{selected.status === "Completed" && !refundConfirmationOpen && <button type="button" onClick={() => setRefundConfirmationOpen(true)} className="h-9 rounded-md border border-[#d8d8d1] px-3 text-sm font-semibold text-[#343630] hover:bg-[#f7f7f3]">{t.recordRefund}</button>}{refundConfirmationOpen && <div className="flex w-full flex-wrap items-center gap-2 rounded-md border border-[#e5d9c3] bg-[#fbf7ef] p-3"><p className="mr-auto text-sm text-[#685538]">{t.confirmRefund}</p><button type="button" onClick={() => setRefundConfirmationOpen(false)} className="h-8 rounded-md border border-[#d8d8d1] px-3 text-sm font-semibold text-[#343630]">{t.cancel}</button><button type="button" onClick={() => updateTransactionStatus("Refunded")} className="h-8 rounded-md bg-[#9c5145] px-3 text-sm font-semibold text-white">{t.confirm}</button></div>}</div><p className="mt-4 text-xs text-[#858680]">{t.sampleNote}</p></section></div>}
     </div>
   );
 }
@@ -112,6 +123,7 @@ function DisputesPage() {
   function updateStatus(dispute: Dispute, nextStatus: DisputeStatus) {
     setRows((current) => current.map((row) => row.id === dispute.id ? { ...row, status: nextStatus } : row));
     setSelected({ ...dispute, status: nextStatus });
+    showAdminToast({ title: messages.toast.disputeUpdated, message: `${dispute.id} · ${t.statuses[nextStatus]}` });
   }
 
   return (

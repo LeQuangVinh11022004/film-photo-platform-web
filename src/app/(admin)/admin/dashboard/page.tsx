@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { ArrowUpRight, Clock3, Star } from "lucide-react";
 import { distributeTotal, formatChartCurrency, formatChartNumber } from "@/shared/utils/adminCharts";
 import { useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
+import { AdminNotificationCenter, type DashboardNotification } from "@/shared/components/AdminNotificationCenter";
+import { AreaTrendChart, ProportionTiles } from "@/shared/components/AdminCharts";
 
 type Period = "7d" | "30d" | "90d";
 
@@ -34,11 +37,23 @@ const activity = [
 	{ initials: "RP", name: "Rory Patel", detail: "equipment", time: 3, tone: "bg-[#e6ebf2] text-[#526784]" },
 ];
 
-const attentionItems = [
-	{ title: "providerReview", count: "08", href: "/users", tone: "text-[#9a6a20] bg-[#f8edd9]" },
-	{ title: "reservationSupport", count: "12", href: "/reports", tone: "text-[#a34d42] bg-[#f5e4e1]" },
-	{ title: "newStudios", count: "05", href: "/users", tone: "text-[#39724b] bg-[#e5f0e8]" },
-];
+const operationsQueue = [
+	{ id: "provider-review", title: "providerReview", detail: "providerReviewDetail", age: "19h", href: "/users", priority: "high" },
+	{ id: "open-disputes", title: "openDisputes", detail: "openDisputesDetail", age: "4h", href: "/disputes", priority: "urgent" },
+	{ id: "pending-payments", title: "pendingPayments", detail: "pendingPaymentsDetail", age: "2h", href: "/transactions", priority: "normal" },
+] as const;
+
+const serviceMix = [
+	{ key: "studios", share: 54, color: "#39724b" },
+	{ key: "equipment", share: 29, color: "#d4a33b" },
+	{ key: "packages", share: 17, color: "#647c98" },
+] as const;
+
+const priorityStyles = {
+	urgent: "border-l-[#bf6a59] bg-[#f5e4e1]",
+	high: "border-l-[#d4a33b] bg-[#f8edd9]",
+	normal: "border-l-[#647c98] bg-[#e6ebf2]",
+};
 
 function donutSegmentPath(startPercentage: number, endPercentage: number) {
 	const center = 90;
@@ -74,12 +89,20 @@ export default function AdminDashboardPage() {
 	const current = periodData[period];
 	const reservationValues = distributeTotal(Number(current.bookings.replaceAll(",", "")), current.bars);
 	const revenueValues = distributeTotal(Number(current.revenue.replace(/[^\d]/g, "")), current.bars);
+	const totalRevenue = Number(current.revenue.replace(/[^\d]/g, ""));
+	const averageBookingValue = Number(current.revenue.replace(/[^\d]/g, "")) / Number(current.bookings.replaceAll(",", ""));
+	const averageBookingLabel = new Intl.NumberFormat(locale === "vi" ? "vi-VN" : "en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(averageBookingValue);
 
 	const metrics = [
-		{ label: t.metricRevenue, value: current.revenue, change: "+8.6%", note: t.previousPeriod, color: "text-[#39724b]", trend: metricTrends[0] },
-		{ label: t.metricReservations, value: current.bookings, change: "+12.8%", note: t.previousPeriod, color: "text-[#39724b]", trend: metricTrends[1] },
-		{ label: t.metricStudios, value: "86", change: "+5.2%", note: t.studiosAdded, color: "text-[#39724b]", trend: metricTrends[2] },
-		{ label: t.metricMembers, value: "2,408", change: "+16.4%", note: t.membersJoined, color: "text-[#39724b]", trend: metricTrends[3] },
+		{ kind: "trend", label: t.metricAverageBooking, value: averageBookingLabel, note: t.averageBookingNote, change: "+4.2%", trend: metricTrends[0] },
+		{ kind: "meter", label: t.metricProviderResponse, value: "92%", note: t.providerResponseNote, progress: 92 },
+		{ kind: "rating", label: t.metricListingQuality, value: "4.86", note: t.listingQualityNote },
+		{ kind: "bars", label: t.metricNewProviders, value: "18", note: t.newProvidersNote, bars: [28, 43, 34, 62, 48, 78, 58] },
+	] as const;
+	const dashboardNotifications: DashboardNotification[] = [
+		{ id: "dispute", title: t.alertDisputeTitle, detail: t.alertDisputeDetail, time: t.alertDisputeTime, href: "/disputes" },
+		{ id: "provider", title: t.alertProviderTitle, detail: t.alertProviderDetail, time: t.alertProviderTime, href: "/users" },
+		{ id: "payment", title: t.alertPaymentTitle, detail: t.alertPaymentDetail, time: t.alertPaymentTime, href: "/transactions" },
 	];
 	const statusSegments = [
 		{ label: t.statuses.confirmed, percentage: 68, color: "#39724b" },
@@ -114,6 +137,7 @@ export default function AdminDashboardPage() {
 				</div>
 				<div className="flex flex-wrap items-center gap-3">
 					<span className="rounded-full border border-[#d8d8d1] bg-white px-3 py-1.5 text-xs font-medium text-[#70716b]">{messages.common.sampleData}</span>
+					<AdminNotificationCenter notifications={dashboardNotifications} />
 					<div className="inline-flex rounded-lg border border-[#d8d8d1] bg-white p-1" role="group" aria-label={t.periodLabel}>
 						{(["7d", "30d", "90d"] as Period[]).map((item) => (
 							<button
@@ -135,8 +159,13 @@ export default function AdminDashboardPage() {
 					<article key={metric.label} style={{ animationDelay: `${metricIndex * 90}ms` }} className="admin-metric group relative overflow-hidden rounded-lg border border-[#e0e0da] bg-white p-5 transition-transform hover:-translate-y-0.5 hover:shadow-md">
 						<p className="text-sm font-medium text-[#686a64]">{metric.label}</p>
 						<p className="mt-3 text-[28px] font-semibold leading-none text-[#20221f]">{metric.value}</p>
-						<p className="mt-3 max-w-[72%] text-xs text-[#777973]"><span className={`mr-1.5 font-semibold ${metric.color}`}>{metric.change}</span>{metric.note}</p>
-						<svg aria-hidden="true" viewBox="0 0 100 36" className="admin-sparkline pointer-events-none absolute bottom-4 right-4 h-9 w-20 opacity-60 transition-opacity group-hover:opacity-100"><polyline points={metric.trend.map((point, index) => `${index * 16.5},${34 - point * 0.62}`).join(" ")} fill="none" stroke="#39724b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+						<div className="mt-4 flex h-8 items-center">
+							{metric.kind === "trend" && <><svg aria-hidden="true" viewBox="0 0 100 36" className="admin-sparkline h-8 w-20"><polyline points={metric.trend.map((point, index) => `${index * 16.5},${34 - point * 0.62}`).join(" ")} fill="none" stroke="#39724b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg><span className="ml-2 text-xs font-semibold text-[#39724b]">{metric.change}</span></>}
+							{metric.kind === "meter" && <div className="w-full"><div role="progressbar" aria-label={metric.label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={metric.progress} className="admin-meter-track h-2 overflow-hidden rounded-full bg-[#e8e8e2]"><div className="admin-meter h-full rounded-full bg-[#39724b]" style={{ width: `${metric.progress}%` }} /></div></div>}
+							{metric.kind === "rating" && <div aria-label={`${metric.value} out of 5`} className="flex items-center gap-1 text-[#d4a33b]">{Array.from({ length: 5 }, (_, index) => <Star key={index} size={15} fill="currentColor" strokeWidth={1.5} />)}</div>}
+							{metric.kind === "bars" && <div aria-hidden="true" className="flex h-full items-end gap-1">{metric.bars.map((height, index) => <span key={index} className="w-2 rounded-t-sm bg-[#647c98]" style={{ height: `${height}%` }} />)}</div>}
+						</div>
+						<p className="mt-2 text-xs leading-5 text-[#777973]">{metric.note}</p>
 					</article>
 				))}
 			</section>
@@ -149,29 +178,18 @@ export default function AdminDashboardPage() {
 								<p className="mt-1 text-sm text-[#777973]">{t.performanceDescription} · {messages.common.periods[periodKey]}</p>
 						</div>
 						<div className="flex items-center gap-4 text-xs text-[#686a64]">
-								<span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm bg-[#39724b]" />{t.legendReservations}</span>
-								<span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-sm bg-[#d4a33b]" />{t.legendValue}</span>
+								<span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#39724b]" />{t.legendValue}</span>
 						</div>
 					</div>
-					<div className="admin-chart-grid mt-7 grid h-48 grid-cols-7 items-end gap-2 border-b border-[#e8e8e2] px-1 sm:gap-4">
-						{current.bars.map((height, index) => (
-							<div key={`${period}-${index}`} className="flex h-full min-w-0 flex-col items-center justify-end gap-1">
-								<div className="flex h-[68%] w-full max-w-12 items-end justify-center gap-1">
-									<span title={`${t.legendReservations}: ${formatChartNumber(reservationValues[index], locale)}`} aria-label={`${t.legendReservations}: ${formatChartNumber(reservationValues[index], locale)}`} className="admin-chart-bar w-2/5 rounded-t-sm bg-[#39724b]" style={{ height: `${height}%`, animationDelay: `${index * 70}ms` }} />
-									<span title={`${t.legendValue}: ${formatChartCurrency(revenueValues[index], locale)}`} aria-label={`${t.legendValue}: ${formatChartCurrency(revenueValues[index], locale)}`} className="admin-chart-bar w-2/5 rounded-t-sm bg-[#d4a33b]" style={{ height: `${Math.max(16, height - 17)}%`, animationDelay: `${index * 70 + 45}ms` }} />
-								</div>
-								<div className="flex min-h-10 w-full flex-col items-center justify-end leading-tight">
-									<span title={`${t.legendReservations}: ${formatChartNumber(reservationValues[index], locale)}`} className="max-w-full truncate text-[9px] font-semibold text-[#39724b]">{formatChartNumber(reservationValues[index], locale)}</span>
-									<span title={`${t.legendValue}: ${formatChartCurrency(revenueValues[index], locale)}`} className="max-w-full truncate text-[9px] font-semibold text-[#9a6a20]">{formatChartCurrency(revenueValues[index], locale)}</span>
-									<span className="mt-0.5 max-w-full truncate text-[10px] text-[#82837d] sm:text-xs">{t.chartLabels[periodKey][index]}</span>
-								</div>
-							</div>
-						))}
-					</div>
-					<div className="mt-5 flex flex-wrap gap-x-8 gap-y-3">
-							<div><p className="text-xs text-[#777973]">{t.metricRevenue}</p><p className="mt-1 text-lg font-semibold text-[#20221f]">{current.revenue}</p></div>
-							<div><p className="text-xs text-[#777973]">{t.metricReservations}</p><p className="mt-1 text-lg font-semibold text-[#20221f]">{current.bookings}</p></div>
-					</div>
+					<AreaTrendChart
+						animationKey={`dashboard-${period}`}
+						ariaLabel={t.performanceTitle}
+						labels={t.chartLabels[periodKey]}
+						series={[
+							{ key: "value", label: t.legendValue, values: revenueValues, color: "#39724b", area: true, format: (value) => formatChartCurrency(value, locale) },
+							{ key: "reservations", label: t.legendReservations, values: reservationValues, color: "#d4a33b", plot: false, format: (value) => formatChartNumber(value, locale) },
+						]}
+					/>
 				</article>
 
 				<article className="rounded-lg border border-[#e0e0da] bg-white p-5 sm:p-6">
@@ -226,7 +244,7 @@ export default function AdminDashboardPage() {
 				</article>
 			</section>
 
-			<section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(310px,1fr)]">
+			<section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(230px,0.8fr)_minmax(280px,1fr)]">
 				<article className="min-w-0 rounded-lg border border-[#e0e0da] bg-white">
 					<div className="flex items-center justify-between gap-3 border-b border-[#e8e8e2] px-5 py-4 sm:px-6">
 						<div><h2 className="text-base font-semibold text-[#20221f]">{t.recentTitle}</h2><p className="mt-1 text-sm text-[#777973]">{t.recentDescription}</p></div>
@@ -243,21 +261,34 @@ export default function AdminDashboardPage() {
 					</ul>
 				</article>
 
-				<article className="rounded-lg border border-[#e0e0da] bg-white">
-					<div className="border-b border-[#e8e8e2] px-5 py-4 sm:px-6"><h2 className="text-base font-semibold text-[#20221f]">{t.needsTitle}</h2><p className="mt-1 text-sm text-[#777973]">{t.needsDescription}</p></div>
-					<ul className="divide-y divide-[#eeeeea]">
-						{attentionItems.map((item) => (
-							<li key={item.title}>
-								<Link href={item.href} className="flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-[#fafaf8] sm:px-6">
-									<span className="text-sm font-medium text-[#444640]">{t[item.title as "providerReview" | "reservationSupport" | "newStudios"]}</span>
-									<span className={`flex h-8 min-w-9 items-center justify-center rounded-md px-2 text-sm font-semibold ${item.tone}`}>{item.count}</span>
-								</Link>
-							</li>
-						))}
-					</ul>
-					<div className="flex flex-wrap gap-2 p-5 sm:px-6">
-						<Link href="/users" className="rounded-md bg-[#20221f] px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#393b36]">{t.manageUsers}</Link>
-						<Link href="/reports" className="rounded-md border border-[#d8d8d1] px-3.5 py-2 text-xs font-semibold text-[#454741] transition-colors hover:bg-[#f7f7f3]">{t.openReports}</Link>
+				<article className="rounded-lg border border-[#e0e0da] bg-white p-5 sm:p-6">
+					<div><h2 className="text-base font-semibold text-[#20221f]">{t.serviceMixTitle}</h2><p className="mt-1 text-sm text-[#777973]">{t.serviceMixDescription}</p></div>
+					<ProportionTiles items={serviceMix.map((service) => ({ label: t.serviceMix[service.key], share: service.share, value: formatChartCurrency(Math.round(totalRevenue * service.share / 100), locale), color: service.color }))} key={period} />
+					<p className="mt-5 border-t border-[#e8e8e2] pt-4 text-xs text-[#777973]">{messages.common.sampleData} · {messages.common.periods[periodKey]}</p>
+				</article>
+
+				<article className="overflow-hidden rounded-lg border border-[#e0e0da] bg-white">
+					<div className="flex items-start justify-between gap-3 border-b border-[#e8e8e2] px-5 py-4 sm:px-6">
+						<div><h2 className="text-base font-semibold text-[#20221f]">{t.opsTitle}</h2><p className="mt-1 text-sm text-[#777973]">{t.opsDescription}</p></div>
+						<span className="shrink-0 rounded-md bg-[#f5e4e1] px-2 py-1 text-xs font-semibold text-[#a34d42]">{operationsQueue.length} {t.openItems}</span>
+					</div>
+					<ol className="space-y-3 p-4 sm:p-5">
+						{operationsQueue.map((item, index) => <li key={item.id}>
+							<div className={`rounded-r-md border-l-[3px] p-3.5 ${priorityStyles[item.priority]}`}>
+								<div className="flex items-start justify-between gap-3">
+									<div className="flex min-w-0 items-start gap-2.5">
+										<span className="mt-0.5 text-xs font-bold tabular-nums opacity-70">0{index + 1}</span>
+										<div className="min-w-0"><p className="text-sm font-semibold text-[#292b27]">{t[item.title]}</p><p className="mt-1 text-xs leading-5 text-[#686a64]">{t[item.detail]}</p></div>
+									</div>
+									<span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-[#686a64]"><Clock3 size={12} />{item.age}</span>
+								</div>
+								<Link href={item.href} className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-[#20221f] hover:underline">{t.reviewItem}<ArrowUpRight size={13} /></Link>
+							</div>
+						</li>)}
+					</ol>
+					<div className="flex items-center justify-between gap-3 border-t border-[#e8e8e2] px-5 py-3 sm:px-6">
+						<span className="text-xs text-[#777973]">{messages.common.sampleData}</span>
+						<Link href="/reports" className="inline-flex items-center gap-1 text-xs font-semibold text-[#39724b] hover:underline">{t.openReports}<ArrowUpRight size={13} /></Link>
 					</div>
 				</article>
 			</section>
