@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Film Photo Web",
   description: "Platform for creative spaces, equipment and service reservations.",
+  icons: {
+    icon: [{ url: "/images/auth/logo.jpg", type: "image/jpeg" }],
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

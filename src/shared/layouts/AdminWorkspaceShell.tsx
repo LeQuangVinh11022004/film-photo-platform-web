@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { Bell, ChevronDown, Layers3, LogOut, Menu, Monitor, Moon, Palette, PanelLeftClose, PanelLeftOpen, Search, Shield, Sun, UserRound } from "lucide-react";
 import { Sidebar } from "@/shared/components/Sidebar";
 import { AdminLoadingState } from "@/shared/components/AdminLoadingState";
+import { AdminToastHost } from "@/shared/components/AdminToastHost";
+import { showAdminToast } from "@/features/admin-notification/toast";
 import { AdminLanguageProvider, useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
 import { AdminProfileProvider, useAdminProfile } from "@/shared/providers/AdminProfileProvider";
 import type { AdminLocale } from "@/shared/i18n/adminMessages";
@@ -54,6 +56,7 @@ function AdminToolbar({ sidebarCollapsed, theme, onMenuClick, onToggleSidebar, o
   const pages = [
     { label: messages.nav.dashboard, href: "/admin/dashboard" },
     { label: messages.nav.users, href: "/users" },
+    { label: messages.nav.content, href: "/content" },
     { label: messages.nav.transactions, href: "/transactions" },
     { label: messages.nav.disputes, href: "/disputes" },
     { label: messages.nav.reports, href: "/reports" },
@@ -84,9 +87,12 @@ function AdminToolbar({ sidebarCollapsed, theme, onMenuClick, onToggleSidebar, o
   }
 
   function logout() {
-    clearSession();
     setAccountMenuOpen(false);
-    router.replace("/login");
+    showAdminToast({ title: messages.toast.signedOut, message: messages.toast.signedOutDetail, tone: "info" });
+    window.setTimeout(() => {
+      clearSession();
+      router.replace("/login");
+    }, 900);
   }
 
   return (
@@ -181,7 +187,7 @@ function AdminWorkspaceContent({ children }: { children: ReactNode }) {
     <AdminThemeContext.Provider value={{ theme, setTheme: updateAdminTheme }}>
     <div data-admin-theme={theme} onClickCapture={showLinkLoading} className="admin-workspace min-h-screen bg-[#f3f4f6] md:flex">
       {menuOpen && <button type="button" aria-label={messages.common.closeMenu} onClick={() => setMenuOpen(false)} className="fixed inset-0 z-30 bg-slate-950/30 md:hidden" />}
-      <div className={`fixed inset-y-0 left-0 z-40 w-72 max-w-[86vw] transition-all duration-200 md:sticky md:top-0 md:block md:shrink-0 ${sidebarCollapsed ? "md:w-18" : "md:w-64"} ${menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
+      <div className={`fixed inset-y-0 left-0 z-40 w-72 max-w-[86vw] transition-all duration-200 md:sticky md:top-0 md:block md:h-dvh md:shrink-0 md:self-start ${sidebarCollapsed ? "md:w-18" : "md:w-64"} ${menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
         <Sidebar role="admin" collapsed={sidebarCollapsed && !menuOpen} onNavigate={() => setMenuOpen(false)} />
       </div>
       <div className="min-w-0 flex-1 p-2 sm:p-3">
@@ -190,6 +196,7 @@ function AdminWorkspaceContent({ children }: { children: ReactNode }) {
           <main aria-busy={isLoading} className="relative min-w-0 p-4 sm:p-6 lg:p-8">{isLoading && <AdminLoadingState label={messages.common.loading} mode="overlay" />}{children}</main>
         </div>
       </div>
+      <AdminToastHost />
     </div>
     </AdminThemeContext.Provider>
   );

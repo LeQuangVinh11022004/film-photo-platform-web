@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const stats = [
   { label: "Studio & space booked", value: "2.4k+" },
@@ -87,9 +88,7 @@ export default function Home() {
       <header className="landing-header mx-auto max-w-7xl px-5 pb-8 pt-6 sm:px-8 lg:px-10">
         <div className="reveal reveal-delay-1 flex items-center justify-between rounded-full border border-[#e8e3d7] bg-white/80 px-4 py-3 shadow-[0_10px_30px_rgba(27,29,24,0.04)] backdrop-blur-sm sm:px-6">
           <Link href="/" className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d6a83f] bg-[#f8edd9] text-xs font-bold text-[#171715]">
-              FP
-            </span>
+            <Image src="/images/auth/logo.jpg" alt="" width={500} height={500} className="h-11 w-11 rounded-md border border-[#e8e3d7] bg-white object-contain" />
             <span className="text-sm font-semibold tracking-[0.18em] text-[#171715]">FILM PHOTO</span>
           </Link>
 
@@ -420,7 +419,7 @@ export default function Home() {
         <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 text-sm text-[#5e5b54] sm:px-8 lg:grid-cols-[1.3fr_0.8fr_0.8fr] lg:px-10">
           <div>
             <div className="flex items-center gap-3 font-semibold tracking-[0.18em] text-[#171715]">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#d6a83f] bg-[#f8edd9] text-[10px]">FP</span>
+              <Image src="/images/auth/logo.jpg" alt="" width={500} height={500} className="h-14 w-14 rounded-md border border-[#e8e3d7] bg-white object-contain" />
               FILM PHOTO
             </div>
             <p className="mt-4 max-w-xs text-base leading-7 text-[#595752]">

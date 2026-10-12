@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 
 type AuthPageLayoutProps = {
@@ -32,8 +33,8 @@ export function AuthPageLayout({
     >
       <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
       <section className="relative z-10 w-full max-w-140 rounded-[18px] border border-white/35 bg-white/70 px-6 py-10 shadow-[0_18px_40px_rgba(12,12,10,0.18)] backdrop-blur-[4px] sm:px-12 sm:py-14">
-        <Link href="/" className="mx-auto mb-8 flex w-fit items-center gap-2.5 text-sm font-bold tracking-[0.02em] text-[#171715]">
-          <span aria-hidden="true" className="h-7 w-px bg-[#d6a83f]" />
+        <Link href="/" className="mx-auto mb-8 flex w-fit items-center gap-3 text-sm font-bold tracking-[0.02em] text-[#171715]">
+          <Image src="/images/auth/logo.jpg" alt="" width={500} height={500} className="h-14 w-14 rounded-md object-contain" />
           <span>FILM PHOTO</span>
         </Link>
         <header className="text-center">
