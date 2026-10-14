@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import ApkDownloadQr from "@/shared/components/ApkDownloadQr";
 
 const stats = [
   { label: "Studio & space booked", value: "2.4k+" },
@@ -411,6 +412,26 @@ export default function Home() {
                 Sign in
               </Link>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="get-the-app" className="mx-auto max-w-7xl px-5 pb-20 sm:px-8 lg:px-10">
+        <div className="flex flex-col items-center gap-10 rounded-[30px] border border-[#e7e1d3] bg-white px-6 py-10 shadow-[0_18px_45px_rgba(13,13,13,0.06)] sm:px-8 lg:flex-row lg:justify-between lg:px-12">
+          <div className="max-w-xl text-center lg:text-left">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#a5812f]">Android app</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[#171715] sm:text-4xl">
+              Get Film Photo on your phone.
+            </h2>
+            <p className="mt-4 text-base leading-7 text-[#595752]">
+              Scan the QR code with your Android device to download the APK and install the app directly.
+              You may need to allow installs from unknown sources once.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-[#ece6d8] bg-[#faf8f1] p-6">
+            <ApkDownloadQr size={180} className="mx-auto" />
+            <p className="mt-4 text-center text-xs font-semibold uppercase tracking-[0.18em] text-[#8a867c]">Scan to download APK</p>
           </div>
         </div>
       </section>
