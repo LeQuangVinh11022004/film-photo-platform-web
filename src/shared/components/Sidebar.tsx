@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Aperture, Bug, CalendarDays, Camera, ChartNoAxesCombined, ClipboardCheck, CreditCard, LayoutDashboard, MessageSquareWarning, Package, Settings2, UsersRound, type LucideIcon } from "lucide-react";
+import { Aperture, Bug, Building2, CalendarDays, Camera, ChartNoAxesCombined, ClipboardCheck, CreditCard, LayoutDashboard, MessageSquareWarning, Package, Settings2, UsersRound, type LucideIcon } from "lucide-react";
 import { useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
 import { useAdminProfile } from "@/shared/providers/AdminProfileProvider";
 import { useProviderLanguage } from "../providers/ProviderLanguageProvider";
@@ -12,6 +12,7 @@ const iconByPath: Record<string, LucideIcon> = {
   "/admin/dashboard": LayoutDashboard,
   "/moderator/dashboard": LayoutDashboard,
   "/users": UsersRound,
+  "/providers": Building2,
   "/content": ClipboardCheck,
   "/transactions": CreditCard,
   "/disputes": MessageSquareWarning,
@@ -47,6 +48,7 @@ export function Sidebar({ role, collapsed = false, onNavigate }: { role: "provid
     ? [
         { label: adminMessages.nav.dashboard, href: "/admin/dashboard" },
         { label: adminMessages.nav.users, href: "/users" },
+        { label: adminMessages.nav.providers, href: "/providers" },
         { label: adminMessages.nav.content, href: "/content" },
         { label: adminMessages.nav.transactions, href: "/transactions" },
         { label: adminMessages.nav.disputes, href: "/disputes" },

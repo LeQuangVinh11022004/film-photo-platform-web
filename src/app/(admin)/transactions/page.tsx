@@ -1,5 +1,5 @@
-import { AdminOperationsPage } from "@/shared/components/AdminOperationsPage";
+import { AdminTransactionsPage } from "@/shared/components/AdminTransactionsPage";
 
 export default function TransactionsPage() {
-  return <AdminOperationsPage kind="transactions" />;
+  return <AdminTransactionsPage />;
 }

@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { ArrowUpRight, Clock3, Star } from "lucide-react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import { ArrowUpRight, Clock3 } from "lucide-react";
 import { distributeTotal, formatChartCurrency, formatChartNumber } from "@/shared/utils/adminCharts";
 import { useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
 import { AdminNotificationCenter, type DashboardNotification } from "@/shared/components/AdminNotificationCenter";
 import { AreaTrendChart, ProportionTiles } from "@/shared/components/AdminCharts";
+import { getAdminDashboard } from "@/features/admin-dashboard/api";
+import type { AdminDashboardStats } from "@/features/admin-dashboard/types";
 
 type Period = "7d" | "30d" | "90d";
 
@@ -27,8 +30,6 @@ const periodData: Record<Period, { bookings: string; revenue: string; bars: numb
 		bars: [38, 54, 62, 48, 72, 84, 96],
 	},
 };
-
-const metricTrends = [[18, 24, 21, 31, 27, 38, 44], [22, 19, 30, 27, 36, 32, 46], [16, 20, 19, 25, 23, 34, 39], [14, 18, 26, 24, 35, 38, 48]];
 
 const activity = [
 	{ initials: "MC", name: "Maya Chen", detail: "booking", time: 0, tone: "bg-[#e5f0e8] text-[#39724b]" },
@@ -83,22 +84,34 @@ function donutSegmentPath(startPercentage: number, endPercentage: number) {
 export default function AdminDashboardPage() {
 	const [period, setPeriod] = useState<Period>("30d");
 	const [hoveredStatus, setHoveredStatus] = useState<string | null>(null);
+	const [dashboard, setDashboard] = useState<AdminDashboardStats | null>(null);
+	const [dashboardError, setDashboardError] = useState("");
 	const { locale, messages } = useAdminLanguage();
 	const t = messages.dashboard;
+	useEffect(() => {
+		let cancelled = false;
+		getAdminDashboard()
+			.then((data) => { if (!cancelled) setDashboard(data); })
+			.catch((error: unknown) => {
+				if (cancelled) return;
+				if (axios.isAxiosError(error)) {
+					const data = error.response?.data as { message?: string } | undefined;
+					setDashboardError(data?.message ?? (error.response ? "Could not load dashboard data." : "Cannot reach the backend. Check that the API is running."));
+				} else setDashboardError("Could not load dashboard data.");
+			});
+		return () => { cancelled = true; };
+	}, []);
 	const periodKey = period === "7d" ? "d7" : period === "30d" ? "d30" : "d90";
 	const current = periodData[period];
 	const reservationValues = distributeTotal(Number(current.bookings.replaceAll(",", "")), current.bars);
 	const revenueValues = distributeTotal(Number(current.revenue.replace(/[^\d]/g, "")), current.bars);
 	const totalRevenue = Number(current.revenue.replace(/[^\d]/g, ""));
-	const averageBookingValue = Number(current.revenue.replace(/[^\d]/g, "")) / Number(current.bookings.replaceAll(",", ""));
-	const averageBookingLabel = new Intl.NumberFormat(locale === "vi" ? "vi-VN" : "en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(averageBookingValue);
-
-	const metrics = [
-		{ kind: "trend", label: t.metricAverageBooking, value: averageBookingLabel, note: t.averageBookingNote, change: "+4.2%", trend: metricTrends[0] },
-		{ kind: "meter", label: t.metricProviderResponse, value: "92%", note: t.providerResponseNote, progress: 92 },
-		{ kind: "rating", label: t.metricListingQuality, value: "4.86", note: t.listingQualityNote },
-		{ kind: "bars", label: t.metricNewProviders, value: "18", note: t.newProvidersNote, bars: [28, 43, 34, 62, 48, 78, 58] },
-	] as const;
+	const liveMetrics = [
+		{ label: t.liveTotalUsers, value: dashboard?.totalUsers },
+		{ label: t.liveActiveUsers, value: dashboard?.activeUsers },
+		{ label: t.liveTotalBookings, value: dashboard?.totalBookings },
+		{ label: t.livePendingBookings, value: dashboard?.pendingBookings },
+	];
 	const dashboardNotifications: DashboardNotification[] = [
 		{ id: "dispute", title: t.alertDisputeTitle, detail: t.alertDisputeDetail, time: t.alertDisputeTime, href: "/disputes" },
 		{ id: "provider", title: t.alertProviderTitle, detail: t.alertProviderDetail, time: t.alertProviderTime, href: "/users" },
@@ -136,7 +149,7 @@ export default function AdminDashboardPage() {
 					<p className="mt-2 text-sm text-[#6b6d67]">{t.description}</p>
 				</div>
 				<div className="flex flex-wrap items-center gap-3">
-					<span className="rounded-full border border-[#d8d8d1] bg-white px-3 py-1.5 text-xs font-medium text-[#70716b]">{messages.common.sampleData}</span>
+					<span className="rounded-full border border-[#cfe1d4] bg-[#edf5ef] px-3 py-1.5 text-xs font-medium text-[#39724b]">{dashboard ? t.liveStats : messages.common.loading}</span>
 					<AdminNotificationCenter notifications={dashboardNotifications} />
 					<div className="inline-flex rounded-lg border border-[#d8d8d1] bg-white p-1" role="group" aria-label={t.periodLabel}>
 						{(["7d", "30d", "90d"] as Period[]).map((item) => (
@@ -154,18 +167,13 @@ export default function AdminDashboardPage() {
 				</div>
 			</header>
 
+			{dashboardError && <p role="alert" className="mb-4 rounded-md border border-[#f0d3cf] bg-[#fdf1ef] px-4 py-3 text-sm text-[#7d372f]">{dashboardError}</p>}
 			<section aria-label="Platform metrics" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-				{metrics.map((metric, metricIndex) => (
-					<article key={metric.label} style={{ animationDelay: `${metricIndex * 90}ms` }} className="admin-metric group relative overflow-hidden rounded-lg border border-[#e0e0da] bg-white p-5 transition-transform hover:-translate-y-0.5 hover:shadow-md">
+				{liveMetrics.map((metric, metricIndex) => (
+					<article key={metric.label} style={{ animationDelay: `${metricIndex * 90}ms` }} className="admin-metric rounded-lg border border-[#e0e0da] bg-white p-5">
 						<p className="text-sm font-medium text-[#686a64]">{metric.label}</p>
-						<p className="mt-3 text-[28px] font-semibold leading-none text-[#20221f]">{metric.value}</p>
-						<div className="mt-4 flex h-8 items-center">
-							{metric.kind === "trend" && <><svg aria-hidden="true" viewBox="0 0 100 36" className="admin-sparkline h-8 w-20"><polyline points={metric.trend.map((point, index) => `${index * 16.5},${34 - point * 0.62}`).join(" ")} fill="none" stroke="#39724b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg><span className="ml-2 text-xs font-semibold text-[#39724b]">{metric.change}</span></>}
-							{metric.kind === "meter" && <div className="w-full"><div role="progressbar" aria-label={metric.label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={metric.progress} className="admin-meter-track h-2 overflow-hidden rounded-full bg-[#e8e8e2]"><div className="admin-meter h-full rounded-full bg-[#39724b]" style={{ width: `${metric.progress}%` }} /></div></div>}
-							{metric.kind === "rating" && <div aria-label={`${metric.value} out of 5`} className="flex items-center gap-1 text-[#d4a33b]">{Array.from({ length: 5 }, (_, index) => <Star key={index} size={15} fill="currentColor" strokeWidth={1.5} />)}</div>}
-							{metric.kind === "bars" && <div aria-hidden="true" className="flex h-full items-end gap-1">{metric.bars.map((height, index) => <span key={index} className="w-2 rounded-t-sm bg-[#647c98]" style={{ height: `${height}%` }} />)}</div>}
-						</div>
-						<p className="mt-2 text-xs leading-5 text-[#777973]">{metric.note}</p>
+						<p className="mt-3 text-[28px] font-semibold leading-none text-[#20221f]">{metric.value?.toLocaleString(locale === "vi" ? "vi-VN" : "en-US") ?? "—"}</p>
+						<p className="mt-4 text-xs leading-5 text-[#777973]">{t.liveStatsNote}</p>
 					</article>
 				))}
 			</section>

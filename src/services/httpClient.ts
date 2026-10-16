@@ -1,5 +1,6 @@
 import axios from "axios";
 import { API_BASE_URL } from "@/services/config";
+import { getAuthToken } from "@/services/authToken";
 import { startApiRequest } from "@/services/loadingState";
 
 export const httpClient = axios.create({
@@ -10,6 +11,11 @@ export const httpClient = axios.create({
 const releaseByRequest = new WeakMap<object, () => void>();
 
 httpClient.interceptors.request.use((config) => {
+  const token = getAuthToken();
+  if (token && !config.headers.Authorization) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
   if (typeof window !== "undefined") releaseByRequest.set(config, startApiRequest());
   return config;
 });

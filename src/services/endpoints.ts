@@ -14,4 +14,13 @@ export const endpoints = {
   adminContent: "/admin/content",
   reports: "/reports",
   adminNotifications: "/admin/notifications",
+  admin: {
+    auth: {
+      login: "/admin/auth/login",
+    },
+    dashboard: "/admin/dashboard",
+    bookings: "/admin/bookings",
+    providers: "/admin/providers",
+    users: "/admin/users",
+  },
 } as const;
