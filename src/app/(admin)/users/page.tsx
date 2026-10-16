@@ -1,16 +1,20 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { Ban, Check, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
+import { useEffect, useState, type FormEvent } from "react";
+import axios from "axios";
+import { Ban, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { AdminPagination } from "@/shared/components/AdminPagination";
 import { showAdminToast } from "@/features/admin-notification/toast";
 import { useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
 import type { AdminMessages } from "@/shared/i18n/adminMessages";
+import { createAdminUser, deleteAdminUser, listAdminUsers, updateAdminUser, updateAdminUserStatus } from "@/features/admin-user/api";
+import { getAdminDashboard } from "@/features/admin-dashboard/api";
+import type { AdminUser } from "@/features/admin-user/types";
 
-type AccountRole = "Provider" | "Customer" | "Moderator" | "Admin";
-type AccountStatus = "Active" | "Pending" | "Suspended";
-type AccountActivity = "twelveReservations" | "fourReservations" | "eightReservations" | "profileReview" | "twentyFourReviews" | "restricted" | "twoReservations" | "noActivity";
+type AccountRole = "Provider" | "Customer" | "Moderator" | "Admin" | string;
+type AccountStatus = "Active" | "Inactive";
+type AccountActivity = "noActivity";
 type Account = {
 	id: string;
 	name: string;
@@ -20,24 +24,42 @@ type Account = {
 	joined: string;
 	activity: AccountActivity;
 };
-type AccountDraft = Pick<Account, "name" | "email" | "role" | "status">;
-
-const accounts: Account[] = [
-	{ id: "FP-2048", name: "Maya Chen", email: "maya.chen@example.com", role: "Provider", status: "Active", joined: "Feb 18, 2026", activity: "twelveReservations" },
-	{ id: "FP-2047", name: "Jonas Lee", email: "jonas.lee@example.com", role: "Provider", status: "Pending", joined: "Feb 18, 2026", activity: "profileReview" },
-	{ id: "FP-2046", name: "Amara Singh", email: "amara.singh@example.com", role: "Customer", status: "Active", joined: "Feb 17, 2026", activity: "fourReservations" },
-	{ id: "FP-2045", name: "Rory Patel", email: "rory.patel@example.com", role: "Provider", status: "Active", joined: "Feb 16, 2026", activity: "eightReservations" },
-	{ id: "FP-2044", name: "Elena Rossi", email: "elena.rossi@example.com", role: "Moderator", status: "Active", joined: "Feb 15, 2026", activity: "twentyFourReviews" },
-	{ id: "FP-2043", name: "Theo Martin", email: "theo.martin@example.com", role: "Customer", status: "Suspended", joined: "Feb 14, 2026", activity: "restricted" },
-	{ id: "FP-2042", name: "Sofia Andersson", email: "sofia.andersson@example.com", role: "Provider", status: "Pending", joined: "Feb 13, 2026", activity: "profileReview" },
-	{ id: "FP-2041", name: "Noah Williams", email: "noah.williams@example.com", role: "Customer", status: "Active", joined: "Feb 12, 2026", activity: "twoReservations" },
-];
+type AccountDraft = Pick<Account, "name" | "email" | "role" | "status"> & { password: string };
 
 const fieldClassName = "h-10 rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#343630] outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
-const pageSize = 5;
+const pageSize = 20;
+
+function mapAdminUser(user: AdminUser): Account {
+	return {
+		id: user.userId,
+		name: user.fullName,
+		email: user.email,
+		role: user.role.toLowerCase().replace(/(^|_)([a-z])/g, (_, separator: string, letter: string) => `${separator ? " " : ""}${letter.toUpperCase()}`),
+		status: user.status.toUpperCase() === "ACTIVE" ? "Active" : "Inactive",
+		joined: new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(user.createdAt)),
+		activity: "noActivity",
+	};
+}
+
+function apiErrorMessage(error: unknown) {
+	if (axios.isAxiosError(error)) {
+		const data = error.response?.data as { message?: string } | undefined;
+		return data?.message ?? (error.response ? "Request failed. Please check the submitted data." : "Cannot reach the backend. Check that the API is running.");
+	}
+	return "Something went wrong. Please try again.";
+}
+
+function roleLabel(messages: AdminMessages["users"], role: AccountRole) {
+	return role in messages.roles ? messages.roles[role as keyof typeof messages.roles] : role;
+}
+
+function statusLabel(status: AccountStatus) {
+	return status === "Active" ? "Active" : "Inactive";
+}
+
 function exportAccounts(rows: Account[], messages: AdminMessages["users"]) {
-	const header = [messages.id, messages.columns.account, messages.email, messages.columns.role, messages.columns.status, messages.columns.joined, messages.columns.activity];
-	const csv = [header, ...rows.map((account) => [account.id, account.name, account.email, messages.roles[account.role], messages.statuses[account.status], account.joined, messages.activity[account.activity]])]
+	const header = [messages.id, messages.columns.account, messages.email, messages.columns.role, messages.columns.status, messages.columns.joined];
+	const csv = [header, ...rows.map((account) => [account.id, account.name, account.email, roleLabel(messages, account.role), statusLabel(account.status), account.joined])]
 		.map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(","))
 		.join("\n");
 	const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -50,7 +72,6 @@ function exportAccounts(rows: Account[], messages: AdminMessages["users"]) {
 
 function statusClass(status: AccountStatus) {
 	if (status === "Active") return "bg-[#e5f0e8] text-[#39724b]";
-	if (status === "Pending") return "bg-[#f8edd9] text-[#93651e]";
 	return "bg-[#f5e4e1] text-[#a34d42]";
 }
 
@@ -60,78 +81,128 @@ export default function UsersPage() {
 	const [query, setQuery] = useState("");
 	const [role, setRole] = useState("");
 	const [status, setStatus] = useState("");
-	const [accountRows, setAccountRows] = useState(accounts);
+	const [accountRows, setAccountRows] = useState<Account[]>([]);
+	const [totalAccounts, setTotalAccounts] = useState(0);
+	const [activeAccounts, setActiveAccounts] = useState(0);
+	const [pendingProviders, setPendingProviders] = useState(0);
+	const [loading, setLoading] = useState(true);
+	const [loadError, setLoadError] = useState("");
 	const [page, setPage] = useState(1);
 	const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
 	const [editorMode, setEditorMode] = useState<"create" | "edit" | null>(null);
-	const [accountDraft, setAccountDraft] = useState<AccountDraft>({ name: "", email: "", role: "Customer", status: "Active" });
+	const [accountDraft, setAccountDraft] = useState<AccountDraft>({ name: "", email: "", role: "Customer", status: "Active", password: "" });
 	const [accountError, setAccountError] = useState("");
 	const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+
+	useEffect(() => {
+		let cancelled = false;
+		const roleFilter = role ? role.toUpperCase() : undefined;
+		const statusFilter = status ? status.toUpperCase() : undefined;
+		Promise.allSettled([
+			listAdminUsers({ role: roleFilter, status: statusFilter, page, pageSize }),
+			getAdminDashboard(),
+		]).then(([usersResult, dashboardResult]) => {
+			if (cancelled) return;
+			if (usersResult.status === "rejected") throw usersResult.reason;
+			const result = usersResult.value;
+			setLoadError("");
+			setAccountRows(result.items.map((user) => mapAdminUser(user)));
+			setTotalAccounts(result.totalItems);
+			if (dashboardResult.status === "fulfilled") {
+				setActiveAccounts(dashboardResult.value.activeUsers);
+				setPendingProviders(dashboardResult.value.pendingProviders);
+			}
+		}).catch((error: unknown) => {
+			if (!cancelled) setLoadError(apiErrorMessage(error));
+		}).finally(() => {
+			if (!cancelled) setLoading(false);
+		});
+		return () => { cancelled = true; };
+	}, [page, role, status]);
 
 	const normalizedQuery = query.trim().toLowerCase();
 	const filteredAccounts = accountRows.filter((account) => {
 		const matchesQuery = `${account.name} ${account.email} ${account.id}`.toLowerCase().includes(normalizedQuery);
-		return matchesQuery && (!role || account.role === role) && (!status || account.status === status);
+		return matchesQuery;
 	});
-	const activeCount = accountRows.filter((account) => account.status === "Active").length;
-	const providerCount = accountRows.filter((account) => account.role === "Provider").length;
-	const totalPages = Math.max(1, Math.ceil(filteredAccounts.length / pageSize));
-	const currentPage = Math.min(page, totalPages);
-	const visibleAccounts = filteredAccounts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+	const currentPage = page;
+	const visibleAccounts = filteredAccounts;
 
-	function updateAccountStatus(account: Account, nextStatus: AccountStatus) {
-		setAccountRows((current) => current.map((item) => item.id === account.id ? { ...item, status: nextStatus } : item));
-		setSelectedAccount({ ...account, status: nextStatus });
-		showAdminToast({ title: messages.toast.accountStatusChanged, message: `${account.name} · ${t.statuses[nextStatus]}`, tone: nextStatus === "Suspended" ? "warning" : "success" });
+	async function refreshAccounts() {
+		const result = await listAdminUsers({ role: role ? role.toUpperCase() : undefined, status: status ? status.toUpperCase() : undefined, page, pageSize });
+		setAccountRows(result.items.map((user) => mapAdminUser(user)));
+		setTotalAccounts(result.totalItems);
+	}
+
+	async function updateAccountStatus(account: Account, nextStatus: AccountStatus) {
+		try {
+			const updated = await updateAdminUserStatus(account.id, nextStatus.toUpperCase() as "ACTIVE" | "INACTIVE");
+			const mapped = mapAdminUser(updated);
+			setAccountRows((current) => current.map((item) => item.id === account.id ? mapped : item));
+			setSelectedAccount(mapped);
+			showAdminToast({ title: messages.toast.accountStatusChanged, message: `${account.name} · ${statusLabel(nextStatus)}`, tone: nextStatus === "Inactive" ? "warning" : "success" });
+		} catch (error) {
+			setAccountError(apiErrorMessage(error));
+		}
 	}
 
 	function openCreateDialog() {
-		setAccountDraft({ name: "", email: "", role: "Customer", status: "Active" });
+		setAccountDraft({ name: "", email: "", role: "Customer", status: "Active", password: "" });
 		setAccountError("");
 		setEditorMode("create");
 	}
 
 	function openEditDialog(account: Account) {
-		setAccountDraft({ name: account.name, email: account.email, role: account.role, status: account.status });
+		setAccountDraft({ name: account.name, email: account.email, role: account.role, status: account.status, password: "" });
 		setAccountError("");
 		setEditorMode("edit");
 	}
 
-	function saveAccount(event: FormEvent<HTMLFormElement>) {
+	async function saveAccount(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-		const normalized = { ...accountDraft, name: accountDraft.name.trim(), email: accountDraft.email.trim() };
+		const normalized = { ...accountDraft, name: accountDraft.name.trim(), email: accountDraft.email.trim(), password: accountDraft.password.trim() };
 		if (!normalized.name || !normalized.email) return;
-		if (accountRows.some((account) => account.email.toLowerCase() === normalized.email.toLowerCase() && account.id !== (editorMode === "edit" ? selectedAccount?.id : undefined))) {
-			setAccountError(t.emailAlreadyExists);
-			return;
-		}
-
-		if (editorMode === "create") {
-			const nextAccount: Account = {
-				...normalized,
-				id: `FP-${Date.now().toString().slice(-6)}`,
-				joined: new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date()),
-				activity: "noActivity",
+		setAccountError("");
+		try {
+			const payload = {
+				fullName: normalized.name,
+				email: normalized.email,
+				role: normalized.role.toUpperCase(),
+				status: normalized.status.toUpperCase() as "ACTIVE" | "INACTIVE",
 			};
-			setAccountRows((current) => [nextAccount, ...current]);
-			setPage(1);
-			showAdminToast({ title: messages.toast.accountCreated, message: nextAccount.name });
-		} else if (selectedAccount) {
-			const updatedAccount = { ...selectedAccount, ...normalized };
-			setAccountRows((current) => current.map((account) => account.id === updatedAccount.id ? updatedAccount : account));
-			setSelectedAccount(updatedAccount);
-			showAdminToast({ title: messages.toast.accountUpdated, message: updatedAccount.name });
+			if (editorMode === "create") {
+				if (normalized.password.length < 8) {
+					setAccountError("Password must be at least 8 characters.");
+					return;
+				}
+				await createAdminUser({ ...payload, password: normalized.password });
+				showAdminToast({ title: messages.toast.accountCreated, message: normalized.name });
+				if (page !== 1) setPage(1);
+				else await refreshAccounts();
+			} else if (selectedAccount) {
+				const updated = await updateAdminUser(selectedAccount.id, { ...payload, ...(normalized.password ? { password: normalized.password } : {}) });
+				setSelectedAccount(mapAdminUser(updated));
+				showAdminToast({ title: messages.toast.accountUpdated, message: normalized.name });
+			}
+			if (editorMode === "edit") await refreshAccounts();
+			setEditorMode(null);
+		} catch (error) {
+			setAccountError(apiErrorMessage(error));
 		}
-		setEditorMode(null);
 	}
 
-	function deleteSelectedAccount() {
+	async function deleteSelectedAccount() {
 		if (!selectedAccount) return;
-		setAccountRows((current) => current.filter((account) => account.id !== selectedAccount.id));
-		showAdminToast({ title: messages.toast.accountDeleted, message: selectedAccount.name, tone: "warning" });
-		setSelectedAccount(null);
-		setDeleteConfirmationOpen(false);
-		setPage(1);
+		try {
+			await deleteAdminUser(selectedAccount.id);
+			showAdminToast({ title: messages.toast.accountDeleted, message: selectedAccount.name, tone: "warning" });
+			setSelectedAccount(null);
+			setDeleteConfirmationOpen(false);
+			if (page !== 1 && accountRows.length === 1) setPage((current) => current - 1);
+			else await refreshAccounts();
+		} catch (error) {
+			setAccountError(apiErrorMessage(error));
+		}
 	}
 
 	return (
@@ -139,7 +210,6 @@ export default function UsersPage() {
 			<div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
 				<div className="min-w-0 flex-1"><PageHeader eyebrow={messages.common.adminWorkspace} title={t.title} description={t.description} /></div>
 				<div className="flex shrink-0 items-center gap-2 sm:pt-2">
-					<span className="rounded-full border border-[#d8d8d1] bg-white px-3 py-1.5 text-xs font-medium text-[#70716b]">{messages.common.sampleData}</span>
 					<button type="button" onClick={openCreateDialog} className="inline-flex h-9 items-center gap-2 rounded-md bg-[#20221f] px-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#393b36]"><Plus size={16} />{t.createAccount}</button>
 					<button type="button" onClick={() => { exportAccounts(filteredAccounts, t); showAdminToast({ title: messages.toast.exported, message: messages.toast.exportedDetail, tone: "info" }); }} className="h-9 rounded-md bg-[#20221f] px-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#393b36]">{messages.common.exportCsv}</button>
 				</div>
@@ -147,9 +217,9 @@ export default function UsersPage() {
 
 			<section aria-label="Account summary" className="-mt-2 grid gap-3 sm:grid-cols-3">
 				{[
-					{ label: t.totalAccounts, value: accountRows.length.toString(), helper: t.allRolesHelper, percentage: 100, color: "bg-[#647c98]" },
-					{ label: t.activeAccounts, value: activeCount.toString(), helper: t.accessEnabled, percentage: accountRows.length ? (activeCount / accountRows.length) * 100 : 0, color: "bg-[#39724b]" },
-					{ label: t.providerReviews, value: accountRows.filter((account) => account.role === "Provider" && account.status === "Pending").length.toString(), helper: `${providerCount} ${t.providersInSample}`, percentage: providerCount ? (accountRows.filter((account) => account.role === "Provider" && account.status === "Pending").length / providerCount) * 100 : 0, color: "bg-[#d4a33b]" },
+					{ label: t.totalAccounts, value: totalAccounts.toString(), helper: t.allRolesHelper, percentage: 100, color: "bg-[#647c98]" },
+					{ label: t.activeAccounts, value: activeAccounts.toString(), helper: t.accessEnabled, percentage: totalAccounts ? (activeAccounts / totalAccounts) * 100 : 0, color: "bg-[#39724b]" },
+					{ label: t.providerReviews, value: pendingProviders.toString(), helper: t.providersInSample, percentage: 0, color: "bg-[#d4a33b]" },
 				].map((metric, metricIndex) => (
 					<article key={metric.label} style={{ animationDelay: `${metricIndex * 100}ms` }} className="admin-metric rounded-lg border border-[#e0e0da] bg-white p-4">
 						<p className="text-sm text-[#686a64]">{metric.label}</p>
@@ -159,23 +229,24 @@ export default function UsersPage() {
 					</article>
 				))}
 			</section>
+			{loadError && <p role="alert" className="mt-4 rounded-md border border-[#f0d3cf] bg-[#fdf1ef] px-4 py-3 text-sm text-[#7d372f]">{loadError}</p>}
 
 			<section className="mt-4 overflow-hidden rounded-lg border border-[#e0e0da] bg-white">
 				<div className="flex flex-col gap-3 border-b border-[#e8e8e2] p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
 					<div>
 						<h2 className="text-base font-semibold text-[#20221f]">{t.allAccounts}</h2>
-						<p className="mt-1 text-sm text-[#777973]">{t.accountCount.replace("{shown}", filteredAccounts.length.toString()).replace("{total}", accountRows.length.toString())}</p>
+						<p className="mt-1 text-sm text-[#777973]">{t.accountCount.replace("{shown}", filteredAccounts.length.toString()).replace("{total}", totalAccounts.toString())}</p>
 					</div>
 					<div className="grid gap-2 sm:grid-cols-[minmax(180px,250px)_150px_155px]">
 						<label className="sr-only" htmlFor="account-search">{messages.common.search}</label>
 						<input id="account-search" value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder={t.searchPlaceholder} className={fieldClassName} />
 						<label className="sr-only" htmlFor="role-filter">{t.columns.role}</label>
-						<select id="role-filter" value={role} onChange={(event) => { setRole(event.target.value); setPage(1); }} className={fieldClassName}>
+						<select id="role-filter" value={role} onChange={(event) => { setLoading(true); setLoadError(""); setRole(event.target.value); setPage(1); }} className={fieldClassName}>
 							<option value="">{t.allRoles}</option><option value="Provider">{t.roles.Provider}</option><option value="Customer">{t.roles.Customer}</option><option value="Moderator">{t.roles.Moderator}</option><option value="Admin">{t.roles.Admin}</option>
 						</select>
 						<label className="sr-only" htmlFor="status-filter">{t.columns.status}</label>
-						<select id="status-filter" value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }} className={fieldClassName}>
-							<option value="">{t.allStatuses}</option><option value="Active">{t.statuses.Active}</option><option value="Pending">{t.statuses.Pending}</option><option value="Suspended">{t.statuses.Suspended}</option>
+						<select id="status-filter" value={status} onChange={(event) => { setLoading(true); setLoadError(""); setStatus(event.target.value); setPage(1); }} className={fieldClassName}>
+							<option value="">{t.allStatuses}</option><option value="Active">{t.statuses.Active}</option><option value="Inactive">{t.statuses.Inactive}</option>
 						</select>
 					</div>
 				</div>
@@ -189,18 +260,19 @@ export default function UsersPage() {
 							{visibleAccounts.map((account) => (
 								<tr key={account.id} className="transition-colors hover:bg-[#fcfcfa]">
 									<td className="px-5 py-3.5"><div className="flex items-center gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e9eee7] text-xs font-semibold text-[#45644a]">{account.name.split(" ").map((part) => part[0]).join("")}</span><div><p className="text-sm font-semibold text-[#292b27]">{account.name}</p><p className="mt-0.5 text-xs text-[#777973]">{account.email}</p></div></div></td>
-									<td className="px-4 py-3.5 text-sm text-[#4c4e48]">{t.roles[account.role]}</td>
+									<td className="px-4 py-3.5 text-sm text-[#4c4e48]">{roleLabel(t, account.role)}</td>
 									<td className="px-4 py-3.5"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(account.status)}`}>{t.statuses[account.status]}</span></td>
 									<td className="px-4 py-3.5 text-sm text-[#686a64]">{account.joined}</td>
 									<td className="px-4 py-3.5 text-sm text-[#686a64]">{t.activity[account.activity]}</td>
 									<td className="px-5 py-3.5 text-right"><button type="button" onClick={() => setSelectedAccount(account)} className="text-sm font-semibold text-[#39724b] hover:underline">{t.view}</button></td>
 								</tr>
 							))}
-							{filteredAccounts.length === 0 && <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-[#777973]">{t.noMatches}</td></tr>}
+							{!loading && filteredAccounts.length === 0 && <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-[#777973]">{t.noMatches}</td></tr>}
+							{loading && <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-[#777973]">{messages.common.loading}</td></tr>}
 						</tbody>
 					</table>
 				</div>
-				<AdminPagination page={currentPage} pageSize={pageSize} total={filteredAccounts.length} onPageChange={setPage} messages={messages.common} />
+				<AdminPagination page={currentPage} pageSize={pageSize} total={totalAccounts} onPageChange={(nextPage) => { setLoading(true); setLoadError(""); setPage(nextPage); }} messages={messages.common} />
 			</section>
 
 			{selectedAccount && !editorMode && (
@@ -208,16 +280,15 @@ export default function UsersPage() {
 						<section role="dialog" aria-modal="true" aria-labelledby="account-detail-title" className="w-full max-w-md rounded-lg border border-[#e0e0da] bg-white p-6 shadow-xl" onClick={(event) => event.stopPropagation()}>
 						<div className="flex items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#777973]">{selectedAccount.id}</p><h2 id="account-detail-title" className="mt-1 text-xl font-semibold text-[#20221f]">{selectedAccount.name}</h2></div><button type="button" onClick={() => { setSelectedAccount(null); setDeleteConfirmationOpen(false); }} aria-label="Close account details" className="rounded-md px-2 py-1 text-lg text-[#777973] hover:bg-[#f0f0ec]">×</button></div>
 						<dl className="mt-6 divide-y divide-[#eeeeea] text-sm">
-							{[ [t.id, selectedAccount.id], [t.email, selectedAccount.email], [t.columns.role, t.roles[selectedAccount.role]], [t.columns.status, t.statuses[selectedAccount.status]], [t.columns.joined, selectedAccount.joined], [t.columns.activity, t.activity[selectedAccount.activity]] ].map(([label, value]) => <div key={label} className="flex justify-between gap-4 py-3"><dt className="text-[#777973]">{label}</dt><dd className="text-right font-medium text-[#343630]">{value}</dd></div>)}
+							{[ [t.id, selectedAccount.id], [t.email, selectedAccount.email], [t.columns.role, roleLabel(t, selectedAccount.role)], [t.columns.status, t.statuses[selectedAccount.status]], [t.columns.joined, selectedAccount.joined], [t.columns.activity, t.activity[selectedAccount.activity]] ].map(([label, value]) => <div key={label} className="flex justify-between gap-4 py-3"><dt className="text-[#777973]">{label}</dt><dd className="text-right font-medium text-[#343630]">{value}</dd></div>)}
 						</dl>
 						<div className="mt-6 flex flex-wrap gap-2">
 							<button type="button" onClick={() => { setDeleteConfirmationOpen(false); openEditDialog(selectedAccount); }} className="inline-flex h-9 items-center gap-2 rounded-md border border-[#d8d8d1] px-3 text-sm font-semibold text-[#343630] hover:bg-[#f7f7f3]"><Pencil size={15} />{t.editAccount}</button>
-							{selectedAccount.role === "Provider" && selectedAccount.status === "Pending" && <button type="button" onClick={() => updateAccountStatus(selectedAccount, "Active")} className="inline-flex h-9 items-center gap-2 rounded-md bg-[#39724b] px-3 text-sm font-semibold text-white hover:bg-[#315f3e]"><Check size={16} />{t.approveProvider}</button>}
-							{selectedAccount.status === "Suspended" ? <button type="button" onClick={() => updateAccountStatus(selectedAccount, "Active")} className="inline-flex h-9 items-center gap-2 rounded-md bg-[#39724b] px-3 text-sm font-semibold text-white hover:bg-[#315f3e]"><RotateCcw size={16} />{t.activateAccount}</button> : <button type="button" onClick={() => updateAccountStatus(selectedAccount, "Suspended")} className="inline-flex h-9 items-center gap-2 rounded-md border border-[#d8d8d1] px-3 text-sm font-semibold text-[#a34d42] hover:bg-[#f5e4e1]"><Ban size={16} />{t.suspendAccount}</button>}
+							{selectedAccount.status === "Inactive" ? <button type="button" onClick={() => updateAccountStatus(selectedAccount, "Active")} className="inline-flex h-9 items-center gap-2 rounded-md bg-[#39724b] px-3 text-sm font-semibold text-white hover:bg-[#315f3e]"><RotateCcw size={16} />{t.activateAccount}</button> : <button type="button" onClick={() => updateAccountStatus(selectedAccount, "Inactive")} className="inline-flex h-9 items-center gap-2 rounded-md border border-[#d8d8d1] px-3 text-sm font-semibold text-[#a34d42] hover:bg-[#f5e4e1]"><Ban size={16} />{t.suspendAccount}</button>}
 							<button type="button" onClick={() => setDeleteConfirmationOpen(true)} className="inline-flex h-9 items-center gap-2 rounded-md border border-[#f0d3cf] px-3 text-sm font-semibold text-[#a34d42] hover:bg-[#fdf1ef]"><Trash2 size={15} />{t.deleteAccount}</button>
 						</div>
 						{deleteConfirmationOpen && <div className="mt-4 rounded-md border border-[#f0d3cf] bg-[#fdf1ef] p-4"><p className="text-sm font-semibold text-[#7d372f]">{t.deleteConfirmation}</p><div className="mt-3 flex gap-2"><button type="button" onClick={() => setDeleteConfirmationOpen(false)} className="h-9 rounded-md border border-[#d8d8d1] bg-white px-3 text-sm font-semibold text-[#343630]">{t.cancel}</button><button type="button" onClick={deleteSelectedAccount} className="h-9 rounded-md bg-[#a34d42] px-3 text-sm font-semibold text-white">{t.confirmDelete}</button></div></div>}
-						<p className="mt-4 text-xs text-[#858680]">{t.actionsSampled}</p>
+						{accountError && <p role="alert" className="mt-4 text-sm text-[#a34d42]">{accountError}</p>}
 					</section>
 				</div>
 			)}
@@ -227,7 +298,8 @@ export default function UsersPage() {
 					<form onSubmit={saveAccount} className="space-y-4 p-5">
 						<label className="block text-sm font-medium text-[#4c4e48]">{t.columns.account}<input required autoFocus value={accountDraft.name} onChange={(event) => { setAccountDraft((draft) => ({ ...draft, name: event.target.value })); setAccountError(""); }} className={`${fieldClassName} mt-1.5 w-full`} /></label>
 						<label className="block text-sm font-medium text-[#4c4e48]">{t.email}<input required type="email" value={accountDraft.email} onChange={(event) => { setAccountDraft((draft) => ({ ...draft, email: event.target.value })); setAccountError(""); }} className={`${fieldClassName} mt-1.5 w-full`} /></label>
-						<div className="grid gap-4 sm:grid-cols-2"><label className="block text-sm font-medium text-[#4c4e48]">{t.columns.role}<select value={accountDraft.role} onChange={(event) => setAccountDraft((draft) => ({ ...draft, role: event.target.value as AccountRole }))} className={`${fieldClassName} mt-1.5 w-full`}>{(Object.keys(t.roles) as AccountRole[]).map((option) => <option key={option} value={option}>{t.roles[option]}</option>)}</select></label><label className="block text-sm font-medium text-[#4c4e48]">{t.columns.status}<select value={accountDraft.status} onChange={(event) => setAccountDraft((draft) => ({ ...draft, status: event.target.value as AccountStatus }))} className={`${fieldClassName} mt-1.5 w-full`}>{(Object.keys(t.statuses) as AccountStatus[]).map((option) => <option key={option} value={option}>{t.statuses[option]}</option>)}</select></label></div>
+						<label className="block text-sm font-medium text-[#4c4e48]">Password {editorMode === "edit" ? "(leave blank to keep current)" : ""}<input type="password" minLength={8} required={editorMode === "create"} value={accountDraft.password} onChange={(event) => setAccountDraft((draft) => ({ ...draft, password: event.target.value }))} className={`${fieldClassName} mt-1.5 w-full`} /></label>
+						<div className="grid gap-4 sm:grid-cols-2"><label className="block text-sm font-medium text-[#4c4e48]">{t.columns.role}<select value={accountDraft.role} onChange={(event) => setAccountDraft((draft) => ({ ...draft, role: event.target.value as AccountRole }))} className={`${fieldClassName} mt-1.5 w-full`}>{(Object.keys(t.roles) as AccountRole[]).map((option) => <option key={option} value={option}>{t.roles[option as keyof typeof t.roles]}</option>)}</select></label><label className="block text-sm font-medium text-[#4c4e48]">{t.columns.status}<select value={accountDraft.status} onChange={(event) => setAccountDraft((draft) => ({ ...draft, status: event.target.value as AccountStatus }))} className={`${fieldClassName} mt-1.5 w-full`}>{(Object.keys(t.statuses) as AccountStatus[]).map((option) => <option key={option} value={option}>{t.statuses[option]}</option>)}</select></label></div>
 						{accountError && <p role="alert" className="text-sm text-[#a34d42]">{accountError}</p>}
 						<div className="flex justify-end gap-2 border-t border-[#e8e8e2] pt-4"><button type="button" onClick={() => setEditorMode(null)} className="h-10 rounded-md border border-[#d8d8d1] px-4 text-sm font-semibold text-[#454741] hover:bg-[#f7f7f3]">{t.cancel}</button><button type="submit" className="h-10 rounded-md bg-[#20221f] px-4 text-sm font-semibold text-white hover:bg-[#393b36]">{t.saveAccount}</button></div>
 					</form>
