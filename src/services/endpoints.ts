@@ -16,11 +16,16 @@ export const endpoints = {
   adminNotifications: "/admin/notifications",
   admin: {
     auth: {
-      login: "/admin/auth/login",
+      login: "/auth/login",
     },
     dashboard: "/admin/dashboard",
     bookings: "/admin/bookings",
     providers: "/admin/providers",
     users: "/admin/users",
+    spaces: "/admin/spaces",
+  },
+  provider: {
+    profile: "/provider/profile",
+    spaces: "/provider/spaces",
   },
 } as const;

@@ -31,7 +31,7 @@ const englishMessages = {
     periods: { d7: "7 days", d30: "30 days", d90: "90 days" },
     languages: { en: "English", vi: "Vietnamese" },
   },
-  nav: { dashboard: "Dashboard", users: "Users", providers: "Providers", content: "Content review", transactions: "Transactions", disputes: "Disputes", reports: "Reports", errors: "Errors", settings: "Settings" },
+  nav: { dashboard: "Dashboard", users: "Users", providers: "Providers", spaces: "Creative spaces", content: "Content review", transactions: "Transactions", disputes: "Disputes", reports: "Reports", errors: "Errors", settings: "Settings" },
   toast: {
     signedOut: "Signed out",
     signedOutDetail: "Your admin session has been closed.",
@@ -396,7 +396,7 @@ const vietnameseMessages: AdminMessages = {
     periods: { d7: "7 ngày", d30: "30 ngày", d90: "90 ngày" },
     languages: { en: "Tiếng Anh", vi: "Tiếng Việt" },
   },
-  nav: { dashboard: "Tổng quan", users: "Người dùng", providers: "Nhà cung cấp", content: "Duyệt nội dung", transactions: "Giao dịch", disputes: "Khiếu nại", reports: "Báo cáo", errors: "Lỗi", settings: "Cài đặt" },
+  nav: { dashboard: "Tổng quan", users: "Người dùng", providers: "Nhà cung cấp", spaces: "Không gian sáng tạo", content: "Duyệt nội dung", transactions: "Giao dịch", disputes: "Khiếu nại", reports: "Báo cáo", errors: "Lỗi", settings: "Cài đặt" },
   toast: {
     signedOut: "Đã đăng xuất",
     signedOutDetail: "Phiên quản trị của bạn đã được đóng.",
