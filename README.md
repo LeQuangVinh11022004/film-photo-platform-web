@@ -48,6 +48,10 @@ The backend must provide these routes for the auth screens:
 
 Google OAuth credentials, email delivery, token validation, and reset-token storage must remain configured on the backend; the frontend does not store provider secrets.
 
+## Provider space image uploads
+
+Provider images are uploaded from the browser to Cloudinary, then the returned secure URL is saved through `POST /provider/spaces/{spaceId}/images`. Create an unsigned upload preset in Cloudinary, restrict it to image formats (JPG, PNG, WebP, and AVIF), and set `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` and `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` in `.env.local`. Restart the dev server after changing these values. Do not put a Cloudinary API secret in a `NEXT_PUBLIC_` variable.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

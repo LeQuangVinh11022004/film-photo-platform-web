@@ -57,6 +57,7 @@ function AdminToolbar({ sidebarCollapsed, theme, onMenuClick, onToggleSidebar, o
     { label: messages.nav.dashboard, href: "/admin/dashboard" },
     { label: messages.nav.users, href: "/users" },
     { label: messages.nav.providers, href: "/providers" },
+    { label: messages.nav.spaces, href: "/spaces" },
     { label: messages.nav.content, href: "/content" },
     { label: messages.nav.transactions, href: "/transactions" },
     { label: messages.nav.disputes, href: "/disputes" },

@@ -1,21 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import type { CreativeSpace } from "@/features/creative-space";
-
-type CreativeSpaceFormData = {
-  name: string;
-  address: string;
-  capacity: number;
-  isActive: boolean;
-};
+import { useState, type FormEvent } from "react";
+import type { ProviderSpace, ProviderSpaceRequest } from "@/features/provider-space";
 
 type CreativeSpaceModalProps = {
   open: boolean;
   mode: "create" | "edit";
-  space?: CreativeSpace | null;
+  space?: ProviderSpace | null;
   onClose: () => void;
-  onSubmit: (data: CreativeSpaceFormData) => void;
+  onSubmit: (data: ProviderSpaceRequest) => void;
+  submitting?: boolean;
 };
 
 const inputClassName =
@@ -30,20 +24,14 @@ export function CreativeSpaceModal({
   space,
   onClose,
   onSubmit,
+  submitting = false,
 }: CreativeSpaceModalProps) {
-  const [name, setName] = useState(() =>
-    mode === "edit" && space ? space.name : "",
-  );
-  const [address, setAddress] = useState(() =>
-    mode === "edit" && space ? space.address : "",
-  );
-  const [capacity, setCapacity] = useState(() =>
-    mode === "edit" && space ? String(space.capacity) : "",
-  );
-  const [description, setDescription] = useState("");
-  const [isActive, setIsActive] = useState(() =>
-    mode === "edit" && space ? space.isActive : true,
-  );
+  const [name, setName] = useState(space?.name ?? "");
+  const [type, setType] = useState(space?.type ?? "");
+  const [address, setAddress] = useState(space?.address ?? "");
+  const [capacity, setCapacity] = useState(space?.capacity == null ? "" : String(space.capacity));
+  const [description, setDescription] = useState(space?.description ?? "");
+  const [status, setStatus] = useState<ProviderSpaceRequest["status"]>(space?.status.toUpperCase() === "ACTIVE" ? "ACTIVE" : "INACTIVE");
 
   if (!open) {
     return null;
@@ -51,14 +39,16 @@ export function CreativeSpaceModal({
 
   const isEditMode = mode === "edit";
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     onSubmit({
       name: name.trim(),
+      type: type.trim(),
+      description: description.trim(),
       address: address.trim(),
-      capacity: Number(capacity),
-      isActive,
+      capacity: capacity === "" ? null : Number(capacity),
+      status,
     });
   };
 
@@ -123,6 +113,11 @@ export function CreativeSpaceModal({
               />
             </div>
 
+            <div>
+              <label htmlFor="space-type" className="mb-1.5 block text-sm font-medium text-[#343630]">Space type</label>
+              <input id="space-type" type="text" value={type} onChange={(event) => setType(event.target.value)} placeholder="e.g. Studio" required className={inputClassName} />
+            </div>
+
             {/* Address */}
             <div>
               <label
@@ -153,11 +148,10 @@ export function CreativeSpaceModal({
               <input
                 id="space-capacity"
                 type="number"
-                min={1}
+                min={0}
                 value={capacity}
                 onChange={(event) => setCapacity(event.target.value)}
-                placeholder="e.g. 8"
-                required
+                placeholder="Optional"
                 className={inputClassName}
               />
             </div>
@@ -179,32 +173,13 @@ export function CreativeSpaceModal({
               />
             </div>
 
-            {/* Status */}
-            {/* <div className="flex items-center justify-between rounded-md border border-[#e0e0da] bg-[#fafaf7] px-4 py-3">
-              <div>
-                <p className="text-sm font-medium text-[#343630]">
-                  Active
-                </p>
-                <p className="mt-0.5 text-xs text-[#858680]">
-                  Active spaces can be available for booking.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                role="switch"
-                aria-checked={isActive}
-                onClick={() => setIsActive((current) => !current)}
-                className={`relative h-6 w-11 rounded-full transition-colors ${
-                  isActive ? "bg-[#39724b]" : "bg-[#c8c9c2]"
-                }`}>
-                <span
-                  className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                    isActive ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button>
-            </div> */}
+            <div>
+              <label htmlFor="space-status" className="mb-1.5 block text-sm font-medium text-[#343630]">Status</label>
+              <select id="space-status" value={status} onChange={(event) => setStatus(event.target.value as ProviderSpaceRequest["status"])} className={inputClassName}>
+                <option value="INACTIVE">Inactive</option>
+                <option value="ACTIVE">Active</option>
+              </select>
+            </div>
           </div>
 
           {/* Footer */}
@@ -218,8 +193,9 @@ export function CreativeSpaceModal({
 
             <button
               type="submit"
-              className="h-9 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#2f603e]">
-              {isEditMode ? "Save changes" : "Add space"}
+              disabled={submitting}
+              className="h-9 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#2f603e] disabled:cursor-not-allowed disabled:opacity-60">
+              {submitting ? "Saving…" : isEditMode ? "Save changes" : "Add space"}
             </button>
           </div>
         </form>

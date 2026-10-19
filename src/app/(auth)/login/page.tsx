@@ -6,7 +6,7 @@ import { useState, type FormEvent } from "react";
 import axios from "axios";
 import { AuthPageLayout } from "@/shared/components/AuthPageLayout";
 import { GoogleAuthButton } from "@/shared/components/GoogleAuthButton";
-import { loginAdmin } from "@/features/admin-auth/api";
+import { loginUser } from "@/features/admin-auth/api";
 import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
@@ -24,9 +24,23 @@ export default function LoginPage() {
     setError("");
     setSubmitting(true);
     try {
-      const result = await loginAdmin({ email: email.trim(), password });
+      const result = await loginUser({ email: email.trim(), password });
       if (!result.success || !result.token || !result.user) {
         setError(result.message || "Sign in failed. Please try again.");
+        return;
+      }
+
+      const normalizedRole = result.user.role.trim().toUpperCase();
+      const role = normalizedRole === "ADMIN"
+        ? "admin"
+        : normalizedRole === "MODERATOR"
+          ? "moderator"
+          : normalizedRole === "PROVIDER" || normalizedRole === "SERVICE_PROVIDER"
+            ? "provider"
+            : null;
+
+      if (!role) {
+        setError(`This account role (${result.user.role}) does not have a workspace here.`);
         return;
       }
 
@@ -34,9 +48,9 @@ export default function LoginPage() {
         id: result.user.userId,
         name: result.user.fullName,
         email: result.user.email,
-        role: "admin",
+        role,
       }, result.expiresAtUtc);
-      router.push("/admin/dashboard");
+      router.replace(role === "admin" ? "/admin/dashboard" : role === "provider" ? "/provider/dashboard" : "/moderator");
     } catch (err) {
       if (axios.isAxiosError(err)) {
         const message = (err.response?.data as { message?: string } | undefined)?.message;
