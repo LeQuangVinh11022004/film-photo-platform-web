@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import type { ProviderSpace, ProviderSpaceRequest } from "@/features/provider-space";
+import Image from "next/image";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import type { ProviderFeatureType, ProviderSpace, ProviderSpaceDetails, ProviderSpaceRequest } from "@/features/provider-space";
 
 type CreativeSpaceModalProps = {
   open: boolean;
   mode: "create" | "edit";
   space?: ProviderSpace | null;
+  featureTypes: ProviderFeatureType[];
+  error?: string;
   onClose: () => void;
-  onSubmit: (data: ProviderSpaceRequest) => void;
+  onSubmit: (data: ProviderSpaceRequest, imageFile?: File) => void;
   submitting?: boolean;
 };
 
@@ -22,6 +25,8 @@ export function CreativeSpaceModal({
   open,
   mode,
   space,
+  featureTypes,
+  error,
   onClose,
   onSubmit,
   submitting = false,
@@ -32,6 +37,26 @@ export function CreativeSpaceModal({
   const [capacity, setCapacity] = useState(space?.capacity == null ? "" : String(space.capacity));
   const [description, setDescription] = useState(space?.description ?? "");
   const [status, setStatus] = useState<ProviderSpaceRequest["status"]>(space?.status.toUpperCase() === "ACTIVE" ? "ACTIVE" : "INACTIVE");
+  const [featureTypeIds, setFeatureTypeIds] = useState<string[]>(space?.features.map((feature) => feature.featureTypeId) ?? []);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageError, setImageError] = useState("");
+  const imagePreviewRef = useRef<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const [details, setDetails] = useState<ProviderSpaceDetails>(space?.details ?? {
+    lengthM: null,
+    widthM: null,
+    heightM: null,
+    artisticStyle: "",
+    lightingConditions: "",
+    ventilationDetails: "",
+    acousticDetails: "",
+    usagePolicies: "",
+  });
+
+  useEffect(() => () => {
+    if (imagePreviewRef.current) URL.revokeObjectURL(imagePreviewRef.current);
+  }, []);
 
   if (!open) {
     return null;
@@ -41,6 +66,7 @@ export function CreativeSpaceModal({
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (imageError) return;
 
     onSubmit({
       name: name.trim(),
@@ -49,21 +75,47 @@ export function CreativeSpaceModal({
       address: address.trim(),
       capacity: capacity === "" ? null : Number(capacity),
       status,
-    });
+      details,
+      featureTypeIds,
+    }, imageFile ?? undefined);
+  };
+
+  const handleImageChange = (file: File | undefined) => {
+    setImageError("");
+    if (imagePreviewRef.current) URL.revokeObjectURL(imagePreviewRef.current);
+    imagePreviewRef.current = null;
+    setImagePreview(null);
+    if (!file && imageInputRef.current) imageInputRef.current.value = "";
+    if (file && !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setImageError("Choose a JPG, PNG, or WebP image.");
+      setImageFile(null);
+      if (imageInputRef.current) imageInputRef.current.value = "";
+      return;
+    }
+    if (file && file.size > 10 * 1024 * 1024) {
+      setImageError("Image size must be 10 MB or less.");
+      setImageFile(null);
+      if (imageInputRef.current) imageInputRef.current.value = "";
+      return;
+    }
+    const previewUrl = file ? URL.createObjectURL(file) : null;
+    imagePreviewRef.current = previewUrl;
+    setImagePreview(previewUrl);
+    setImageFile(file ?? null);
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#171815]/35 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#171815]/35 p-3 sm:p-4"
       onClick={onClose}>
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="creative-space-modal-title"
-        className="w-full max-w-lg rounded-lg border border-[#e0e0da] bg-white shadow-xl"
+        className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-2xl flex-col overflow-hidden rounded-lg border border-[#e0e0da] bg-white shadow-xl sm:max-h-[calc(100dvh-2rem)]"
         onClick={(event) => event.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-[#eeeeea] px-6 py-5">
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[#eeeeea] px-5 py-4 sm:px-6">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#777973]">
               Creative space
@@ -92,8 +144,9 @@ export function CreativeSpaceModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-5 px-6 py-6">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="grid min-h-0 gap-4 overflow-y-auto px-5 py-4 sm:grid-cols-2 sm:px-6 sm:py-5">
+            {error && <p role="alert" className="rounded-md border border-[#e6c3bd] bg-[#fbefed] px-3 py-2 text-sm text-[#9c4339] sm:col-span-2">{error}</p>}
             {/* Name */}
             <div>
               <label
@@ -105,6 +158,7 @@ export function CreativeSpaceModal({
               <input
                 id="space-name"
                 type="text"
+                maxLength={200}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="e.g. North Light Studio"
@@ -115,11 +169,11 @@ export function CreativeSpaceModal({
 
             <div>
               <label htmlFor="space-type" className="mb-1.5 block text-sm font-medium text-[#343630]">Space type</label>
-              <input id="space-type" type="text" value={type} onChange={(event) => setType(event.target.value)} placeholder="e.g. Studio" required className={inputClassName} />
+              <input id="space-type" type="text" maxLength={50} value={type} onChange={(event) => setType(event.target.value)} placeholder="e.g. Studio" required className={inputClassName} />
             </div>
 
             {/* Address */}
-            <div>
+            <div className="sm:col-span-2">
               <label
                 htmlFor="space-address"
                 className="mb-1.5 block text-sm font-medium text-[#343630]">
@@ -129,12 +183,31 @@ export function CreativeSpaceModal({
               <input
                 id="space-address"
                 type="text"
+                maxLength={500}
                 value={address}
                 onChange={(event) => setAddress(event.target.value)}
                 placeholder="e.g. 12 Nguyen Van Dau, Binh Thanh"
                 required
                 className={inputClassName}
               />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="space-image" className="mb-1.5 block text-sm font-medium text-[#343630]">Space image <span className="font-normal text-[#777973]">(optional)</span></label>
+              <input
+                ref={imageInputRef}
+                id="space-image"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) => handleImageChange(event.target.files?.[0])}
+                className="w-full rounded-md border border-[#d8d8d1] bg-white px-3 py-2 text-sm text-[#343630] file:mr-3 file:rounded file:border-0 file:bg-[#f0f0ec] file:px-3 file:py-1 file:text-sm file:font-medium"
+              />
+              <p className="mt-1.5 text-xs text-[#777973]">JPG, PNG, or WebP. Maximum 10 MB.</p>
+              {imageError && <p role="alert" className="mt-2 text-sm text-[#9c4339]">{imageError}</p>}
+              {imagePreview && <div className="relative mt-3 aspect-video max-h-48 overflow-hidden rounded-md bg-[#f0f0ec]">
+                <Image src={imagePreview} alt="Selected space preview" fill unoptimized className="object-cover" />
+                <button type="button" onClick={() => handleImageChange(undefined)} aria-label="Remove selected image" className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-md bg-white/95 text-[#a34d42] shadow-sm hover:bg-white">×</button>
+              </div>}
             </div>
 
             {/* Capacity */}
@@ -148,7 +221,7 @@ export function CreativeSpaceModal({
               <input
                 id="space-capacity"
                 type="number"
-                min={0}
+                min={1}
                 value={capacity}
                 onChange={(event) => setCapacity(event.target.value)}
                 placeholder="Optional"
@@ -157,7 +230,7 @@ export function CreativeSpaceModal({
             </div>
 
             {/* Description */}
-            <div>
+            <div className="sm:col-span-2">
               <label
                 htmlFor="space-description"
                 className="mb-1.5 block text-sm font-medium text-[#343630]">
@@ -180,10 +253,29 @@ export function CreativeSpaceModal({
                 <option value="ACTIVE">Active</option>
               </select>
             </div>
+
+            <details open={isEditMode} className="rounded-md border border-[#e0e0da] px-3 py-2 sm:col-span-2">
+              <summary className="cursor-pointer text-sm font-medium text-[#343630]">Features ({featureTypeIds.length} selected)</summary>
+              {featureTypes.length ? <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {featureTypes.map((feature) => <label key={feature.featureTypeId} className="flex items-start gap-2 rounded-md border border-[#e0e0da] px-3 py-2 text-sm text-[#454741]">
+                  <input type="checkbox" checked={featureTypeIds.includes(feature.featureTypeId)} onChange={(event) => setFeatureTypeIds((current) => event.target.checked ? [...current, feature.featureTypeId] : current.filter((id) => id !== feature.featureTypeId))} className="mt-0.5 accent-[#39724b]" />
+                  <span>{feature.name}{feature.description && <span className="mt-0.5 block text-xs text-[#777973]">{feature.description}</span>}</span>
+                </label>)}
+              </div> : <p className="mt-2 text-sm text-[#777973]">No feature types available.</p>}
+            </details>
+
+            <details open={isEditMode} className="rounded-md border border-[#e0e0da] px-3 py-2 sm:col-span-2">
+              <summary className="cursor-pointer text-sm font-medium text-[#343630]">Additional space details</summary>
+              <fieldset className="mt-3 grid gap-4 sm:grid-cols-3">
+                {(["lengthM", "widthM", "heightM"] as const).map((field) => <label key={field} className="grid gap-1.5 text-sm text-[#454741]">{field.replace("M", " (m)").replace(/^./, (letter) => letter.toUpperCase())}<input type="number" min="0.01" step="0.01" value={details[field] ?? ""} onChange={(event) => setDetails((current) => ({ ...current, [field]: event.target.value === "" ? null : Number(event.target.value) }))} className={inputClassName} /></label>)}
+                <label className="grid gap-1.5 text-sm text-[#454741] sm:col-span-3">Artistic style<input maxLength={255} value={details.artisticStyle ?? ""} onChange={(event) => setDetails((current) => ({ ...current, artisticStyle: event.target.value }))} className={inputClassName} /></label>
+                {(["lightingConditions", "ventilationDetails", "acousticDetails", "usagePolicies"] as const).map((field) => <label key={field} className="grid gap-1.5 text-sm text-[#454741] sm:col-span-3">{field.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase())}<textarea rows={2} value={details[field] ?? ""} onChange={(event) => setDetails((current) => ({ ...current, [field]: event.target.value }))} className={textareaClassName} /></label>)}
+              </fieldset>
+            </details>
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-2 border-t border-[#eeeeea] px-6 py-4">
+          <div className="flex shrink-0 justify-end gap-2 border-t border-[#eeeeea] bg-white px-5 py-3 sm:px-6">
             <button
               type="button"
               onClick={onClose}

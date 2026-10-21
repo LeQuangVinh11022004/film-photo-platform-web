@@ -8,6 +8,7 @@ import { PageHeader } from "@/shared/components/PageHeader";
 import { HolidayPolicySection } from "@/features/provider-pricing-policy/components/HolidayPolicySection";
 import { CustomPricingRules } from "@/features/provider-pricing-policy/components/CustomPricingRules";
 import { PricingRuleModal } from "@/features/provider-pricing-policy/components/PricingRuleModal";
+import { ConfirmDeleteDialog } from "@/shared/components/ConfirmDeleteDialog";
 
 import type {
   CustomPricingRule,
@@ -116,6 +117,8 @@ export default function PricingPolicyPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRule, setEditingRule] =
     useState<CustomPricingRule | null>(null);
+  const [pendingDeleteRule, setPendingDeleteRule] =
+    useState<CustomPricingRule | null>(null);
 
   const enabledHolidayCount = holidayPolicies.filter(
     (policy) => policy.enabled,
@@ -173,15 +176,13 @@ export default function PricingPolicyPage() {
   };
 
   const handleDeleteRule = (rule: CustomPricingRule) => {
-    const confirmed = window.confirm(
-      `Delete "${rule.name}"? This action cannot be undone.`,
-    );
+    setPendingDeleteRule(rule);
+  };
 
-    if (!confirmed) return;
-
-    setCustomRules((current) =>
-      current.filter((item) => item.id !== rule.id),
-    );
+  const confirmDeleteRule = () => {
+    if (!pendingDeleteRule) return;
+    setCustomRules((current) => current.filter((item) => item.id !== pendingDeleteRule.id));
+    setPendingDeleteRule(null);
   };
 
   const handleToggleRule = (updated: CustomPricingRule) => {
@@ -275,6 +276,7 @@ export default function PricingPolicyPage() {
         onClose={handleCloseModal}
         onSave={handleSaveRule}
       />
+      {pendingDeleteRule && <ConfirmDeleteDialog title="Delete this pricing rule?" description={`“${pendingDeleteRule.name}” will be permanently deleted. This action cannot be undone.`} onCancel={() => setPendingDeleteRule(null)} onConfirm={confirmDeleteRule} />}
     </div>
   );
 }

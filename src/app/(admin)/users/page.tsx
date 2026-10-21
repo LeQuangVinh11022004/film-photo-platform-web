@@ -6,6 +6,7 @@ import { Ban, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { AdminPagination } from "@/shared/components/AdminPagination";
 import { showAdminToast } from "@/features/admin-notification/toast";
+import { ConfirmDeleteDialog } from "@/shared/components/ConfirmDeleteDialog";
 import { useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
 import type { AdminMessages } from "@/shared/i18n/adminMessages";
 import { createAdminUser, deleteAdminUser, listAdminUsers, updateAdminUser, updateAdminUserStatus } from "@/features/admin-user/api";
@@ -93,6 +94,7 @@ export default function UsersPage() {
 	const [accountDraft, setAccountDraft] = useState<AccountDraft>({ name: "", email: "", role: "Customer", status: "Active", password: "" });
 	const [accountError, setAccountError] = useState("");
 	const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+	const [deletingAccount, setDeletingAccount] = useState(false);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -193,6 +195,7 @@ export default function UsersPage() {
 
 	async function deleteSelectedAccount() {
 		if (!selectedAccount) return;
+		setDeletingAccount(true);
 		try {
 			await deleteAdminUser(selectedAccount.id);
 			showAdminToast({ title: messages.toast.accountDeleted, message: selectedAccount.name, tone: "warning" });
@@ -202,6 +205,8 @@ export default function UsersPage() {
 			else await refreshAccounts();
 		} catch (error) {
 			setAccountError(apiErrorMessage(error));
+		} finally {
+			setDeletingAccount(false);
 		}
 	}
 
@@ -285,13 +290,13 @@ export default function UsersPage() {
 						<div className="mt-6 flex flex-wrap gap-2">
 							<button type="button" onClick={() => { setDeleteConfirmationOpen(false); openEditDialog(selectedAccount); }} className="inline-flex h-9 items-center gap-2 rounded-md border border-[#d8d8d1] px-3 text-sm font-semibold text-[#343630] hover:bg-[#f7f7f3]"><Pencil size={15} />{t.editAccount}</button>
 							{selectedAccount.status === "Inactive" ? <button type="button" onClick={() => updateAccountStatus(selectedAccount, "Active")} className="inline-flex h-9 items-center gap-2 rounded-md bg-[#39724b] px-3 text-sm font-semibold text-white hover:bg-[#315f3e]"><RotateCcw size={16} />{t.activateAccount}</button> : <button type="button" onClick={() => updateAccountStatus(selectedAccount, "Inactive")} className="inline-flex h-9 items-center gap-2 rounded-md border border-[#d8d8d1] px-3 text-sm font-semibold text-[#a34d42] hover:bg-[#f5e4e1]"><Ban size={16} />{t.suspendAccount}</button>}
-							<button type="button" onClick={() => setDeleteConfirmationOpen(true)} className="inline-flex h-9 items-center gap-2 rounded-md border border-[#f0d3cf] px-3 text-sm font-semibold text-[#a34d42] hover:bg-[#fdf1ef]"><Trash2 size={15} />{t.deleteAccount}</button>
+							<button type="button" onClick={() => { setAccountError(""); setDeleteConfirmationOpen(true); }} className="inline-flex h-9 items-center gap-2 rounded-md border border-[#f0d3cf] px-3 text-sm font-semibold text-[#a34d42] hover:bg-[#fdf1ef]"><Trash2 size={15} />{t.deleteAccount}</button>
 						</div>
-						{deleteConfirmationOpen && <div className="mt-4 rounded-md border border-[#f0d3cf] bg-[#fdf1ef] p-4"><p className="text-sm font-semibold text-[#7d372f]">{t.deleteConfirmation}</p><div className="mt-3 flex gap-2"><button type="button" onClick={() => setDeleteConfirmationOpen(false)} className="h-9 rounded-md border border-[#d8d8d1] bg-white px-3 text-sm font-semibold text-[#343630]">{t.cancel}</button><button type="button" onClick={deleteSelectedAccount} className="h-9 rounded-md bg-[#a34d42] px-3 text-sm font-semibold text-white">{t.confirmDelete}</button></div></div>}
-						{accountError && <p role="alert" className="mt-4 text-sm text-[#a34d42]">{accountError}</p>}
+						{accountError && !deleteConfirmationOpen && <p role="alert" className="mt-4 text-sm text-[#a34d42]">{accountError}</p>}
 					</section>
 				</div>
 			)}
+			{selectedAccount && deleteConfirmationOpen && <ConfirmDeleteDialog title={t.deleteAccount} description={`${t.deleteConfirmation} ${selectedAccount.name}`} confirmLabel={t.confirmDelete} cancelLabel={t.cancel} error={accountError || undefined} confirming={deletingAccount} onCancel={() => { if (!deletingAccount) { setDeleteConfirmationOpen(false); setAccountError(""); } }} onConfirm={() => void deleteSelectedAccount()} />}
 			{editorMode && <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171815]/40 p-4" onClick={() => setEditorMode(null)}>
 				<section role="dialog" aria-modal="true" aria-labelledby="account-editor-title" className="w-full max-w-lg rounded-lg border border-[#e0e0da] bg-white shadow-xl" onClick={(event) => event.stopPropagation()}>
 					<header className="flex items-start justify-between gap-4 border-b border-[#e8e8e2] px-5 py-4"><div><h2 id="account-editor-title" className="text-lg font-semibold text-[#20221f]">{editorMode === "create" ? t.createAccount : t.editAccount}</h2><p className="mt-1 text-sm text-[#777973]">{t.editorDescription}</p></div><button type="button" aria-label={messages.common.close} onClick={() => setEditorMode(null)} className="flex h-8 w-8 items-center justify-center rounded-md text-[#777973] hover:bg-[#f0f0ec]"><X size={17} /></button></header>

@@ -6,7 +6,10 @@ const apiProxyTarget = (process.env.API_PROXY_TARGET ?? "http://localhost:5038")
 
 const nextConfig: NextConfig = {
   async rewrites() {
-    return [{ source: "/api/:path*", destination: `${apiProxyTarget}/api/:path*` }];
+    return [
+      { source: "/api/:path*", destination: `${apiProxyTarget}/api/:path*` },
+      { source: "/uploads/:path*", destination: `${apiProxyTarget}/uploads/:path*` },
+    ];
   },
 };
 

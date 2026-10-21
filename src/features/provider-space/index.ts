@@ -1,1 +1,10 @@
-export type { ListProviderSpacesParams, ProviderSpace, ProviderSpaceImage, ProviderSpaceRequest } from "./types";
+export type {
+	ListProviderSpacesParams,
+	ProviderFeatureType,
+	ProviderSpace,
+	ProviderSpaceAvailability,
+	ProviderSpaceAvailabilityRequest,
+	ProviderSpaceDetails,
+	ProviderSpaceImage,
+	ProviderSpaceRequest,
+} from "./types";
