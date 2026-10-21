@@ -50,7 +50,7 @@ Google OAuth credentials, email delivery, token validation, and reset-token stor
 
 ## Provider space image uploads
 
-Provider images are uploaded from the browser to Cloudinary, then the returned secure URL is saved through `POST /provider/spaces/{spaceId}/images`. Create an unsigned upload preset in Cloudinary, restrict it to image formats (JPG, PNG, WebP, and AVIF), and set `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` and `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET` in `.env.local`. Restart the dev server after changing these values. Do not put a Cloudinary API secret in a `NEXT_PUBLIC_` variable.
+Provider image files are sent as `multipart/form-data` to `POST /provider/spaces/{spaceId}/images/upload`. The API stores the image under `wwwroot/uploads/spaces` and returns its URL. In local development, Next.js proxies `/uploads/*` to the backend so saved images can be displayed without extra frontend configuration.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

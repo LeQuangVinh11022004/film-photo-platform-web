@@ -1,38 +1,24 @@
-type CloudinaryUploadResponse = {
-	secure_url?: string;
-	error?: { message?: string };
-};
+import { endpoints } from "@/services/endpoints";
+import { httpClient } from "@/services/httpClient";
+import type { ProviderSpaceImage } from "../types";
 
 const maxImageSize = 10 * 1024 * 1024;
-const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+const allowedImageTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-export async function uploadProviderSpaceImage(file: File) {
+export async function uploadProviderSpaceImage(spaceId: string, file: File) {
 	if (!allowedImageTypes.has(file.type)) {
-		throw new Error("Choose a JPG, PNG, WebP, or AVIF image.");
+		throw new Error("Choose a JPG, PNG, or WebP image.");
 	}
 	if (file.size > maxImageSize) {
 		throw new Error("Image size must be 10 MB or less.");
 	}
 
-	const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-	const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-	if (!cloudName || !uploadPreset) {
-		throw new Error("Image upload is not configured. Set the Cloudinary cloud name and upload preset.");
-	}
-
 	const body = new FormData();
 	body.append("file", file);
-	body.append("upload_preset", uploadPreset);
-	body.append("folder", "film-photo/spaces");
-
-	const response = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/image/upload`, {
-		method: "POST",
+	const response = await httpClient.post<ProviderSpaceImage>(
+		`${endpoints.provider.spaces}/${encodeURIComponent(spaceId)}/images/upload`,
 		body,
-	});
-	const result = await response.json() as CloudinaryUploadResponse;
-	if (!response.ok || !result.secure_url) {
-		throw new Error(result.error?.message ?? "The image upload failed. Please try again.");
-	}
-
-	return result.secure_url;
+		{ headers: { "Content-Type": "multipart/form-data" } },
+	);
+	return response.data;
 }

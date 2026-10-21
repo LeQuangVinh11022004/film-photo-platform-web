@@ -10,6 +10,7 @@ import type { AdminProvider } from "@/features/admin-provider/types";
 import { AdminPagination } from "@/shared/components/AdminPagination";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
+import { ConfirmDeleteDialog } from "@/shared/components/ConfirmDeleteDialog";
 import type { PagedResponse } from "@/types";
 
 const pageSize = 20;
@@ -41,6 +42,8 @@ export default function AdminSpacesPage() {
 	const [error, setError] = useState("");
 	const [modalOpen, setModalOpen] = useState(false);
 	const [editingSpace, setEditingSpace] = useState<AdminSpace | null>(null);
+	const [pendingDeleteSpace, setPendingDeleteSpace] = useState<AdminSpace | null>(null);
+	const [deletingSpace, setDeletingSpace] = useState(false);
 	const [form, setForm] = useState<AdminSpaceRequest>(blankForm);
 
 	useEffect(() => {
@@ -94,14 +97,22 @@ export default function AdminSpacesPage() {
 	}
 
 	async function handleDelete(space: AdminSpace) {
-		if (!window.confirm(`Delete “${space.name}”?`)) return;
+		setPendingDeleteSpace(space);
+	}
+
+	async function confirmDeleteSpace() {
+		if (!pendingDeleteSpace) return;
 		setError("");
+		setDeletingSpace(true);
 		try {
-			await deleteAdminSpace(space.spaceId);
+			await deleteAdminSpace(pendingDeleteSpace.spaceId);
+			setPendingDeleteSpace(null);
 			if (result?.items.length === 1 && page > 1) setPage(page - 1);
 			else await refresh();
 		} catch (requestError) {
 			setError(errorMessage(requestError));
+		} finally {
+			setDeletingSpace(false);
 		}
 	}
 
@@ -148,14 +159,15 @@ export default function AdminSpacesPage() {
 
 			{modalOpen && <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#171815]/40 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setModalOpen(false); }}><section role="dialog" aria-modal="true" aria-labelledby="admin-space-form-title" className="my-auto w-full max-w-xl rounded-lg border border-[#e0e0da] bg-white shadow-xl"><div className="flex items-center justify-between border-b border-[#e8e8e2] px-5 py-4"><h2 id="admin-space-form-title" className="text-lg font-semibold text-[#20221f]">{editingSpace ? "Edit space" : "Add space"}</h2><button type="button" onClick={() => setModalOpen(false)} aria-label="Close form" className="flex h-8 w-8 items-center justify-center rounded-md text-[#686a64] hover:bg-[#f0f0ec]"><X size={18} /></button></div><form onSubmit={handleSubmit} className="grid gap-4 p-5 sm:grid-cols-2">
 				<label className="grid gap-1.5 text-sm font-medium text-[#454741] sm:col-span-2">Provider<select required value={form.providerId} onChange={(event) => setField("providerId", event.target.value)} className={fieldClassName}><option value="" disabled>Select provider</option>{providers.map((provider) => <option key={provider.providerId} value={provider.providerId}>{provider.businessName || provider.email}</option>)}</select></label>
-				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Name<input required maxLength={150} value={form.name} onChange={(event) => setField("name", event.target.value)} className={fieldClassName} /></label>
-				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Type<input required maxLength={80} value={form.type} onChange={(event) => setField("type", event.target.value)} className={fieldClassName} /></label>
-				<label className="grid gap-1.5 text-sm font-medium text-[#454741] sm:col-span-2">Address<input required maxLength={300} value={form.address} onChange={(event) => setField("address", event.target.value)} className={fieldClassName} /></label>
-				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Capacity<input type="number" min="0" value={form.capacity ?? ""} onChange={(event) => setField("capacity", event.target.value === "" ? null : Number(event.target.value))} className={fieldClassName} /></label>
+				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Name<input required maxLength={200} value={form.name} onChange={(event) => setField("name", event.target.value)} className={fieldClassName} /></label>
+				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Type<input required maxLength={50} value={form.type} onChange={(event) => setField("type", event.target.value)} className={fieldClassName} /></label>
+				<label className="grid gap-1.5 text-sm font-medium text-[#454741] sm:col-span-2">Address<input required maxLength={500} value={form.address} onChange={(event) => setField("address", event.target.value)} className={fieldClassName} /></label>
+				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Capacity<input type="number" min="1" value={form.capacity ?? ""} onChange={(event) => setField("capacity", event.target.value === "" ? null : Number(event.target.value))} className={fieldClassName} /></label>
 				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Status<select value={form.status} onChange={(event) => setField("status", event.target.value as AdminSpaceRequest["status"])} className={fieldClassName}><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select></label>
 				<label className="grid gap-1.5 text-sm font-medium text-[#454741] sm:col-span-2">Description<textarea rows={3} maxLength={1000} value={form.description ?? ""} onChange={(event) => setField("description", event.target.value)} className="rounded-md border border-[#d8d8d1] bg-white px-3 py-2 text-sm outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15" /></label>
 				<div className="flex justify-end gap-2 border-t border-[#eeeeea] pt-4 sm:col-span-2"><button type="button" onClick={() => setModalOpen(false)} className="h-10 rounded-md border border-[#d8d8d1] px-4 text-sm font-semibold text-[#454741] hover:bg-[#f7f7f3]">Cancel</button><button type="submit" disabled={saving} className="h-10 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white hover:bg-[#2f603e] disabled:opacity-60">{saving ? "Saving…" : editingSpace ? "Save changes" : "Create space"}</button></div>
 				</form></section></div>}
+			{pendingDeleteSpace && <ConfirmDeleteDialog title="Delete this space?" description={`“${pendingDeleteSpace.name}” will be permanently deleted. This action cannot be undone.`} confirming={deletingSpace} error={error || undefined} onCancel={() => { if (!deletingSpace) { setPendingDeleteSpace(null); setError(""); } }} onConfirm={() => void confirmDeleteSpace()} />}
 		</div>
 	);
 }
