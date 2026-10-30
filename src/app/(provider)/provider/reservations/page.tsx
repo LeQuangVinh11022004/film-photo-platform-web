@@ -1,95 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import { PageHeader } from "@/shared/components/PageHeader";
-import type { Reservation } from "@/features/reservation";
+import { Pagination } from "@/shared/components/Pagination";
+import { getProviderBooking, listProviderBookings, reviewProviderBooking } from "@/features/reservation/api";
+import type { ProviderBooking, ProviderBookingDecision } from "@/features/reservation";
 
-type ReservationStatus = Reservation["status"];
-
-type ReservationRow = Reservation & {
-  photographerName: string;
-  packageName: string;
-  spaceName: string;
-};
-
-const reservations: ReservationRow[] = [
-  {
-    id: "BK-4001",
-    photographerName: "Linh Nguyen",
-    packageName: "Portrait Starter",
-    spaceName: "North Light Studio",
-    startTime: "2026-10-08 09:00",
-    endTime: "2026-10-08 11:00",
-    totalAmount: 1550000,
-    status: "confirmed",
-    createdAt: "2026-10-06 18:22",
-  },
-  {
-    id: "BK-4002",
-    photographerName: "Minh Tran",
-    packageName: "Editorial Session",
-    spaceName: "Cyclorama Room",
-    startTime: "2026-10-09 13:00",
-    endTime: "2026-10-09 17:00",
-    totalAmount: 2300000,
-    status: "pending",
-    createdAt: "2026-10-06 20:05",
-  },
-  {
-    id: "BK-4003",
-    photographerName: "Anh Pham",
-    packageName: "Product Campaign",
-    spaceName: "Product Corner",
-    startTime: "2026-10-10 08:30",
-    endTime: "2026-10-10 11:30",
-    totalAmount: 1850000,
-    status: "confirmed",
-    createdAt: "2026-1OTH-05 14:40",
-  },
-  {
-    id: "BK-4004",
-    photographerName: "Ha Le",
-    packageName: "Portrait Starter",
-    spaceName: "North Light Studio",
-    startTime: "2026-10-11 14:00",
-    endTime: "2026-10-11 16:00",
-    totalAmount: 1550000,
-    status: "cancelled",
-    createdAt: "2026-10-08 10:15",
-  },
-  {
-    id: "BK-4005",
-    photographerName: "Quang Vo",
-    packageName: "Editorial Session",
-    spaceName: "Rooftop Set",
-    startTime: "2026-10-12 15:00",
-    endTime: "2026-10-12 19:00",
-    totalAmount: 2950000,
-    status: "pending",
-    createdAt: "2026-10-09 14:30",
-  },
-];
-
+const pageSize = 20;
 const fieldClassName =
   "h-10 rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#343630] outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
 
-function statusClass(status: ReservationStatus) {
-  if (status === "confirmed") return "bg-[#e5f0e8] text-[#39724b]";
-  if (status === "pending") return "bg-[#f8edd9] text-[#93651e]";
+function statusClass(status: string) {
+  if (["APPROVED", "CONFIRMED", "COMPLETED"].includes(status.toUpperCase())) return "bg-[#e5f0e8] text-[#39724b]";
+  if (status.toUpperCase() === "PENDING") return "bg-[#f8edd9] text-[#93651e]";
   return "bg-[#f5e4e1] text-[#a34d42]";
 }
 
-function statusLabel(status: ReservationStatus) {
-  if (status === "confirmed") return "Confirmed";
-  if (status === "pending") return "Pending";
-  return "Cancelled";
+function statusLabel(status: string) {
+  return status.toLowerCase().replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function formatMoney(value: number) {
   return `${value.toLocaleString("vi-VN")} VND`;
 }
 
-function exportReservations(rows: ReservationRow[]) {
+function displayTime(value: string) {
+  return value.slice(0, 5);
+}
+
+function formatCreatedAt(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+}
+
+function errorMessage(error: unknown) {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as { message?: string } | undefined;
+    return data?.message ?? (error.response ? "The request failed. Please try again." : "Cannot reach the backend. Check that the API is running.");
+  }
+  return error instanceof Error ? error.message : "Something went wrong. Please try again.";
+}
+
+function exportReservations(rows: ProviderBooking[]) {
   const header = [
     "Booking ID",
     "Start time",
@@ -101,12 +54,12 @@ function exportReservations(rows: ReservationRow[]) {
   const csv = [
     header,
     ...rows.map((item) => [
-      item.id,
-      item.startTime,
-      item.endTime,
+      item.bookingId,
+      `${item.bookingDate} ${displayTime(item.startTime)}`,
+      `${item.bookingDate} ${displayTime(item.endTime)}`,
       item.totalAmount,
       statusLabel(item.status),
-      item.createdAt,
+      formatCreatedAt(item.createdAt),
     ]),
   ]
     .map((row) =>
@@ -126,27 +79,77 @@ function exportReservations(rows: ReservationRow[]) {
 export default function ReservationsPage() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
-  const [selectedReservation, setSelectedReservation] =
-    useState<ReservationRow | null>(null);
+  const [page, setPage] = useState(1);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [reservations, setReservations] = useState<ProviderBooking[]>([]);
+  const [totalReservations, setTotalReservations] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [approvedCount, setApprovedCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [decisionError, setDecisionError] = useState("");
+  const [savingDecision, setSavingDecision] = useState(false);
+  const [selectedReservation, setSelectedReservation] = useState<ProviderBooking | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      listProviderBookings({ status: status || undefined, page, pageSize }),
+      listProviderBookings({ status: "PENDING", page: 1, pageSize: 1 }),
+      listProviderBookings({ status: "APPROVED", page: 1, pageSize: 1 }),
+    ]).then(([queue, pending, approved]) => {
+      if (cancelled) return;
+      setReservations(queue.items);
+      setTotalReservations(queue.totalItems);
+      setPendingCount(pending.totalItems);
+      setApprovedCount(approved.totalItems);
+      setError("");
+    }).catch((requestError: unknown) => {
+      if (!cancelled) setError(errorMessage(requestError));
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [page, reloadKey, status]);
+
+  async function openReservation(bookingId: string) {
+    setError("");
+    try {
+      setSelectedReservation(await getProviderBooking(bookingId));
+    } catch (requestError) {
+      setError(errorMessage(requestError));
+    }
+  }
+
+  async function handleReview(decision: ProviderBookingDecision) {
+    if (!selectedReservation) return;
+    setSavingDecision(true);
+    setDecisionError("");
+    try {
+      setSelectedReservation(await reviewProviderBooking(selectedReservation.bookingId, decision));
+      setLoading(true);
+      setReloadKey((key) => key + 1);
+    } catch (requestError) {
+      setDecisionError(errorMessage(requestError));
+    } finally {
+      setSavingDecision(false);
+    }
+  }
 
   const normalizedQuery = query.trim().toLowerCase();
   const filteredReservations = reservations.filter((reservation) => {
     const matchesQuery =
-      `${reservation.id} ${reservation.photographerName} ${reservation.packageName} ${reservation.spaceName}`
+      `${reservation.bookingId} ${reservation.photographerName} ${reservation.packageName ?? ""} ${reservation.spaceName}`
         .toLowerCase()
         .includes(normalizedQuery);
-    return matchesQuery && (!status || reservation.status === status);
+    return matchesQuery;
   });
 
-  const pendingCount = reservations.filter(
-    (item) => item.status === "pending",
-  ).length;
-  const confirmedCount = reservations.filter(
-    (item) => item.status === "confirmed",
-  ).length;
-  const confirmedValue = reservations
-    .filter((item) => item.status === "confirmed")
-    .reduce((total, item) => total + item.totalAmount, 0);
+  function handleStatusChange(value: string) {
+    setLoading(true);
+    setPage(1);
+    setStatus(value);
+  }
 
   return (
     <div className="mx-auto max-w-375">
@@ -160,7 +163,7 @@ export default function ReservationsPage() {
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:pt-2">
           <span className="rounded-full border border-[#d8d8d1] bg-white px-3 py-1.5 text-xs font-medium text-[#70716b]">
-            Sample data
+            Live API
           </span>
           <button
             type="button"
@@ -177,7 +180,7 @@ export default function ReservationsPage() {
         {[
           {
             label: "Total reservations",
-            value: reservations.length.toString(),
+            value: totalReservations.toString(),
             helper: "Bookings in your provider account",
           },
           {
@@ -186,9 +189,9 @@ export default function ReservationsPage() {
             helper: "Bookings waiting for review",
           },
           {
-            label: "Confirmed value",
-            value: formatMoney(confirmedValue),
-            helper: `${confirmedCount} confirmed bookings`,
+            label: "Approved bookings",
+            value: approvedCount.toString(),
+            helper: "Bookings accepted by your business",
           },
         ].map((metric) => (
           <article
@@ -203,6 +206,8 @@ export default function ReservationsPage() {
         ))}
       </section>
 
+      {error && <p role="alert" className="mt-4 rounded-md border border-[#e6c3bd] bg-[#fbefed] px-4 py-3 text-sm text-[#9c4339]">{error}</p>}
+
       <section className="mt-4 overflow-hidden rounded-lg border border-[#e0e0da] bg-white">
         <div className="flex flex-col gap-3 border-b border-[#e8e8e2] p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div>
@@ -210,7 +215,7 @@ export default function ReservationsPage() {
               Reservation queue
             </h2>
             <p className="mt-1 text-sm text-[#777973]">
-              Showing {filteredReservations.length} of {reservations.length}{" "}
+              Showing {filteredReservations.length} on this page of {totalReservations}{" "}
               reservations
             </p>
           </div>
@@ -231,12 +236,14 @@ export default function ReservationsPage() {
             <select
               id="reservation-status"
               value={status}
-              onChange={(event) => setStatus(event.target.value)}
+              onChange={(event) => handleStatusChange(event.target.value)}
               className={fieldClassName}>
               <option value="">All statuses</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="CANCELLED">Cancelled</option>
+              <option value="COMPLETED">Completed</option>
             </select>
           </div>
         </div>
@@ -255,16 +262,17 @@ export default function ReservationsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eeeeea]">
-              {filteredReservations.map((reservation) => (
+              {loading && <tr><td colSpan={8} className="px-5 py-12 text-center text-sm text-[#777973]">Loading reservations…</td></tr>}
+              {!loading && filteredReservations.map((reservation) => (
                 <tr
-                  key={reservation.id}
+                  key={reservation.bookingId}
                   className="transition-colors hover:bg-[#fcfcfa]">
                   <td className="px-5 py-3.5">
                     <p className="text-sm font-semibold text-[#292b27]">
-                      {reservation.id}
+                      {reservation.bookingId}
                     </p>
                     <p className="mt-0.5 text-xs text-[#777973]">
-                      {reservation.createdAt}
+                      {formatCreatedAt(reservation.createdAt)}
                     </p>
                   </td>
                   <td className="px-4 py-3.5">
@@ -276,14 +284,14 @@ export default function ReservationsPage() {
                     </p> */}
                   </td>
                   <td className="px-4 py-3.5 text-sm text-[#686a64]">
-                    {reservation.packageName}
+                    {reservation.packageName || "—"}
                   </td>
                   <td className="px-4 py-3.5 text-sm text-[#686a64]">
                     {reservation.spaceName}
                   </td>
                   <td className="px-4 py-3.5 text-sm text-[#686a64]">
-                    <p>from {reservation.startTime}</p>
-                    <p className="mt-0.5">to {reservation.endTime}</p>
+                    <p>{reservation.bookingDate} · {displayTime(reservation.startTime)}</p>
+                    <p className="mt-0.5">to {displayTime(reservation.endTime)}</p>
                   </td>
                   <td className="px-4 py-3.5 whitespace-nowrap text-sm font-medium text-[#343630]">
                     {formatMoney(reservation.totalAmount)}
@@ -297,14 +305,14 @@ export default function ReservationsPage() {
                   <td className="px-5 py-3.5 text-right">
                     <button
                       type="button"
-                      onClick={() => setSelectedReservation(reservation)}
+                      onClick={() => void openReservation(reservation.bookingId)}
                       className="text-sm font-semibold text-[#39724b] hover:underline">
                       View
                     </button>
                   </td>
                 </tr>
               ))}
-              {filteredReservations.length === 0 && (
+              {!loading && filteredReservations.length === 0 && (
                 <tr>
                   <td
                     colSpan={8}
@@ -316,6 +324,7 @@ export default function ReservationsPage() {
             </tbody>
           </table>
         </div>
+        <div className="border-t border-[#e8e8e2] px-5 py-4"><Pagination currentPage={page} totalItems={totalReservations} itemsPerPage={pageSize} onPageChange={(nextPage) => { setLoading(true); setPage(nextPage); }} /></div>
       </section>
 
       {selectedReservation && (
@@ -331,7 +340,7 @@ export default function ReservationsPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#777973]">
-                  {selectedReservation.id}
+                  {selectedReservation.bookingId}
                 </p>
                 <h2
                   id="reservation-detail-title"
@@ -352,18 +361,19 @@ export default function ReservationsPage() {
                 // ["Photographer ID", selectedReservation.photographerId],
                 [
                   "Package",
-                  `${selectedReservation.packageName}`,
+                  selectedReservation.packageName || "—",
                 ],
                 [
                   "Space",
                   `${selectedReservation.spaceName}`,
                 ],
                 // ["Equipment ID", selectedReservation.equipmentId],
-                ["Start time", selectedReservation.startTime],
-                ["End time", selectedReservation.endTime],
+                ["Booking date", selectedReservation.bookingDate],
+                ["Start time", displayTime(selectedReservation.startTime)],
+                ["End time", displayTime(selectedReservation.endTime)],
                 ["Total amount", formatMoney(selectedReservation.totalAmount)],
                 ["Status", statusLabel(selectedReservation.status)],
-                ["Created at", selectedReservation.createdAt],
+                ["Created at", formatCreatedAt(selectedReservation.createdAt)],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between gap-4 py-3">
                   <dt className="text-[#777973]">{label}</dt>
@@ -373,10 +383,15 @@ export default function ReservationsPage() {
                 </div>
               ))}
             </dl>
-            <p className="mt-4 text-xs text-[#858680]">
-              Approve, reject, and status-change actions can be connected to the
-              reservation API next.
-            </p>
+            {selectedReservation.equipment.length > 0 && <div className="mt-4"><h3 className="text-sm font-semibold text-[#343630]">Equipment</h3><ul className="mt-2 space-y-1 text-sm text-[#686a64]">{selectedReservation.equipment.map((item) => <li key={item.equipmentId}>{item.name} × {item.quantity}</li>)}</ul></div>}
+            {decisionError && <p role="alert" className="mt-4 rounded-md border border-[#e6c3bd] bg-[#fbefed] px-3 py-2 text-sm text-[#9c4339]">{decisionError}</p>}
+            <div className="mt-6 flex flex-wrap justify-end gap-2 border-t border-[#eeeeea] pt-4">
+              {selectedReservation.status.toUpperCase() === "PENDING" && <>
+                <button type="button" disabled={savingDecision} onClick={() => void handleReview("REJECTED")} className="h-9 rounded-md border border-[#e6c3bd] px-3 text-sm font-semibold text-[#a34d42] hover:bg-[#fbefed] disabled:opacity-50">{savingDecision ? "Saving…" : "Reject"}</button>
+                <button type="button" disabled={savingDecision} onClick={() => void handleReview("APPROVED")} className="h-9 rounded-md bg-[#39724b] px-3 text-sm font-semibold text-white hover:bg-[#2f603e] disabled:opacity-50">{savingDecision ? "Saving…" : "Approve"}</button>
+              </>}
+              <button type="button" onClick={() => { setSelectedReservation(null); setDecisionError(""); }} className="h-9 rounded-md bg-[#20221f] px-4 text-sm font-semibold text-white hover:bg-[#393b36]">Close</button>
+            </div>
           </section>
         </div>
       )}
