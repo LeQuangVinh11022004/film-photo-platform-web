@@ -27,5 +27,6 @@ export const endpoints = {
   provider: {
     profile: "/provider/profile",
     spaces: "/provider/spaces",
+    bookings: "/provider/bookings",
   },
 } as const;
