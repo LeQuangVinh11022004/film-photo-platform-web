@@ -10,7 +10,7 @@ export type AdminRegisterProviderRequest = {
 	businessName: string;
 	description: string;
 	address: string;
-	phoneNumber: string;
+	phone: string;
 };
 
 /** Matches backend AdminUserResponseDTO. */

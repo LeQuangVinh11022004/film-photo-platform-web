@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-
 import { PageHeader } from "@/shared/components/PageHeader";
-
+import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 import {
 	ProviderMetricCard,
 	ProviderPerformanceChart,
@@ -104,6 +103,8 @@ const metricTrends = {
 
 export default function DashboardPage() {
 	const [period, setPeriod] = useState<ProviderPeriod>("30d");
+	const { messages } = useProviderLanguage();
+	const t = messages.dashboard;
 
 	const currentPerformance = performanceData[period];
 
@@ -120,9 +121,9 @@ export default function DashboardPage() {
 	return (
 		<div className="mx-auto w-full max-w-375">
 			<PageHeader
-				eyebrow="Provider workspace"
-				title="Dashboard"
-				description="Monitor your creative services, reservations and business performance."
+				eyebrow={messages.common.providerWorkspace}
+				title={t.title}
+				description={t.description}
 			/>
 
 			{/* Metrics */}
@@ -131,36 +132,38 @@ export default function DashboardPage() {
 				className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
 			>
 				<ProviderMetricCard
-					label="Revenue"
+					label={t.metrics.revenue}
 					value={`₫${new Intl.NumberFormat("vi-VN").format(totalRevenue)}`}
 					change="+12.4%"
+					changeLabel={t.metrics.vsPrevious}
 					trend={metricTrends.revenue}
 					delay={0}
 					href="/provider/transaction"
 				/>
 
 				<ProviderMetricCard
-					label="Reservations"
+					label={t.metrics.reservations}
 					value={totalReservations.toLocaleString()}
 					change="+8.7%"
+					changeLabel={t.metrics.vsPrevious}
 					trend={metricTrends.reservations}
 					delay={80}
 					href="/provider/reservations"
 				/>
 
 				<ProviderMetricCard
-					label="Creative spaces"
+					label={t.metrics.creativeSpaces}
 					value="8"
-					change="7 active"
+					change={`7 ${t.metrics.activeSpaces}`}
 					trend={metricTrends.spaces}
 					delay={160}
 					href="/provider/creative-spaces"
 				/>
 
 				<ProviderMetricCard
-					label="Equipment"
+					label={t.metrics.equipment}
 					value="42"
-					change="36 available"
+					change={`36 ${t.metrics.availableEquipment}`}
 					trend={metricTrends.equipment}
 					delay={240}
 					href="/provider/equipment"
@@ -200,10 +203,10 @@ export default function DashboardPage() {
 					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
 				>
 					<p className="text-sm font-semibold text-[#20221f]">
-						Manage packages
+						{t.quickLinks.packages}
 					</p>
 					<p className="mt-1 text-xs leading-5 text-[#777973]">
-						Update services and package availability.
+						{t.quickLinks.packagesDetail}
 					</p>
 				</Link>
 
@@ -212,10 +215,10 @@ export default function DashboardPage() {
 					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
 				>
 					<p className="text-sm font-semibold text-[#20221f]">
-						Review feedback
+						{t.quickLinks.feedback}
 					</p>
 					<p className="mt-1 text-xs leading-5 text-[#777973]">
-						See customer ratings and feedback.
+						{t.quickLinks.feedbackDetail}
 					</p>
 				</Link>
 
@@ -224,10 +227,10 @@ export default function DashboardPage() {
 					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
 				>
 					<p className="text-sm font-semibold text-[#20221f]">
-						Pricing policy
+						{t.quickLinks.pricing}
 					</p>
 					<p className="mt-1 text-xs leading-5 text-[#777973]">
-						Manage pricing rules and service rates.
+						{t.quickLinks.pricingDetail}
 					</p>
 				</Link>
 
@@ -236,10 +239,10 @@ export default function DashboardPage() {
 					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
 				>
 					<p className="text-sm font-semibold text-[#20221f]">
-						Transactions
+						{t.quickLinks.transactions}
 					</p>
 					<p className="mt-1 text-xs leading-5 text-[#777973]">
-						Track payments and transaction history.
+						{t.quickLinks.transactionsDetail}
 					</p>
 				</Link>
 			</section>

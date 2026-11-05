@@ -6,6 +6,7 @@ import type { Equipment } from "@/features/equipment";
 import { Pagination } from "@/shared/components/Pagination";
 import { LayoutGrid, Table2 } from "lucide-react";
 import { EquipmentModal } from "@/features/equipment/components/EquipmentModal";
+import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 
 type EquipmentRow = Equipment;
 
@@ -144,6 +145,8 @@ function formatPrice(value: number) {
 }
 
 export default function EquipmentPage() {
+  const { messages } = useProviderLanguage();
+  const eq = messages.equipment;
   const tableRef = useRef<HTMLElement | null>(null);
   const [viewMode, setViewMode] = useState<"table" | "grid">("grid");
 
@@ -238,20 +241,20 @@ export default function EquipmentPage() {
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div className="min-w-0 flex-1">
           <PageHeader
-            eyebrow="Provider workspace"
-            title="Equipment"
-            description="Manage the equipment listings and stock offered by your provider account."
+            eyebrow={messages.common.providerWorkspace}
+            title={eq.title}
+            description={eq.description}
           />
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:pt-2">
           <span className="rounded-full border border-[#d8d8d1] bg-white px-3 py-1.5 text-xs font-medium text-[#70716b]">
-            Sample data
+            {messages.common.sampleData}
           </span>
           <button
             type="button"
             onClick={() => exportEquipment(filteredEquipment)}
             className="h-9 rounded-md bg-[#20221f] px-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#393b36]">
-            Export CSV
+            {messages.common.exportCsv}
           </button>
         </div>
       </div>

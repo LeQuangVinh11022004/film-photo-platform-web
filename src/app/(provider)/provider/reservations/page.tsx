@@ -6,6 +6,7 @@ import { PageHeader } from "@/shared/components/PageHeader";
 import { Pagination } from "@/shared/components/Pagination";
 import { getProviderBooking, listProviderBookings, reviewProviderBooking } from "@/features/reservation/api";
 import type { ProviderBooking, ProviderBookingDecision } from "@/features/reservation";
+import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 
 const pageSize = 20;
 const fieldClassName =
@@ -77,6 +78,8 @@ function exportReservations(rows: ProviderBooking[]) {
 }
 
 export default function ReservationsPage() {
+  const { messages } = useProviderLanguage();
+  const res = messages.reservations;
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
@@ -156,9 +159,9 @@ export default function ReservationsPage() {
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div className="min-w-0 flex-1">
           <PageHeader
-            eyebrow="Provider workspace"
-            title="Reservations"
-            description="Review booking requests and reservation details for your spaces and packages."
+            eyebrow={messages.common.providerWorkspace}
+            title={res.title}
+            description={res.description}
           />
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:pt-2">
@@ -169,7 +172,7 @@ export default function ReservationsPage() {
             type="button"
             onClick={() => exportReservations(filteredReservations)}
             className="h-9 rounded-md bg-[#20221f] px-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#393b36]">
-            Export CSV
+            {messages.common.exportCsv}
           </button>
         </div>
       </div>

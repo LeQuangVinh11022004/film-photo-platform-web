@@ -5,6 +5,7 @@ import { useState } from "react";
 import { CalendarDays, TrendingDown, TrendingUp } from "lucide-react";
 
 import { PageHeader } from "@/shared/components/PageHeader";
+import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 import { HolidayPolicySection } from "@/features/provider-pricing-policy/components/HolidayPolicySection";
 import { CustomPricingRules } from "@/features/provider-pricing-policy/components/CustomPricingRules";
 import { PricingRuleModal } from "@/features/provider-pricing-policy/components/PricingRuleModal";
@@ -108,6 +109,8 @@ const summaryCardClass =
   "rounded-xl border border-[#e0e0da] bg-white p-4";
 
 export default function PricingPolicyPage() {
+  const { messages } = useProviderLanguage();
+  const pp = messages.pricingPolicy;
   const [holidayPolicies, setHolidayPolicies] =
     useState<HolidayPolicy[]>(initialHolidayPolicies);
 
@@ -198,9 +201,9 @@ export default function PricingPolicyPage() {
   return (
     <div className="mx-auto max-w-360">
       <PageHeader
-        eyebrow="Provider workspace"
-        title="Pricing Policy"
-        description="Manage seasonal pricing, holiday adjustments, and custom pricing rules for your services."
+        eyebrow={messages.common.providerWorkspace}
+        title={pp.title}
+        description={pp.description}
       />
 
       {/* Summary */}

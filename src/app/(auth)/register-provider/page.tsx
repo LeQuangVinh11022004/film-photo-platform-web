@@ -14,7 +14,7 @@ type FieldKey =
   | "password"
   | "confirmPassword"
   | "businessName"
-  | "phoneNumber"
+  | "phone"
   | "address"
   | "description";
 
@@ -25,7 +25,7 @@ export default function RegisterProviderPage() {
     password: "",
     confirmPassword: "",
     businessName: "",
-    phoneNumber: "",
+    phone: "",
     address: "",
     description: "",
   });
@@ -95,8 +95,8 @@ export default function RegisterProviderPage() {
       clientErrors.businessName = "Please enter your business name.";
     }
 
-    if (!formData.phoneNumber.trim()) {
-      clientErrors.phoneNumber = "Please enter your phone number.";
+    if (!formData.phone.trim()) {
+      clientErrors.phone = "Please enter your phone number.";
     }
 
     if (!formData.address.trim()) {
@@ -124,7 +124,7 @@ export default function RegisterProviderPage() {
         businessName: formData.businessName.trim(),
         description: formData.description.trim(),
         address: formData.address.trim(),
-        phoneNumber: formData.phoneNumber.trim(),
+        phone: formData.phone.trim(),
       });
 
       // Successful registration returns user object with userId or role: PROVIDER
@@ -147,7 +147,7 @@ export default function RegisterProviderPage() {
               const lowerKey = key.toLowerCase();
               if (lowerKey.includes("email")) serverErrors.email = msg;
               else if (lowerKey.includes("business")) serverErrors.businessName = msg;
-              else if (lowerKey.includes("phone")) serverErrors.phoneNumber = msg;
+              else if (lowerKey.includes("phone")) serverErrors.phone = msg;
               else if (lowerKey.includes("password")) serverErrors.password = msg;
               else if (lowerKey.includes("location") || lowerKey.includes("address")) serverErrors.address = msg;
               else if (lowerKey.includes("description")) serverErrors.description = msg;
@@ -162,7 +162,7 @@ export default function RegisterProviderPage() {
           if (apiMessage) {
             const lowerMsg = apiMessage.toLowerCase();
             if (lowerMsg.includes("email")) serverErrors.email = apiMessage;
-            else if (lowerMsg.includes("phone")) serverErrors.phoneNumber = apiMessage;
+            else if (lowerMsg.includes("phone")) serverErrors.phone = apiMessage;
             else if (lowerMsg.includes("password")) serverErrors.password = apiMessage;
             else if (lowerMsg.includes("address")) serverErrors.address = apiMessage;
           }
@@ -334,14 +334,14 @@ export default function RegisterProviderPage() {
                 type="tel"
                 autoComplete="tel"
                 required
-                value={formData.phoneNumber}
-                onChange={(e) => handleFieldChange("phoneNumber", e.target.value)}
+                value={formData.phone}
+                onChange={(e) => handleFieldChange("phone", e.target.value)}
                 placeholder="e.g. 0901234567"
-                className={getFieldClassName("phoneNumber")}
+                className={getFieldClassName("phone")}
               />
-              {fieldErrors.phoneNumber ? (
+              {fieldErrors.phone ? (
                 <p role="alert" className="mt-1 text-xs font-medium text-red-600">
-                  {fieldErrors.phoneNumber}
+                  {fieldErrors.phone}
                 </p>
               ) : null}
             </label>

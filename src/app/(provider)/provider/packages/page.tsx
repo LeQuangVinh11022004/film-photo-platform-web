@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import type { ServicePackage } from "@/features/service-package";
+import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 
 type ServicePackageRow = ServicePackage;
 
@@ -98,6 +99,8 @@ function exportPackages(rows: ServicePackageRow[]) {
 }
 
 export default function PackagesPage() {
+  const { messages } = useProviderLanguage();
+  const pkg = messages.packages;
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
   const [selectedPackage, setSelectedPackage] =
@@ -123,20 +126,20 @@ export default function PackagesPage() {
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div className="min-w-0 flex-1">
           <PageHeader
-            eyebrow="Provider workspace"
-            title="Service packages"
-            description="Configure the packages customers can discover and book from your provider account."
+            eyebrow={messages.common.providerWorkspace}
+            title={pkg.title}
+            description={pkg.description}
           />
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:pt-2">
           <span className="rounded-full border border-[#d8d8d1] bg-white px-3 py-1.5 text-xs font-medium text-[#70716b]">
-            Sample data
+            {messages.common.sampleData}
           </span>
           <button
             type="button"
             onClick={() => exportPackages(filteredPackages)}
             className="h-9 rounded-md bg-[#20221f] px-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#393b36]">
-            Export CSV
+            {messages.common.exportCsv}
           </button>
         </div>
       </div>

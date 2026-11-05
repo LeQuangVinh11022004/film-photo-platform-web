@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 
 type UpcomingReservation = {
 	id: string;
@@ -16,16 +19,25 @@ type ProviderUpcomingReservationsProps = {
 export function ProviderUpcomingReservations({
 	data,
 }: ProviderUpcomingReservationsProps) {
+	const { messages } = useProviderLanguage();
+	const u = messages.dashboard.upcoming;
+	const s = messages.dashboard.status;
+
+	const statusLabelMap: Record<string, string> = {
+		Confirmed: s.confirmed,
+		Pending: s.pending,
+	};
+
 	return (
 		<article className="rounded-xl border border-[#e2e4dd] bg-white">
 			<div className="flex items-start justify-between gap-4 border-b border-[#eeeeea] px-5 py-5 sm:px-6">
 				<div>
 					<h2 className="text-base font-semibold text-[#20221f]">
-						Upcoming reservations
+						{u.title}
 					</h2>
 
 					<p className="mt-1 text-sm text-[#777973]">
-						Reservations that need your attention.
+						{u.description}
 					</p>
 				</div>
 
@@ -33,7 +45,7 @@ export function ProviderUpcomingReservations({
 					href="/provider/reservations"
 					className="shrink-0 text-xs font-semibold text-[#4d875d] hover:text-[#376844]"
 				>
-					View all
+					{u.viewAll}
 				</Link>
 			</div>
 
@@ -56,23 +68,27 @@ export function ProviderUpcomingReservations({
 											: "bg-[#f8edd9] text-[#9a6a20]"
 									}`}
 								>
-									{reservation.status}
+									{statusLabelMap[reservation.status] ?? reservation.status}
 								</span>
 							</div>
 
-							<p className="mt-1 truncate text-xs text-[#777973]">
+							<p className="mt-1 text-xs text-[#70736c]">
 								{reservation.space}
 							</p>
 						</div>
 
-						<div className="shrink-0 text-left sm:text-right">
-							<p className="text-xs font-semibold text-[#4b4e47]">
-								{reservation.date}
-							</p>
+						<div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
+							<span className="text-xs font-medium text-[#20221f]">
+								{reservation.date === "Today"
+									? u.today
+									: reservation.date === "Tomorrow"
+									? u.tomorrow
+									: reservation.date}
+							</span>
 
-							<p className="mt-1 text-xs text-[#858880]">
+							<span className="text-[11px] text-[#858880]">
 								{reservation.time}
-							</p>
+							</span>
 						</div>
 					</div>
 				))}

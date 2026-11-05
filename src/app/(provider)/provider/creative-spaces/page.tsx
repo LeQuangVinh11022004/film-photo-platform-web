@@ -12,6 +12,7 @@ import { ProviderSpaceDetailsDialog } from "@/features/provider-space/components
 import type { ProviderFeatureType, ProviderSpace, ProviderSpaceRequest } from "@/features/provider-space";
 import type { PagedResponse } from "@/types";
 import { ConfirmDeleteDialog } from "@/shared/components/ConfirmDeleteDialog";
+import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 
 const pageSize = 15;
 const fieldClassName = "h-10 rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#343630] outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
@@ -43,6 +44,8 @@ function exportSpaces(rows: ProviderSpace[]) {
 }
 
 export default function CreativeSpacesPage() {
+	const { messages } = useProviderLanguage();
+	const cs = messages.creativeSpaces;
 	const tableRef = useRef<HTMLElement | null>(null);
 	const [result, setResult] = useState<PagedResponse<ProviderSpace> | null>(null);
 	const [featureTypes, setFeatureTypes] = useState<ProviderFeatureType[]>([]);
@@ -191,8 +194,8 @@ export default function CreativeSpacesPage() {
 	return (
 		<div className="mx-auto max-w-375">
 			<div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-				<div className="min-w-0 flex-1"><PageHeader eyebrow="Provider workspace" title="Creative spaces" description="Manage the spaces customers can reserve from your provider account." /></div>
-				<div className="flex shrink-0 items-center gap-2 sm:pt-2"><button type="button" onClick={() => exportSpaces(filteredSpaces)} disabled={!filteredSpaces.length} className="h-9 rounded-md bg-[#20221f] px-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#393b36] disabled:opacity-50">Export CSV</button></div>
+				<div className="min-w-0 flex-1"><PageHeader eyebrow={messages.common.providerWorkspace} title={cs.title} description={cs.description} /></div>
+				<div className="flex shrink-0 items-center gap-2 sm:pt-2"><button type="button" onClick={() => exportSpaces(filteredSpaces)} disabled={!filteredSpaces.length} className="h-9 rounded-md bg-[#20221f] px-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#393b36] disabled:opacity-50">{messages.common.exportCsv}</button></div>
 			</div>
 
 			<section aria-label="Creative space summary" className="mt-3 grid gap-3 sm:grid-cols-3">

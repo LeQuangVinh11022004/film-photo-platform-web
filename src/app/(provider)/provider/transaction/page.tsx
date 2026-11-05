@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { PageHeader } from "@/shared/components/PageHeader";
+import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 
 import { TransactionSummary } from "@/features/provider-transaction/components/TransactionSummary";
 import {
@@ -169,6 +170,8 @@ const thirtyDayRevenue: RevenuePoint[] = [
 ];
 
 export default function TransactionPage() {
+  const { messages } = useProviderLanguage();
+  const tx = messages.transactions;
   const [transactions] = useState<Transaction[]>(initialTransactions);
   const [period, setPeriod] = useState<"7d" | "30d">("7d");
 
@@ -181,9 +184,9 @@ export default function TransactionPage() {
   return (
     <div className="mx-auto max-w-360 space-y-6 pb-8">
       <PageHeader
-        eyebrow="Provider workspace"
-        title="Transactions"
-        description="Track your revenue, platform fees, payouts, and transaction history."
+        eyebrow={messages.common.providerWorkspace}
+        title={tx.title}
+        description={tx.description}
       />
 
       <TransactionSummary

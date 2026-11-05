@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 
 export type ProviderPeriod = "7d" | "30d" | "90d";
 type ChartMetric = "reservations" | "revenue";
@@ -44,6 +45,8 @@ export function ProviderPerformanceChart({
   data,
 }: ProviderPerformanceChartProps) {
   const [metric, setMetric] = useState<ChartMetric>("reservations");
+  const { messages } = useProviderLanguage();
+  const p = messages.dashboard.performance;
 
   const currentData = data[period];
 
@@ -54,13 +57,11 @@ export function ProviderPerformanceChart({
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
         <div>
           <h2 className="text-base font-semibold text-[#20221f]">
-            Performance overview
+            {p.title}
           </h2>
 
           <p className="mt-1 text-sm text-[#777973]">
-            {isRevenue
-              ? "Revenue generated during the selected period."
-              : "Reservations received during the selected period."}
+            {isRevenue ? p.revenueDesc : p.reservationsDesc}
           </p>
         </div>
 
@@ -81,7 +82,7 @@ export function ProviderPerformanceChart({
                     ? "bg-[#20221f] text-white shadow-sm"
                     : "text-[#70736c] hover:bg-white hover:text-[#20221f]"
                 }`}>
-                {item === "reservations" ? "Reservations" : "Revenue"}
+                {item === "reservations" ? p.reservations : p.revenue}
               </button>
             ))}
           </div>
@@ -102,11 +103,7 @@ export function ProviderPerformanceChart({
                     ? "bg-[#20221f] text-white shadow-sm"
                     : "text-[#70736c] hover:bg-white hover:text-[#20221f]"
                 }`}>
-                {item === "7d"
-                  ? "7 days"
-                  : item === "30d"
-                    ? "30 days"
-                    : "90 days"}
+                {item === "7d" ? p.d7 : item === "30d" ? p.d30 : p.d90}
               </button>
             ))}
           </div>
@@ -149,33 +146,28 @@ export function ProviderPerformanceChart({
                 fill: "#858880",
               }}
               tickFormatter={isRevenue ? formatCurrency : formatNumber}
-              width={isRevenue ? 55 : 40}
+              dx={-4}
             />
 
             <Tooltip
-              cursor={{
-                fill: isRevenue ? "#fbf7ee" : "#f2f7f3",
-              }}
-              content={({ active, payload, label }) => {
+              cursor={{ fill: "rgba(77, 135, 93, 0.06)" }}
+              content={({ active, payload }) => {
                 if (!active || !payload?.length) {
                   return null;
                 }
 
-                const value = Number(payload[0]?.value ?? 0);
+                const item = payload[0].payload as PerformancePoint;
 
                 return (
-                  <div className="rounded-lg border border-[#dedfd9] bg-white px-4 py-3 shadow-lg">
-                    <p className="mb-2 text-xs font-semibold text-[#343631]">
-                      {label}
+                  <div className="rounded-xl border border-[#dedfd9] bg-white p-3 shadow-xl">
+                    <p className="text-xs font-medium text-[#70736c]">
+                      {item.label}
                     </p>
 
-                    <p className="text-xs text-[#70736c]">
-                      {isRevenue ? "Revenue" : "Reservations"}:{" "}
-                      <span className="font-semibold text-[#20221f]">
-                        {isRevenue
-                          ? formatFullCurrency(value)
-                          : `${formatNumber(value)} reservations`}
-                      </span>
+                    <p className="mt-1 text-sm font-semibold text-[#20221f]">
+                      {isRevenue
+                        ? formatFullCurrency(item.revenue)
+                        : `${formatNumber(item.reservations)} ${p.reservations}`}
                     </p>
                   </div>
                 );
@@ -184,26 +176,25 @@ export function ProviderPerformanceChart({
 
             <Bar
               dataKey={metric}
-              name={isRevenue ? "Revenue" : "Reservations"}
-              fill={isRevenue ? "#c89b42" : "#4d875d"}
-              radius={[5, 5, 0, 0]}
-              barSize={isRevenue ? 30 : 34}
+              fill="#4d875d"
+              radius={[6, 6, 0, 0]}
+              maxBarSize={44}
               animationDuration={650}
-              animationBegin={50}
             />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="mt-4 flex items-center gap-2 border-t border-[#eeeeea] pt-4">
-        <span
-          className={`h-2.5 w-2.5 rounded-sm ${
-            isRevenue ? "bg-[#c89b42]" : "bg-[#4d875d]"
-          }`}
-        />
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#eceee8] pt-4 text-xs text-[#70736c]">
+        <div className="flex items-center gap-2">
+          <span className="h-2.5 w-2.5 rounded-full bg-[#4d875d]" />
+          <span>
+            {isRevenue ? p.revenue : p.reservations}
+          </span>
+        </div>
 
-        <span className="text-xs text-[#70736c]">
-          {isRevenue ? "Revenue" : "Reservations"}
+        <span className="text-[11px] text-[#858880]">
+          {messages.common.sampleData}
         </span>
       </div>
     </article>

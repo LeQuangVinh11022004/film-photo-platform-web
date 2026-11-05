@@ -7,6 +7,7 @@ import {
 	ResponsiveContainer,
 	Tooltip,
 } from "recharts";
+import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 
 type StatusItem = {
 	name: string;
@@ -24,15 +25,25 @@ export function ProviderReservationStatus({
 	data,
 	total,
 }: ProviderReservationStatusProps) {
+	const { messages } = useProviderLanguage();
+	const s = messages.dashboard.status;
+
+	const statusLabelMap: Record<string, string> = {
+		Confirmed: s.confirmed,
+		Pending: s.pending,
+		Completed: s.completed,
+		Cancelled: s.cancelled,
+	};
+
 	return (
 		<article className="rounded-xl border border-[#e2e4dd] bg-white p-5 sm:p-6">
 			<div>
 				<h2 className="text-base font-semibold text-[#20221f]">
-					Reservation status
+					{s.title}
 				</h2>
 
 				<p className="mt-1 text-sm text-[#777973]">
-					Current booking distribution.
+					{s.description}
 				</p>
 			</div>
 
@@ -66,11 +77,12 @@ export function ProviderReservationStatus({
 									}
 
 									const item = payload[0];
+									const label = statusLabelMap[String(item.name)] ?? item.name;
 
 									return (
 										<div className="rounded-lg border border-[#dedfd9] bg-white px-3 py-2 shadow-lg">
 											<p className="text-xs font-medium text-[#70736c]">
-												{item.name}
+												{label}
 											</p>
 											<p className="mt-1 text-sm font-semibold text-[#20221f]">
 												{item.value}
@@ -87,7 +99,7 @@ export function ProviderReservationStatus({
 							{total}
 						</span>
 						<span className="mt-1 text-[10px] uppercase tracking-wider text-[#858880]">
-							Reservations
+							{s.reservations}
 						</span>
 					</div>
 				</div>
@@ -98,43 +110,39 @@ export function ProviderReservationStatus({
 							total > 0
 								? Math.round((item.value / total) * 100)
 								: 0;
+						const label = statusLabelMap[item.name] ?? item.name;
 
 						return (
 							<li
 								key={item.name}
-								className="flex items-center gap-3 text-sm"
+								className="flex items-center justify-between text-xs"
 							>
-								<span
-									className="h-2.5 w-2.5 shrink-0 rounded-full"
-									style={{
-										backgroundColor:
-											COLORS[index % COLORS.length],
-									}}
-								/>
+								<div className="flex items-center gap-2">
+									<span
+										className="h-2.5 w-2.5 rounded-full"
+										style={{
+											backgroundColor:
+												COLORS[index % COLORS.length],
+										}}
+									/>
+									<span className="font-medium text-[#20221f]">
+										{label}
+									</span>
+								</div>
 
-								<span className="min-w-0 flex-1 truncate text-[#555850]">
-									{item.name}
-								</span>
-
-								<span className="font-semibold text-[#292b27]">
-									{item.value}
-								</span>
-
-								<span className="w-8 text-right text-xs text-[#858880]">
-									{percentage}%
-								</span>
+								<div className="flex items-center gap-2 text-[#70736c]">
+									<span className="font-semibold text-[#20221f]">
+										{item.value}
+									</span>
+									<span className="text-[11px] text-[#858880]">
+										({percentage}%)
+									</span>
+								</div>
 							</li>
 						);
 					})}
 				</ul>
 			</div>
-
-			<a
-				href="/provider/reservations"
-				className="mt-6 block border-t border-[#eeeeea] pt-4 text-xs font-semibold text-[#4d875d] transition-colors hover:text-[#376844]"
-			>
-				View all reservations →
-			</a>
 		</article>
 	);
 }
