@@ -101,6 +101,9 @@ export default function Home() {
           </nav>
 
           <div className="flex items-center gap-3">
+            <Link href="/register-provider" className="hidden rounded-full border border-[#e5d7b4] bg-[#fffaf0] px-4 py-2 text-sm font-semibold text-[#8a6a21] transition hover:bg-[#f7edd2] lg:inline-flex">
+              Become a provider
+            </Link>
             <Link href="/login" className="hidden rounded-full border border-[#d9d4c7] px-4 py-2 text-sm font-medium text-[#1b1b18] transition hover:bg-[#f4f1ea] sm:inline-flex">
               Sign in
             </Link>
@@ -132,7 +135,10 @@ export default function Home() {
                 <Link href="/register" className="inline-flex rounded-full bg-[#171715] px-6 py-3 text-sm font-semibold text-white transition duration-300 hover:-translate-y-0.5 hover:bg-[#2d2c29] hover:shadow-[0_12px_24px_rgba(23,23,21,0.18)]">
                   Start booking
                 </Link>
-                <Link href="/login" className="inline-flex rounded-full border border-[#d8d2c8] bg-white px-6 py-3 text-sm font-semibold text-[#171715] transition duration-300 hover:-translate-y-0.5 hover:bg-[#f8f6f2]">
+                <Link href="/register-provider" className="inline-flex rounded-full border border-[#d8d2c8] bg-white px-6 py-3 text-sm font-semibold text-[#171715] transition duration-300 hover:-translate-y-0.5 hover:bg-[#f8f6f2]">
+                  Become a provider
+                </Link>
+                <Link href="/login" className="inline-flex rounded-full border border-transparent px-4 py-3 text-sm font-semibold text-[#666560] transition hover:text-[#171715]">
                   Sign in
                 </Link>
               </div>
@@ -408,6 +414,9 @@ export default function Home() {
               <Link href="/register" className="inline-flex rounded-full bg-[#f4e4b9] px-6 py-3 text-sm font-semibold text-[#171715] transition hover:bg-[#f7efdb]">
                 Create account
               </Link>
+              <Link href="/register-provider" className="inline-flex rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">
+                Register as provider
+              </Link>
               <Link href="/login" className="inline-flex rounded-full border border-white/20 bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
                 Sign in
               </Link>
@@ -462,6 +471,7 @@ export default function Home() {
             <ul className="mt-4 space-y-3 text-[#5b5a56]">
               <li><Link href="/login" className="transition hover:text-[#171715]">Login</Link></li>
               <li><Link href="/register" className="transition hover:text-[#171715]">Create account</Link></li>
+              <li><Link href="/register-provider" className="transition hover:text-[#171715]">Register as provider</Link></li>
               <li><Link href="/forgot-password" className="transition hover:text-[#171715]">Forgot password</Link></li>
             </ul>
           </div>
