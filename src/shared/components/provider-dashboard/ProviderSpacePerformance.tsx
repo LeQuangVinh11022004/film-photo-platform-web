@@ -9,6 +9,7 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
+import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 
 type SpacePerformance = {
 	name: string;
@@ -22,16 +23,19 @@ type ProviderSpacePerformanceProps = {
 export function ProviderSpacePerformance({
 	data,
 }: ProviderSpacePerformanceProps) {
+	const { messages } = useProviderLanguage();
+	const sp = messages.dashboard.spaces;
+
 	return (
 		<article className="rounded-xl border border-[#e2e4dd] bg-white p-5 sm:p-6">
 			<div className="flex items-start justify-between gap-4">
 				<div>
 					<h2 className="text-base font-semibold text-[#20221f]">
-						Space performance
+						{sp.title}
 					</h2>
 
 					<p className="mt-1 text-sm text-[#777973]">
-						Most booked creative spaces.
+						{sp.description}
 					</p>
 				</div>
 
@@ -39,7 +43,7 @@ export function ProviderSpacePerformance({
 					href="/provider/creative-spaces"
 					className="shrink-0 text-xs font-semibold text-[#4d875d] transition-colors hover:text-[#376844]"
 				>
-					View spaces
+					{sp.viewSpaces}
 				</Link>
 			</div>
 
@@ -60,7 +64,7 @@ export function ProviderSpacePerformance({
 							axisLine={false}
 							tickLine={false}
 							tick={{
-								fontSize: 10,
+								fontSize: 11,
 								fill: "#858880",
 							}}
 						/>
@@ -68,32 +72,58 @@ export function ProviderSpacePerformance({
 						<YAxis
 							type="category"
 							dataKey="name"
-							width={105}
 							axisLine={false}
 							tickLine={false}
 							tick={{
-								fontSize: 11,
-								fill: "#555850",
+								fontSize: 12,
+								fill: "#343631",
 							}}
+							width={130}
 						/>
 
 						<Tooltip
-							cursor={{ fill: "#f6f7f3" }}
-							formatter={(value) => [
-								`${value} bookings`,
-								"Bookings",
-							]}
+							cursor={{ fill: "rgba(77, 135, 93, 0.06)" }}
+							content={({ active, payload }) => {
+								if (!active || !payload?.length) {
+									return null;
+								}
+
+								const item = payload[0]
+									.payload as SpacePerformance;
+
+								return (
+									<div className="rounded-xl border border-[#dedfd9] bg-white p-3 shadow-xl">
+										<p className="text-xs font-medium text-[#70736c]">
+											{item.name}
+										</p>
+										<p className="mt-1 text-sm font-semibold text-[#20221f]">
+											{item.bookings} {sp.bookings}
+										</p>
+									</div>
+								);
+							}}
 						/>
 
 						<Bar
 							dataKey="bookings"
 							fill="#4d875d"
-							radius={[0, 5, 5, 0]}
-							barSize={22}
-							animationDuration={700}
+							radius={[0, 6, 6, 0]}
+							barSize={18}
+							animationDuration={650}
 						/>
 					</BarChart>
 				</ResponsiveContainer>
+			</div>
+
+			<div className="mt-4 flex items-center justify-between border-t border-[#eceee8] pt-4 text-xs text-[#70736c]">
+				<span className="text-[11px] text-[#858880]">
+					{sp.description}
+				</span>
+
+				<span className="font-medium text-[#4d875d]">
+					{data.reduce((acc, curr) => acc + curr.bookings, 0)}{" "}
+					{sp.bookings}
+				</span>
 			</div>
 		</article>
 	);

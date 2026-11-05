@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/shared/components/PageHeader";
+import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 import {
   Star,
   MessageSquareText,
@@ -198,6 +199,8 @@ function RatingBadge({ rating }: { rating: number }) {
 }
 
 export default function RatingFeedbackPage() {
+  const { messages } = useProviderLanguage();
+  const rf = messages.ratingFeedback;
   const [activeTab, setActiveTab] = useState<TabType>("rating");
   const [query, setQuery] = useState("");
   const [resourceType, setResourceType] = useState("all");
@@ -266,9 +269,9 @@ export default function RatingFeedbackPage() {
     <div className="mx-auto max-w-375 space-y-6">
       {/* Page header */}
       <PageHeader
-        eyebrow="Provider workspace"
-        title="Rating & Feedback"
-        description="Monitor customer ratings and feedback for your resources and bookings."
+        eyebrow={messages.common.providerWorkspace}
+        title={rf.title}
+        description={rf.description}
       />
 
       {/* Summary */}

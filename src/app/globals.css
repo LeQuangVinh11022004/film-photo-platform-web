@@ -15,7 +15,7 @@ body {
   font-family: var(--font-geist-sans), sans-serif;
 }
 
-.admin-workspace[data-admin-theme="dark"] {
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) {
   color-scheme: dark;
   --admin-shell: #111714;
   --admin-surface: #19211c;
@@ -28,81 +28,135 @@ body {
   color: var(--admin-ink);
 }
 
-.admin-workspace[data-admin-theme="dark"] [class~="bg-white"],
-.admin-workspace[data-admin-theme="dark"] [class~="bg-white/95"] { background-color: color-mix(in srgb, var(--admin-surface) 94%, transparent); }
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#f3f4f6]"],
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#f7f7f2]"],
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#f7f7f3]"],
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#f8f8f5]"],
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#fafaf8]"],
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#fcfcfa]"],
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#eeeee9]"],
-.admin-workspace[data-admin-theme="dark"] [class~="bg-slate-50"] { background-color: var(--admin-surface-raised); }
-.admin-workspace[data-admin-theme="dark"] [class~="bg-slate-100"],
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#f0f0ec]"] { background-color: var(--admin-hover); }
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#e5f0e8]"],
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#e9eee7]"],
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#edf2eb]"],
-.admin-workspace[data-admin-theme="dark"] [class~="bg-emerald-50"] { background-color: #26372b; }
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#f8edd9]"] { background-color: #3a3020; }
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#f5e4e1]"] { background-color: #3c2826; }
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#e6ebf2]"] { background-color: #273342; }
-.admin-workspace[data-admin-theme="dark"] [class~="bg-[#20221f]"] { background-color: #45664b; }
-.admin-workspace[data-admin-theme="dark"] [class~="hover:bg-[#fafaf8]"]:hover,
-.admin-workspace[data-admin-theme="dark"] [class~="hover:bg-[#f7f7f3]"]:hover,
-.admin-workspace[data-admin-theme="dark"] [class~="hover:bg-[#fcfcfa]"]:hover,
-.admin-workspace[data-admin-theme="dark"] [class~="hover:bg-slate-50"]:hover,
-.admin-workspace[data-admin-theme="dark"] [class~="hover:bg-slate-100"]:hover { background-color: var(--admin-hover); }
-.admin-workspace[data-admin-theme="dark"] [class~="border-[#deded8]"],
-.admin-workspace[data-admin-theme="dark"] [class~="border-[#d8d8d1]"],
-.admin-workspace[data-admin-theme="dark"] [class~="border-[#e0e0da]"],
-.admin-workspace[data-admin-theme="dark"] [class~="border-[#e8e8e2]"],
-.admin-workspace[data-admin-theme="dark"] [class~="border-slate-100"],
-.admin-workspace[data-admin-theme="dark"] [class~="border-slate-200"],
-.admin-workspace[data-admin-theme="dark"] [class~="border-stone-200"] { border-color: var(--admin-border); }
-.admin-workspace[data-admin-theme="dark"] [class~="divide-[#eeeeea]"] > :not(:last-child),
-.admin-workspace[data-admin-theme="dark"] [class~="divide-slate-100"] > :not(:last-child) { border-color: var(--admin-border); }
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#20221f]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#292b27]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#343630]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#444640]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#454741]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#4c4e48]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#686a64]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#6b6d67]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#70716b]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#72736d]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#777973]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#82837d]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#858680]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#39724b]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#45644a]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#93651e]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#9a6a20]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#a34d42]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-slate-500"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-slate-600"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-slate-700"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-slate-800"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-slate-900"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-slate-950"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-stone-900"] { color: var(--admin-ink); }
-.admin-workspace[data-admin-theme="dark"] [class~="text-stone-500"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-stone-600"] { color: var(--admin-muted); }
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#39724b]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#45644a]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-emerald-950"] { color: #a8d6ad; }
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#93651e]"],
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#9a6a20]"] { color: #e6bd70; }
-.admin-workspace[data-admin-theme="dark"] [class~="text-[#a34d42]"] { color: #eea497; }
-.admin-workspace[data-admin-theme="dark"] [class~="text-emerald-700"] { color: #a8d6ad; }
-.admin-workspace[data-admin-theme="dark"] [class~="border-emerald-700"] { border-color: #5b9563; }
-.admin-workspace[data-admin-theme="dark"] input,
-.admin-workspace[data-admin-theme="dark"] select { color: var(--admin-ink); }
-.admin-workspace[data-admin-theme="dark"] input::placeholder { color: var(--admin-muted); }
-.admin-workspace[data-admin-theme="dark"] .admin-meter-track { background-color: var(--admin-hover); }
-.admin-workspace[data-admin-theme="dark"] .admin-metric { background-image: linear-gradient(135deg, rgb(57 114 75 / 9%), transparent 72%); }
-.admin-workspace[data-admin-theme="dark"] .admin-loading-overlay { background-color: rgb(17 23 20 / 78%); }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-white"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-white/95"] { background-color: color-mix(in srgb, var(--admin-surface) 94%, transparent); }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#f3f4f6]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#f7f7f2]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#f7f7f3]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#f8f8f5]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#f8f9f5]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#fafaf8]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#fafaf7]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#fafbf8]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#f6f7f3]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#fbf7ee]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#fcfcfa]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#eeeee9]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-slate-50"] { background-color: var(--admin-surface-raised); }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-slate-100"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#f0f0ec]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#f0f1ec]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#eceee8]"] { background-color: var(--admin-hover); }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#e5f0e8]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#e6f0e8]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#eef6ef]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#e9eee7]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#edf2eb]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-emerald-50"] { background-color: #26372b; }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#f8edd9]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#faf0df]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#faf2df]"] { background-color: #3a3020; }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#f5e4e1]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#fbefed]"] { background-color: #3c2826; }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#e6ebf2]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#eaf0f8]"] { background-color: #273342; }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#20221f]"] { background-color: #45664b; }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="hover:bg-[#fafaf8]"]:hover,
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="hover:bg-[#fafaf7]"]:hover,
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="hover:bg-[#fafbf8]"]:hover,
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="hover:bg-[#f7f7f3]"]:hover,
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="hover:bg-[#fcfcfa]"]:hover,
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="hover:bg-slate-50"]:hover,
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="hover:bg-slate-100"]:hover { background-color: var(--admin-hover); }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-[#deded8]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-[#dedfd9]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-[#dfe1da]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-[#d8d8d1]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-[#e0e0da]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-[#e8e8e2]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-[#e2e4dd]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-[#cdd2c5]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-[#b8b9b1]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-[#c8d9c9]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-[#c9dfcd]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-[#e6c3bd]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-[#eeeeea]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-slate-100"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-slate-200"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-stone-200"] { border-color: var(--admin-border); }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="divide-[#eeeeea]"] > :not(:last-child),
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="divide-slate-100"] > :not(:last-child) { border-color: var(--admin-border); }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#171815]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#20221f]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#292b27]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#343630]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#343631]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#444640]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#454741]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#4b4e47]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#4c4e48]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#555750]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#555850]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#686a64]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#6b6d67]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#70716b]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#70736c]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#72736d]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#777973]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#7b7e76]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#82837d]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#858680]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#858880]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#a0a198]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-slate-500"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-slate-600"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-slate-700"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-slate-800"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-slate-900"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-slate-950"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-stone-900"] { color: var(--admin-ink); }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-stone-500"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-stone-600"] { color: var(--admin-muted); }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#39724b]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#376844]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#285636]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#45644a]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#4d875d]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-emerald-950"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-emerald-700"] { color: #a8d6ad; }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#93651e]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#9a6a20]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#e6ad42]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#c89b42]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#a36a24]"] { color: #e6bd70; }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#a34d42]"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#9c4339]"] { color: #eea497; }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="text-[#426a9b]"] { color: #9bbfe8; }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="border-emerald-700"] { border-color: #5b9563; }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) input,
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) select,
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) textarea {
+  color: var(--admin-ink);
+}
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) input::placeholder,
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) textarea::placeholder {
+  color: var(--admin-muted);
+}
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) .admin-meter-track { background-color: var(--admin-hover); }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) .admin-metric { background-image: linear-gradient(135deg, rgb(57 114 75 / 9%), transparent 72%); }
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) .admin-loading-overlay { background-color: rgb(17 23 20 / 78%); }
+
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) .recharts-cartesian-grid line {
+  stroke: var(--admin-border) !important;
+}
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) .recharts-text {
+  fill: var(--admin-muted) !important;
+}
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) .recharts-default-tooltip {
+  background-color: var(--admin-surface-raised) !important;
+  border-color: var(--admin-border) !important;
+  color: var(--admin-ink) !important;
+}
 
 .admin-metric { animation: admin-rise-in 520ms cubic-bezier(.2,.7,.2,1) both; }
 .admin-chart-bar { transform-origin: bottom; animation: admin-bar-in 720ms cubic-bezier(.2,.7,.2,1) both; }
@@ -142,7 +196,7 @@ body {
 @keyframes admin-draw-line { to { stroke-dashoffset: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .admin-workspace *, .admin-workspace *::before, .admin-workspace *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  :is(.admin-workspace, .provider-workspace) *, :is(.admin-workspace, .provider-workspace) *::before, :is(.admin-workspace, .provider-workspace) *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
 @keyframes provider-fade-up {
