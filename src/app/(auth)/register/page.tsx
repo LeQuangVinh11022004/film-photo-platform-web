@@ -9,12 +9,20 @@ export default function RegisterPage() {
       description="Set up your workspace for creative bookings."
       backgroundImage="/images/auth/register-background.jpg"
       footer={
-        <p>
-          Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-[#171715] underline decoration-[#d6a83f] underline-offset-4 hover:text-[#8c6a20]">
-            Sign in
-          </Link>
-        </p>
+        <div className="space-y-2 text-center">
+          <p>
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-[#171715] underline decoration-[#d6a83f] underline-offset-4 hover:text-[#8c6a20]">
+              Sign in
+            </Link>
+          </p>
+          <p className="text-sm text-[#70706b]">
+            Looking to list your spaces or gear?{" "}
+            <Link href="/register-provider" className="font-semibold text-[#171715] underline decoration-[#d6a83f] underline-offset-4 hover:text-[#8c6a20]">
+              Register as provider
+            </Link>
+          </p>
+        </div>
       }
     >
       <form className="space-y-5">

@@ -69,15 +69,26 @@ export default function LoginPage() {
       description="Sign in to manage your creative spaces."
       backgroundImage="/images/auth/login-background.jpg"
       footer={
-        <p>
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/register"
-            className="font-semibold text-[#171715] underline decoration-[#d6a83f] underline-offset-4 hover:text-[#8c6a20]"
-          >
-            Create an account
-          </Link>
-        </p>
+        <div className="space-y-2 text-center">
+          <p>
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/register"
+              className="font-semibold text-[#171715] underline decoration-[#d6a83f] underline-offset-4 hover:text-[#8c6a20]"
+            >
+              Create an account
+            </Link>
+          </p>
+          <p className="text-sm text-[#70706b]">
+            Are you a service provider?{" "}
+            <Link
+              href="/register-provider"
+              className="font-semibold text-[#171715] underline decoration-[#d6a83f] underline-offset-4 hover:text-[#8c6a20]"
+            >
+              Register as provider
+            </Link>
+          </p>
+        </div>
       }
     >
       <form className="space-y-6" onSubmit={handleSubmit}>
