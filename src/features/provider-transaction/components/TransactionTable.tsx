@@ -3,6 +3,7 @@
 
 import { useMemo, useState } from "react";
 import { Download, Search, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { Pagination } from "@/shared/components/Pagination";
 import type {
   Transaction,
   TransactionStatus,
@@ -88,6 +89,8 @@ export function TransactionTable({ transactions }: Props) {
   const [query, setQuery] = useState("");
   const [type, setType] = useState("all");
   const [status, setStatus] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   const filtered = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -113,6 +116,10 @@ export function TransactionTable({ transactions }: Props) {
       return matchesQuery && matchesType && matchesStatus;
     });
   }, [transactions, query, type, status]);
+
+  const paginated = useMemo(() => {
+    return filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  }, [filtered, currentPage, pageSize]);
 
   return (
     <section className="overflow-hidden rounded-xl border border-[#e0e0da] bg-white">
@@ -144,7 +151,10 @@ export function TransactionTable({ transactions }: Props) {
           />
           <input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Search transaction, booking, customer..."
             className="h-10 w-full rounded-md border border-[#d8d8d1] pl-9 pr-3 text-sm outline-none focus:border-[#39724b]"
           />
@@ -152,7 +162,10 @@ export function TransactionTable({ transactions }: Props) {
 
         <select
           value={type}
-          onChange={(event) => setType(event.target.value)}
+          onChange={(event) => {
+            setType(event.target.value);
+            setCurrentPage(1);
+          }}
           className="h-10 rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#555750] outline-none focus:border-[#39724b]"
         >
           <option value="all">All transaction types</option>
@@ -165,7 +178,10 @@ export function TransactionTable({ transactions }: Props) {
 
         <select
           value={status}
-          onChange={(event) => setStatus(event.target.value)}
+          onChange={(event) => {
+            setStatus(event.target.value);
+            setCurrentPage(1);
+          }}
           className="h-10 rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#555750] outline-none focus:border-[#39724b]"
         >
           <option value="all">All statuses</option>
@@ -189,7 +205,7 @@ export function TransactionTable({ transactions }: Props) {
           </thead>
 
           <tbody className="divide-y divide-[#eeeeea]">
-            {filtered.map((transaction) => {
+            {paginated.map((transaction) => {
               const incoming =
                 transaction.type === "payment" ||
                 (transaction.type === "adjustment" &&
@@ -305,8 +321,13 @@ export function TransactionTable({ transactions }: Props) {
         </table>
       </div>
 
-      <div className="border-t border-[#eeeeea] px-5 py-3 text-xs text-[#858680]">
-        Showing {filtered.length} of {transactions.length} transactions
+      <div className="border-t border-[#eeeeea] px-5 py-4">
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filtered.length}
+          itemsPerPage={pageSize}
+          onPageChange={setCurrentPage}
+        />
       </div>
     </section>
   );

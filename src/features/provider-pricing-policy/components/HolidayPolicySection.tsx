@@ -69,14 +69,16 @@ export function HolidayPolicySection({ policies, onChange }: Props) {
                   aria-checked={policy.enabled}
                   aria-label={`Enable ${policy.name} policy`}
                   onClick={() => update({ enabled: !policy.enabled })}
-                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#39724b] focus-visible:ring-offset-2 ${
                     policy.enabled ? "bg-[#39724b]" : "bg-[#c8c9c2]"
                   }`}
                 >
                   <span
-                    className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                      policy.enabled ? "translate-x-6" : "translate-x-1"
+                    aria-hidden="true"
+                    className={`pointer-events-none block h-5 w-5 rounded-full shadow-sm transition-transform duration-200 ease-in-out ${
+                      policy.enabled ? "translate-x-5" : "translate-x-0"
                     }`}
+                    style={{ backgroundColor: "#ffffff" }}
                   />
                 </button>
               </div>

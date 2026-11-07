@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/shared/components/PageHeader";
+import { Pagination } from "@/shared/components/Pagination";
 import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 import {
   Star,
@@ -206,6 +207,9 @@ export default function RatingFeedbackPage() {
   const [resourceType, setResourceType] = useState("all");
   const [ratingStatus, setRatingStatus] = useState<RatingStatus>("All ratings");
   const [feedbackStatus, setFeedbackStatus] = useState("all");
+  const [ratingPage, setRatingPage] = useState(1);
+  const [feedbackPage, setFeedbackPage] = useState(1);
+  const pageSize = 6;
 
   const filteredRatings = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -246,6 +250,24 @@ export default function RatingFeedbackPage() {
     });
   }, [query, resourceType, feedbackStatus]);
 
+  useEffect(() => {
+    setRatingPage(1);
+  }, [query, resourceType, ratingStatus]);
+
+  useEffect(() => {
+    setFeedbackPage(1);
+  }, [query, resourceType, feedbackStatus]);
+
+  const paginatedRatings = useMemo(() => {
+    const start = (ratingPage - 1) * pageSize;
+    return filteredRatings.slice(start, start + pageSize);
+  }, [filteredRatings, ratingPage]);
+
+  const paginatedFeedback = useMemo(() => {
+    const start = (feedbackPage - 1) * pageSize;
+    return filteredFeedback.slice(start, start + pageSize);
+  }, [filteredFeedback, feedbackPage]);
+
   const averageRating =
     ratingItems.length > 0
       ? ratingItems.reduce((sum, item) => sum + item.rating, 0) /
@@ -263,6 +285,8 @@ export default function RatingFeedbackPage() {
     setResourceType("all");
     setRatingStatus("All ratings");
     setFeedbackStatus("all");
+    setRatingPage(1);
+    setFeedbackPage(1);
   };
 
   return (
@@ -494,7 +518,7 @@ export default function RatingFeedbackPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#eeeeea]">
-                  {filteredRatings.map((item) => (
+                  {paginatedRatings.map((item) => (
                     <tr
                       key={item.id}
                       className="transition-colors hover:bg-[#fafaf7]">
@@ -571,20 +595,13 @@ export default function RatingFeedbackPage() {
               )}
             </div>
 
-            <div className="flex items-center justify-between gap-3 border-t border-[#eeeeea] px-4 py-3 text-xs text-[#777973] sm:px-6">
-              <span>
-                Showing {filteredRatings.length} of {ratingItems.length} ratings
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setQuery("");
-                  setResourceType("all");
-                  setRatingStatus("All ratings");
-                }}
-                className="font-medium text-[#39724b] hover:underline">
-                Clear filters
-              </button>
+            <div className="border-t border-[#eeeeea] px-4 py-4 sm:px-6">
+              <Pagination
+                currentPage={ratingPage}
+                totalItems={filteredRatings.length}
+                itemsPerPage={pageSize}
+                onPageChange={setRatingPage}
+              />
             </div>
           </div>
         )}
@@ -655,7 +672,7 @@ export default function RatingFeedbackPage() {
             </div>
 
             <div className="divide-y divide-[#eeeeea]">
-              {filteredFeedback.map((item) => (
+              {paginatedFeedback.map((item) => (
                 <article
                   key={item.id}
                   className="p-4 transition-colors hover:bg-[#fafaf7] sm:p-6">
@@ -728,21 +745,13 @@ export default function RatingFeedbackPage() {
               )}
             </div>
 
-            <div className="flex items-center justify-between gap-3 border-t border-[#eeeeea] px-4 py-3 text-xs text-[#777973] sm:px-6">
-              <span>
-                Showing {filteredFeedback.length} of {feedbackItems.length}{" "}
-                feedback entries
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setQuery("");
-                  setResourceType("all");
-                  setFeedbackStatus("all");
-                }}
-                className="font-medium text-[#39724b] hover:underline">
-                Clear filters
-              </button>
+            <div className="border-t border-[#eeeeea] px-4 py-4 sm:px-6">
+              <Pagination
+                currentPage={feedbackPage}
+                totalItems={filteredFeedback.length}
+                itemsPerPage={pageSize}
+                onPageChange={setFeedbackPage}
+              />
             </div>
           </div>
         )}

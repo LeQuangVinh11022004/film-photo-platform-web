@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PageHeader } from "@/shared/components/PageHeader";
+import { Pagination } from "@/shared/components/Pagination";
 import type { ServicePackage } from "@/features/service-package";
 import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 
@@ -103,9 +104,11 @@ export default function PackagesPage() {
   const pkg = messages.packages;
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedPackage, setSelectedPackage] =
     useState<ServicePackageRow | null>(null);
 
+  const pageSize = 8;
   const normalizedQuery = query.trim().toLowerCase();
   const filteredPackages = packages.filter((item) => {
     const matchesQuery = `${item.name} ${item.description} ${item.id}`
@@ -113,6 +116,11 @@ export default function PackagesPage() {
       .includes(normalizedQuery);
     return matchesQuery && (!status || item.isActive === (status === "active"));
   });
+
+  const paginatedPackages = filteredPackages.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
   const activeCount = packages.filter((item) => item.isActive).length;
   const averagePrice = packages.length
     ? Math.round(
@@ -193,7 +201,10 @@ export default function PackagesPage() {
             <input
               id="package-search"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setCurrentPage(1);
+              }}
               placeholder="Search name, description or ID..."
               className={fieldClassName}
             />
@@ -203,7 +214,10 @@ export default function PackagesPage() {
             <select
               id="package-status"
               value={status}
-              onChange={(event) => setStatus(event.target.value)}
+              onChange={(event) => {
+                setStatus(event.target.value);
+                setCurrentPage(1);
+              }}
               className={fieldClassName}>
               <option value="">All statuses</option>
               <option value="active">Active</option>
@@ -224,7 +238,7 @@ export default function PackagesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#eeeeea]">
-              {filteredPackages.map((item) => (
+              {paginatedPackages.map((item) => (
                 <tr
                   key={item.id}
                   className="transition-colors hover:bg-[#fcfcfa]">
@@ -279,6 +293,14 @@ export default function PackagesPage() {
               )}
             </tbody>
           </table>
+        </div>
+        <div className="border-t border-[#e8e8e2] px-5 py-4">
+          <Pagination
+            currentPage={currentPage}
+            totalItems={filteredPackages.length}
+            itemsPerPage={pageSize}
+            onPageChange={setCurrentPage}
+          />
         </div>
       </section>
 

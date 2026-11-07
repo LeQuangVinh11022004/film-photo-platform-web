@@ -44,6 +44,7 @@ body {
 :is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#eeeee9]"],
 :is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-slate-50"] { background-color: var(--admin-surface-raised); }
 :is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-slate-100"],
+:is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#c8c9c2]"],
 :is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#f0f0ec]"],
 :is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#f0f1ec]"],
 :is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) [class~="bg-[#eceee8]"] { background-color: var(--admin-hover); }
