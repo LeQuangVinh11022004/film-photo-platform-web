@@ -12,9 +12,7 @@ export const endpoints = {
   reservations: "/reservations",
   packages: "/packages",
   users: "/users",
-  adminContent: "/admin/content",
   reports: "/reports",
-  adminNotifications: "/admin/notifications",
   admin: {
     auth: {
       login: "/auth/login",
