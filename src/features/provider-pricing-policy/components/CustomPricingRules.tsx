@@ -1,12 +1,14 @@
 
 "use client";
 
+import { useMemo, useState } from "react";
 import {
   CalendarRange,
   Pencil,
   Plus,
   Trash2,
 } from "lucide-react";
+import { Pagination } from "@/shared/components/Pagination";
 import type { CustomPricingRule } from "@/features/provider-pricing-policy/types";
 
 type Props = {
@@ -45,6 +47,16 @@ export function CustomPricingRules({
   onDelete,
   onToggle,
 }: Props) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
+
+  const totalPages = Math.max(1, Math.ceil(rules.length / pageSize));
+  const activePage = Math.min(currentPage, totalPages);
+
+  const paginatedRules = useMemo(() => {
+    const start = (activePage - 1) * pageSize;
+    return rules.slice(start, start + pageSize);
+  }, [rules, activePage, pageSize]);
   return (
     <section className="mt-8">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
@@ -106,7 +118,7 @@ export function CustomPricingRules({
               </thead>
 
               <tbody className="divide-y divide-[#eeeeea]">
-                {rules.map((rule) => {
+                {paginatedRules.map((rule) => {
                   const isIncrease = rule.adjustmentType === "increase";
 
                   return (
@@ -190,6 +202,17 @@ export function CustomPricingRules({
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {rules.length > 0 && (
+          <div className="border-t border-[#eeeeea] px-5 py-4">
+            <Pagination
+              currentPage={activePage}
+              totalItems={rules.length}
+              itemsPerPage={pageSize}
+              onPageChange={setCurrentPage}
+            />
           </div>
         )}
       </div>
