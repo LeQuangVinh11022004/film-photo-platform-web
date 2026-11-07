@@ -1,0 +1,415 @@
+# VS Code REST Client: set credentials/IDs below, then use "Send Request" above each request.
+# Sign in before running protected requests; requests are manual and are not run as a batch.
+# POST/PATCH/PUT/DELETE requests can create, change, send email, or permanently delete data.
+# The backend redirects HTTP :5038 to HTTPS :7104; use HTTPS directly to preserve Authorization.
+@baseUrl = https://localhost:7104/api
+@adminEmail = replace-with-admin-email@example.com
+@adminPassword = replace-with-admin-password
+@providerEmail = replace-with-provider-email@example.com
+@providerPassword = replace-with-provider-password
+@testEmail = replace-with-existing-email@example.com
+@photographerEmail = replace-with-photographer-email@example.com
+@photographerPassword = replace-with-photographer-password
+@providerId = replace-with-provider-id
+@adminUserId = replace-with-user-id
+@adminSpaceId = replace-with-admin-space-id
+@providerSpaceId = replace-with-provider-space-id
+@availabilityId = replace-with-availability-id
+@imageId = replace-with-image-id
+@bookingId = replace-with-booking-id
+@contentId = replace-with-content-id
+@notificationId = replace-with-notification-id
+
+### Sign in as an admin (protected admin requests use this token)
+# @name adminLogin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### Sign in as a photographer (photographer requests use this token)
+# @name photographerLogin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{photographerEmail}}",
+  "password": "{{photographerPassword}}"
+}
+
+### Sign in as a provider (provider requests use this token)
+# @name providerLogin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{providerEmail}}",
+  "password": "{{providerPassword}}"
+}
+
+### Register provider (creates an account)
+POST {{baseUrl}}/auth/register/provider
+Content-Type: application/json
+
+{
+  "fullName": "API Test Provider",
+  "email": "replace-with-a-new-email@example.com",
+  "password": "replace-with-a-valid-password",
+  "businessName": "API Test Studio",
+  "description": "Temporary account for API testing",
+  "address": "Replace with a valid address",
+  "phone": "0900000000"
+}
+
+### Register photographer (creates an account)
+POST {{baseUrl}}/auth/register/photographer
+Content-Type: application/json
+
+{
+  "fullName": "API Test Photographer",
+  "email": "replace-with-a-new-photographer-email@example.com",
+  "password": "replace-with-a-valid-password"
+}
+
+### Request password reset (may send an email)
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}"
+}
+
+### Reset password (replace token with a valid reset token)
+POST {{baseUrl}}/auth/reset-password
+Content-Type: application/json
+
+{
+  "token": "replace-with-reset-token",
+  "password": "replace-with-a-new-password"
+}
+
+### Admin dashboard
+GET {{baseUrl}}/admin/dashboard
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+
+### Admin bookings list
+GET {{baseUrl}}/admin/bookings?page=1&pageSize=10
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+
+### Admin booking detail
+GET {{baseUrl}}/admin/bookings/{{bookingId}}
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+
+### Admin providers list
+GET {{baseUrl}}/admin/providers?page=1&pageSize=10
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+
+### Admin provider detail
+GET {{baseUrl}}/admin/providers/{{providerId}}
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+
+### Approve admin provider (changes provider approval status)
+PATCH {{baseUrl}}/admin/providers/{{providerId}}/approval
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "approvalStatus": "APPROVED"
+}
+
+### List admin users
+GET {{baseUrl}}/admin/users?page=1&pageSize=10
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+
+### Admin user detail
+GET {{baseUrl}}/admin/users/{{adminUserId}}
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+
+### Create admin user (creates an account)
+POST {{baseUrl}}/admin/users
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "fullName": "API Test User",
+  "email": "replace-with-a-new-email@example.com",
+  "password": "replace-with-a-valid-password",
+  "role": "USER",
+  "status": "ACTIVE"
+}
+
+### Update admin user
+PUT {{baseUrl}}/admin/users/{{adminUserId}}
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "fullName": "API Test User Updated",
+  "email": "{{testEmail}}",
+  "role": "USER",
+  "status": "ACTIVE"
+}
+
+### Change admin user status
+PATCH {{baseUrl}}/admin/users/{{adminUserId}}/status
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "status": "INACTIVE"
+}
+
+### Delete admin user (permanent)
+DELETE {{baseUrl}}/admin/users/{{adminUserId}}
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+
+### List admin spaces
+GET {{baseUrl}}/admin/spaces?page=1&pageSize=10
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+
+### Admin space detail
+GET {{baseUrl}}/admin/spaces/{{adminSpaceId}}
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+
+### Admin space approval (replace decision with a value accepted by the backend)
+PATCH {{baseUrl}}/admin/spaces/{{adminSpaceId}}/approval
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "decision": "replace-with-backend-supported-decision"
+}
+
+### Create admin space
+POST {{baseUrl}}/admin/spaces
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "providerId": "{{providerId}}",
+  "name": "API Test Space",
+  "type": "STUDIO",
+  "description": "Temporary space for API testing",
+  "address": "Replace with a valid address",
+  "capacity": 4,
+  "status": "ACTIVE"
+}
+
+### Update admin space
+PUT {{baseUrl}}/admin/spaces/{{adminSpaceId}}
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "providerId": "{{providerId}}",
+  "name": "API Test Space Updated",
+  "type": "STUDIO",
+  "description": "Updated by API test",
+  "address": "Replace with a valid address",
+  "capacity": 4,
+  "status": "ACTIVE"
+}
+
+### Delete admin space (permanent)
+DELETE {{baseUrl}}/admin/spaces/{{adminSpaceId}}
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+
+{
+  "status": "Published",
+  "moderationNote": "API test"
+}
+
+
+{
+  "title": "API test notification",
+  "message": "Temporary notification created by API test",
+  "href": "/"
+}
+
+### Get provider profile
+GET {{baseUrl}}/provider/profile
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Create provider profile
+POST {{baseUrl}}/provider/profile
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "businessName": "API Test Studio",
+  "description": "Temporary profile for API testing",
+  "address": "Replace with a valid address",
+  "phone": "0900000000"
+}
+
+### Update provider profile
+PUT {{baseUrl}}/provider/profile
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "businessName": "API Test Studio Updated",
+  "description": "Updated by API test",
+  "address": "Replace with a valid address",
+  "phone": "0900000000"
+}
+
+### List provider spaces
+GET {{baseUrl}}/provider/spaces?page=1&pageSize=10
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Provider space detail
+GET {{baseUrl}}/provider/spaces/{{providerSpaceId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Create provider space
+POST {{baseUrl}}/provider/spaces
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "name": "API Test Space",
+  "type": "STUDIO",
+  "description": "Temporary space for API testing",
+  "address": "Replace with a valid address",
+  "capacity": 4,
+  "details": null,
+  "featureTypeIds": []
+}
+
+### Update provider space
+PUT {{baseUrl}}/provider/spaces/{{providerSpaceId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "name": "API Test Space Updated",
+  "type": "STUDIO",
+  "description": "Updated by API test",
+  "address": "Replace with a valid address",
+  "capacity": 4,
+  "status": "ACTIVE",
+  "details": null,
+  "featureTypeIds": []
+}
+
+### Delete provider space (permanent)
+DELETE {{baseUrl}}/provider/spaces/{{providerSpaceId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### List provider feature types
+GET {{baseUrl}}/provider/spaces/feature-types
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Add image by URL to provider space
+POST {{baseUrl}}/provider/spaces/{{providerSpaceId}}/images
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "imageUrl": "https://example.com/replace-with-test-image.jpg"
+}
+
+### Upload provider space image (uses the sample image in public/images/auth)
+POST {{baseUrl}}/provider/spaces/{{providerSpaceId}}/images/upload
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: multipart/form-data; boundary=----api-test-boundary
+
+------api-test-boundary
+Content-Disposition: form-data; name="file"; filename="logo.jpg"
+Content-Type: image/jpeg
+
+< ./public/images/auth/logo.jpg
+------api-test-boundary--
+
+### Delete provider space image
+DELETE {{baseUrl}}/provider/spaces/{{providerSpaceId}}/images/{{imageId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### List provider space availability
+GET {{baseUrl}}/provider/spaces/{{providerSpaceId}}/availability?fromDate=2026-01-01&toDate=2026-12-31
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Create provider space availability
+POST {{baseUrl}}/provider/spaces/{{providerSpaceId}}/availability
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "availableDate": "2026-12-31",
+  "startTime": "09:00:00",
+  "endTime": "17:00:00",
+  "status": "AVAILABLE",
+  "price": 1000000
+}
+
+### Update provider space availability
+PUT {{baseUrl}}/provider/spaces/{{providerSpaceId}}/availability/{{availabilityId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "availableDate": "2026-12-31",
+  "startTime": "09:00:00",
+  "endTime": "17:00:00",
+  "status": "AVAILABLE",
+  "price": 1000000
+}
+
+### Delete provider space availability (permanent)
+DELETE {{baseUrl}}/provider/spaces/{{providerSpaceId}}/availability/{{availabilityId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### List provider bookings
+GET {{baseUrl}}/provider/bookings?page=1&pageSize=10
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Provider booking detail
+GET {{baseUrl}}/provider/bookings/{{bookingId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Review provider booking (changes booking status)
+PATCH {{baseUrl}}/provider/bookings/{{bookingId}}/decision
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "decision": "APPROVED"
+}
+
+### List photographer space availability
+GET {{baseUrl}}/photographer/spaces/{{providerSpaceId}}/availability?fromDate=2026-01-01&toDate=2026-12-31
+Authorization: Bearer {{photographerLogin.response.body.$.token}}
+
+### List photographer bookings
+GET {{baseUrl}}/photographer/bookings?page=1&pageSize=10
+Authorization: Bearer {{photographerLogin.response.body.$.token}}
+
+### Create photographer booking (creates a booking)
+POST {{baseUrl}}/photographer/bookings
+Authorization: Bearer {{photographerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "availabilityId": "{{availabilityId}}",
+  "packageId": null,
+  "equipmentIds": []
+}
+
+### Photographer booking detail
+GET {{baseUrl}}/photographer/bookings/{{bookingId}}
+Authorization: Bearer {{photographerLogin.response.body.$.token}}
+
+### Cancel photographer booking (changes booking status)
+PATCH {{baseUrl}}/photographer/bookings/{{bookingId}}/cancel
+Authorization: Bearer {{photographerLogin.response.body.$.token}}
+
+### Routes declared in the frontend but without an HTTP method/function wired:
+# These endpoint constants currently have no HTTP method/function wired:
+# /auth/google, /creative-spaces, /equipment, /reservations, /packages, /users, /reports
+# /auth/forgot-password, /auth/reset-password
+# The last four are called by frontend code but are absent from the backend OpenAPI document.
+# Google auth is a browser redirect, not a JSON API request.
