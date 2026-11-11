@@ -96,7 +96,7 @@ API-backed operations that have a backend OpenAPI contract are tracked in `api-c
 
 ## Requirements
 
-- Node.js **20.9 or later**
+- Node.js **22 LTS (22.13 or later) or 24 LTS**
 - npm (the repository includes `package-lock.json`)
 - Backend API for authenticated and API-backed workflows
 
