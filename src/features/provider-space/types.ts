@@ -2,6 +2,7 @@ export type ProviderSpaceImage = {
 	imageId: string;
 	imageUrl: string;
 	createdAt: string | null;
+	imageType?: "COVER" | "INTERIOR" | string | null;
 };
 
 export type ProviderFeatureType = {

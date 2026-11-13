@@ -1,8 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Trash2, X } from "lucide-react";
 import type { ProviderFeatureType, ProviderSpace, ProviderSpaceDetails, ProviderSpaceRequest } from "@/features/provider-space";
+import { providerSpaceImageUrl } from "@/features/provider-space/imageUrl";
+
+type ImagePreviewItem = {
+  id: string;
+  file: File;
+  previewUrl: string;
+};
 
 type CreativeSpaceModalProps = {
   open: boolean;
@@ -11,7 +18,7 @@ type CreativeSpaceModalProps = {
   featureTypes: ProviderFeatureType[];
   error?: string;
   onClose: () => void;
-  onSubmit: (data: ProviderSpaceRequest, imageFile?: File) => void;
+  onSubmit: (data: ProviderSpaceRequest, imageFiles?: File[]) => void;
   submitting?: boolean;
 };
 
@@ -38,10 +45,10 @@ export function CreativeSpaceModal({
   const [description, setDescription] = useState(space?.description ?? "");
   const [status, setStatus] = useState<ProviderSpaceRequest["status"]>(space?.status.toUpperCase() === "ACTIVE" ? "ACTIVE" : "INACTIVE");
   const [featureTypeIds, setFeatureTypeIds] = useState<string[]>(space?.features.map((feature) => feature.featureTypeId) ?? []);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreviews, setImagePreviews] = useState<ImagePreviewItem[]>([]);
   const [imageError, setImageError] = useState("");
-  const imagePreviewRef = useRef<string | null>(null);
+  const imagePreviewsRef = useRef<ImagePreviewItem[]>([]);
+  imagePreviewsRef.current = imagePreviews;
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [details, setDetails] = useState<ProviderSpaceDetails>(space?.details ?? {
     lengthM: null,
@@ -54,8 +61,12 @@ export function CreativeSpaceModal({
     usagePolicies: "",
   });
 
-  useEffect(() => () => {
-    if (imagePreviewRef.current) URL.revokeObjectURL(imagePreviewRef.current);
+  useEffect(() => {
+    return () => {
+      imagePreviewsRef.current.forEach((item) => {
+        URL.revokeObjectURL(item.previewUrl);
+      });
+    };
   }, []);
 
   if (!open) {
@@ -77,31 +88,57 @@ export function CreativeSpaceModal({
       status,
       details,
       featureTypeIds,
-    }, imageFile ?? undefined);
+    }, imagePreviews.map((item) => item.file));
   };
 
-  const handleImageChange = (file: File | undefined) => {
+  const handleImagesChange = (fileList: FileList | null) => {
     setImageError("");
-    if (imagePreviewRef.current) URL.revokeObjectURL(imagePreviewRef.current);
-    imagePreviewRef.current = null;
-    setImagePreview(null);
-    if (!file && imageInputRef.current) imageInputRef.current.value = "";
-    if (file && !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      setImageError("Choose a JPG, PNG, or WebP image.");
-      setImageFile(null);
-      if (imageInputRef.current) imageInputRef.current.value = "";
-      return;
+    if (!fileList || fileList.length === 0) return;
+
+    const files = Array.from(fileList);
+    const validItems: ImagePreviewItem[] = [];
+    const errors: string[] = [];
+
+    for (const file of files) {
+      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+        errors.push(`"${file.name}" is not a JPG, PNG, or WebP image.`);
+        continue;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        errors.push(`"${file.name}" exceeds 10 MB.`);
+        continue;
+      }
+      validItems.push({
+        id: `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2, 9)}`,
+        file,
+        previewUrl: URL.createObjectURL(file),
+      });
     }
-    if (file && file.size > 10 * 1024 * 1024) {
-      setImageError("Image size must be 10 MB or less.");
-      setImageFile(null);
-      if (imageInputRef.current) imageInputRef.current.value = "";
-      return;
+
+    if (errors.length > 0) {
+      setImageError(errors.join(" "));
     }
-    const previewUrl = file ? URL.createObjectURL(file) : null;
-    imagePreviewRef.current = previewUrl;
-    setImagePreview(previewUrl);
-    setImageFile(file ?? null);
+
+    if (validItems.length > 0) {
+      setImagePreviews((current) => [...current, ...validItems]);
+    }
+
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveImage = (indexToRemove: number) => {
+    setImagePreviews((current) => {
+      const item = current[indexToRemove];
+      if (item) {
+        URL.revokeObjectURL(item.previewUrl);
+      }
+      return current.filter((_, index) => index !== indexToRemove);
+    });
+    if (imageInputRef.current) {
+      imageInputRef.current.value = "";
+    }
   };
 
   return (
@@ -138,8 +175,8 @@ export function CreativeSpaceModal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-md px-2 py-1 text-lg text-[#777973] transition-colors hover:bg-[#f0f0ec]">
-            ×
+            className="flex h-9 w-9 items-center justify-center rounded-md text-[#777973] transition-colors hover:bg-[#f0f0ec]">
+            <X size={18} />
           </button>
         </div>
 
@@ -192,22 +229,85 @@ export function CreativeSpaceModal({
               />
             </div>
 
+            {/* Images */}
             <div className="sm:col-span-2">
-              <label htmlFor="space-image" className="mb-1.5 block text-sm font-medium text-[#343630]">Space image <span className="font-normal text-[#777973]">(optional)</span></label>
+              <div className="flex items-center justify-between gap-3">
+                <label htmlFor="space-images" className="mb-1.5 block text-sm font-medium text-[#343630]">
+                  Space images <span className="font-normal text-[#777973]">(optional)</span>
+                </label>
+                {imagePreviews.length > 0 && (
+                  <span className="text-xs text-[#777973]">
+                    {imagePreviews.length} {imagePreviews.length === 1 ? "image" : "images"} selected
+                  </span>
+                )}
+              </div>
               <input
                 ref={imageInputRef}
-                id="space-image"
+                id="space-images"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
-                onChange={(event) => handleImageChange(event.target.files?.[0])}
+                multiple
+                onChange={(event) => handleImagesChange(event.target.files)}
                 className="w-full rounded-md border border-[#d8d8d1] bg-white px-3 py-2 text-sm text-[#343630] file:mr-3 file:rounded file:border-0 file:bg-[#f0f0ec] file:px-3 file:py-1 file:text-sm file:font-medium"
               />
-              <p className="mt-1.5 text-xs text-[#777973]">JPG, PNG, or WebP. Maximum 10 MB.</p>
-              {imageError && <p role="alert" className="mt-2 text-sm text-[#9c4339]">{imageError}</p>}
-              {imagePreview && <div className="relative mt-3 aspect-video max-h-48 overflow-hidden rounded-md bg-[#f0f0ec]">
-                <Image src={imagePreview} alt="Selected space preview" fill unoptimized className="object-cover" />
-                <button type="button" onClick={() => handleImageChange(undefined)} aria-label="Remove selected image" className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-md bg-white/95 text-[#a34d42] shadow-sm hover:bg-white">×</button>
-              </div>}
+              <p className="mt-1.5 text-xs text-[#777973]">
+                JPG, PNG, or WebP. Maximum 10 MB per file. You can select multiple images.
+              </p>
+              {imageError && (
+                <p
+                  role="alert"
+                  className="mt-3 rounded-md border border-[#e6c3bd] bg-[#fbefed] px-3 py-2 text-sm text-[#9c4339]">
+                  {imageError}
+                </p>
+              )}
+              {imagePreviews.length > 0 && (
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {imagePreviews.map((item, index) => (
+                    <div
+                      key={item.id}
+                      className="group relative aspect-4/3 overflow-hidden rounded-md bg-[#f0f0ec]">
+                      <img
+                        src={item.previewUrl}
+                        alt={`Selected space preview ${index + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        aria-label="Remove image"
+                        title="Remove image"
+                        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-md bg-white/95 text-[#a34d42] shadow-sm hover:bg-white">
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {isEditMode && space?.images && space.images.length > 0 && (
+                <div className="mt-4 border-t border-[#eeeeea] pt-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-sm font-semibold text-[#343630]">
+                      Current images
+                    </h3>
+                    <span className="text-xs text-[#777973]">
+                      {space.images.length} {space.images.length === 1 ? "image" : "images"}
+                    </span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {space.images.map((image) => (
+                      <div
+                        key={image.imageId}
+                        className="group relative aspect-4/3 overflow-hidden rounded-md bg-[#f0f0ec]">
+                        <img
+                          src={providerSpaceImageUrl(image.imageUrl)}
+                          alt={space.name}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Capacity */}
