@@ -433,7 +433,7 @@ export default function EquipmentPage() {
                             ]
                           }
                           alt={item.name}
-                          className="h-10 w-10 rounded-md bg-[#f0f1ec] object-cover"
+                          className="h-10 w-10 rounded-sm bg-[#f0f1ec] object-cover"
                           loading="lazy"
                         />
                         <div>
