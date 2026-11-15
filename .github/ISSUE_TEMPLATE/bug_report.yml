@@ -1,0 +1,59 @@
+name: Bug Report
+description: Report a bug, broken UI state, or API integration issue
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an issue! Please fill out the sections below so we can reproduce and fix it quickly.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Workspace / Area
+      description: Which part of the web portal is affected?
+      options:
+        - Authentication (/login, /register, /register-provider)
+        - Provider Workspace (/provider/*, /settings/profile)
+        - Admin Workspace (/admin/dashboard, /users, /providers, /spaces, etc.)
+        - Public / Landing Page (/)
+        - API Contract / CI
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Sign in as '...'
+        2. Navigate to '/...'
+        3. Click on '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console / Network Logs or Screenshots
+      description: Paste any relevant browser console errors, HTTP status codes, or screenshots.
+      render: shell

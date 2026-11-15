@@ -1,0 +1,43 @@
+name: Feature Request
+description: Suggest an enhancement or new capability for the Film Photo Platform web portal
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggest an improvement or feature for the Film Photo Platform Web Portal (`FA26SE091`).
+
+  - type: dropdown
+    id: role
+    attributes:
+      label: Target User Role
+      options:
+        - Service Provider
+        - Administrator
+        - Photographer
+        - General / Platform-wide
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Use Case
+      description: What problem does this feature solve, or what workflow does it improve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: Describe the UI, route, or API behavior you would like to see.
+    validations:
+      required: true
+
+  - type: textarea
+    id: api_impact
+    attributes:
+      label: Backend API / OpenAPI Contract Impact
+      description: Does this require new or updated backend endpoints in `api-contract/openapi.json`?
