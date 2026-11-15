@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: API Contract & Testing Guide
+    url: https://github.com/LeQuangVinh11022004/film-photo-platform-web/blob/main/api-contract/README.md
+    about: Learn how to update and verify the OpenAPI contract snapshot before opening an API issue.

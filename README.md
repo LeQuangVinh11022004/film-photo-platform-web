@@ -92,7 +92,7 @@ API-backed operations that have a backend OpenAPI contract are tracked in `api-c
 
 ### Feature modules
 
-`src/features` is organized by product domain, including admin authentication, dashboard, bookings, providers, users, spaces, content and notifications; provider profile and spaces; reservations; creative spaces; equipment; and service packages. Feature API clients use the shared HTTP client and endpoint definitions where implemented.
+`src/features` is organized by product domain, including admin authentication, dashboard, bookings, providers, users, spaces, content and notifications; provider account and spaces; reservations; creative spaces; equipment; and service packages. Feature API clients use the shared HTTP client and endpoint definitions where implemented.
 
 ## Requirements
 
@@ -160,4 +160,8 @@ For individual manual requests, open `api-tests.http` with the VS Code REST Clie
 ## Documentation
 
 - [API contract update guide](./api-contract/README.md)
+- [Contributing guide](./CONTRIBUTING.md)
+- [Code of Conduct](./CODE_OF_CONDUCT.md)
+- [Security policy](./SECURITY.md)
+- [License (MIT)](./LICENSE)
 - [Next.js documentation](https://nextjs.org/docs)
