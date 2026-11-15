@@ -5,15 +5,24 @@ import { useSearchParams } from "next/navigation";
 import axios from "axios";
 import { Moon, Palette, Shield, Sun, UserRound } from "lucide-react";
 import { PageHeader } from "@/shared/components/PageHeader";
-import { createMyProviderProfile, getMyProviderProfile, updateMyProviderProfile } from "@/features/provider-profile/api";
-import type { ProviderProfileRequest } from "@/features/provider-profile/types";
+import { getMyProviderAccount, updateMyProviderAccount } from "@/features/provider-account/api";
+import type { ProviderAccount, ProviderAccountRequest } from "@/features/provider-account/types";
 import { useProviderProfile } from "@/shared/providers/ProviderProfileProvider";
 import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 import { useProviderTheme } from "@/shared/layouts/ProviderWorkspaceShell";
 import { useAuthStore } from "@/store/authStore";
 
 const fieldClassName = "h-10 w-full rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#343630] outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
-const blankProfile: ProviderProfileRequest = { businessName: "", description: "", address: "", phone: "" };
+const blankProfile: ProviderAccountRequest = { businessName: "", businessDescription: "", businessAddress: "", businessPhone: "" };
+
+function toForm(account: ProviderAccount): ProviderAccountRequest {
+	return {
+		businessName: account.businessName,
+		businessDescription: account.businessDescription ?? "",
+		businessAddress: account.businessAddress,
+		businessPhone: account.businessPhone ?? "",
+	};
+}
 
 type ProviderSettingsTab = "profile" | "appearance" | "account";
 
@@ -27,17 +36,11 @@ function errorMessage(error: unknown) {
 
 function ProviderProfileContent() {
 	const searchParams = useSearchParams();
-	const initialTab = (searchParams.get("tab") as ProviderSettingsTab) || "profile";
-	const [activeTab, setActiveTab] = useState<ProviderSettingsTab>(
-		initialTab === "appearance" || initialTab === "account" ? initialTab : "profile"
-	);
-
-	useEffect(() => {
-		const tab = searchParams.get("tab") as ProviderSettingsTab;
-		if (tab === "profile" || tab === "appearance" || tab === "account") {
-			setActiveTab(tab);
-		}
-	}, [searchParams]);
+	const urlTab = searchParams.get("tab") as ProviderSettingsTab | null;
+	const [selectedTab, setSelectedTab] = useState<ProviderSettingsTab | null>(null);
+	const activeTab: ProviderSettingsTab =
+		selectedTab ?? (urlTab === "appearance" || urlTab === "account" ? urlTab : "profile");
+	const setActiveTab = setSelectedTab;
 
 	const { setDisplayName } = useProviderProfile();
 	const { messages, locale, setLocale } = useProviderLanguage();
@@ -46,10 +49,9 @@ function ProviderProfileContent() {
 
 	const accountEmail = useAuthStore((state) => state.user?.email ?? "");
 	const userRole = useAuthStore((state) => state.user?.role ?? "provider");
-	const [form, setForm] = useState<ProviderProfileRequest>(blankProfile);
+	const [form, setForm] = useState<ProviderAccountRequest>(blankProfile);
 	const [email, setEmail] = useState("");
 	const [approvalStatus, setApprovalStatus] = useState("");
-	const [profileExists, setProfileExists] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState("");
@@ -57,13 +59,12 @@ function ProviderProfileContent() {
 
 	useEffect(() => {
 		let cancelled = false;
-		getMyProviderProfile()
+		getMyProviderAccount()
 			.then((profile) => {
 				if (cancelled) return;
-				setForm({ businessName: profile.businessName, description: profile.description, address: profile.address, phone: profile.phone });
+				setForm(toForm(profile));
 				setEmail(profile.email);
-				setApprovalStatus(profile.approvalStatus);
-				setProfileExists(true);
+				setApprovalStatus(profile.providerApprovalStatus);
 				setDisplayName(profile.businessName);
 			})
 			.catch((requestError: unknown) => {
@@ -75,7 +76,7 @@ function ProviderProfileContent() {
 		return () => { cancelled = true; };
 	}, [setDisplayName]);
 
-	function setField<K extends keyof ProviderProfileRequest>(key: K, value: ProviderProfileRequest[K]) {
+	function setField<K extends keyof ProviderAccountRequest>(key: K, value: ProviderAccountRequest[K]) {
 		setForm((current) => ({ ...current, [key]: value }));
 	}
 
@@ -85,11 +86,10 @@ function ProviderProfileContent() {
 		setError("");
 		setSuccess("");
 		try {
-			const profile = profileExists ? await updateMyProviderProfile(form) : await createMyProviderProfile(form);
-			setForm({ businessName: profile.businessName, description: profile.description, address: profile.address, phone: profile.phone });
+			const profile = await updateMyProviderAccount(form);
+			setForm(toForm(profile));
 			setEmail(profile.email);
-			setApprovalStatus(profile.approvalStatus);
-			setProfileExists(true);
+			setApprovalStatus(profile.providerApprovalStatus);
 			setDisplayName(profile.businessName);
 			setSuccess(messages.common.savedOnDevice);
 		} catch (requestError) {
@@ -162,19 +162,19 @@ function ProviderProfileContent() {
 							</label>
 							<label className="grid gap-1.5 text-sm font-medium text-[#454741] sm:col-span-2">
 								Address
-								<input required maxLength={300} value={form.address} onChange={(event) => setField("address", event.target.value)} className={fieldClassName} />
+								<input required maxLength={300} value={form.businessAddress} onChange={(event) => setField("businessAddress", event.target.value)} className={fieldClassName} />
 							</label>
 							<label className="grid gap-1.5 text-sm font-medium text-[#454741]">
 								Phone
-								<input type="tel" maxLength={30} value={form.phone} onChange={(event) => setField("phone", event.target.value)} className={fieldClassName} />
+								<input type="tel" maxLength={30} value={form.businessPhone} onChange={(event) => setField("businessPhone", event.target.value)} className={fieldClassName} />
 							</label>
 							<label className="grid gap-1.5 text-sm font-medium text-[#454741] sm:col-span-2">
 								Description
-								<textarea rows={4} maxLength={2000} value={form.description} onChange={(event) => setField("description", event.target.value)} className="w-full rounded-md border border-[#d8d8d1] bg-white px-3 py-2 text-sm text-[#343630] outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15" />
+								<textarea rows={4} maxLength={2000} value={form.businessDescription} onChange={(event) => setField("businessDescription", event.target.value)} className="w-full rounded-md border border-[#d8d8d1] bg-white px-3 py-2 text-sm text-[#343630] outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15" />
 							</label>
 							<div className="flex justify-end border-t border-[#eeeeea] pt-4 sm:col-span-2">
 								<button type="submit" disabled={saving} className="h-10 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#2f603e] disabled:cursor-not-allowed disabled:opacity-60">
-									{saving ? messages.common.loading : profileExists ? t.saveChanges : "Create profile"}
+									{saving ? messages.common.loading : t.saveChanges}
 								</button>
 							</div>
 						</form>

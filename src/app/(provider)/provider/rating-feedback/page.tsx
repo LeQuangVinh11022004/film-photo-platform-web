@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { Pagination } from "@/shared/components/Pagination";
 import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
@@ -190,15 +190,6 @@ function ResourceIcon({ type }: { type: ResourceType }) {
   );
 }
 
-function RatingBadge({ rating }: { rating: number }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-md bg-[#faf2df] px-2 py-1 text-xs font-semibold text-[#946a1e]">
-      <Star size={12} className="fill-current" />
-      {rating}/5
-    </span>
-  );
-}
-
 export default function RatingFeedbackPage() {
   const { messages } = useProviderLanguage();
   const rf = messages.ratingFeedback;
@@ -250,23 +241,20 @@ export default function RatingFeedbackPage() {
     });
   }, [query, resourceType, feedbackStatus]);
 
-  useEffect(() => {
-    setRatingPage(1);
-  }, [query, resourceType, ratingStatus]);
-
-  useEffect(() => {
-    setFeedbackPage(1);
-  }, [query, resourceType, feedbackStatus]);
+  const ratingTotalPages = Math.max(1, Math.ceil(filteredRatings.length / pageSize));
+  const safeRatingPage = Math.min(ratingPage, ratingTotalPages);
+  const feedbackTotalPages = Math.max(1, Math.ceil(filteredFeedback.length / pageSize));
+  const safeFeedbackPage = Math.min(feedbackPage, feedbackTotalPages);
 
   const paginatedRatings = useMemo(() => {
-    const start = (ratingPage - 1) * pageSize;
+    const start = (safeRatingPage - 1) * pageSize;
     return filteredRatings.slice(start, start + pageSize);
-  }, [filteredRatings, ratingPage]);
+  }, [filteredRatings, safeRatingPage]);
 
   const paginatedFeedback = useMemo(() => {
-    const start = (feedbackPage - 1) * pageSize;
+    const start = (safeFeedbackPage - 1) * pageSize;
     return filteredFeedback.slice(start, start + pageSize);
-  }, [filteredFeedback, feedbackPage]);
+  }, [filteredFeedback, safeFeedbackPage]);
 
   const averageRating =
     ratingItems.length > 0
@@ -597,7 +585,7 @@ export default function RatingFeedbackPage() {
 
             <div className="border-t border-[#eeeeea] px-4 py-4 sm:px-6">
               <Pagination
-                currentPage={ratingPage}
+                currentPage={safeRatingPage}
                 totalItems={filteredRatings.length}
                 itemsPerPage={pageSize}
                 onPageChange={setRatingPage}
@@ -747,7 +735,7 @@ export default function RatingFeedbackPage() {
 
             <div className="border-t border-[#eeeeea] px-4 py-4 sm:px-6">
               <Pagination
-                currentPage={feedbackPage}
+                currentPage={safeFeedbackPage}
                 totalItems={filteredFeedback.length}
                 itemsPerPage={pageSize}
                 onPageChange={setFeedbackPage}

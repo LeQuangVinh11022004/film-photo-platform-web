@@ -4,7 +4,6 @@ import type { PagedResponse } from "@/types";
 import { providerSpaceImageUrl } from "../imageUrl";
 import type {
 	ListProviderSpacesParams,
-	ProviderFeatureType,
 	ProviderSpace,
 	ProviderSpaceAvailability,
 	ProviderSpaceAvailabilityRequest,
@@ -48,11 +47,6 @@ export async function addMyProviderSpaceImage(spaceId: string, imageUrl: string)
 		`${endpoints.provider.spaces}/${encodeURIComponent(spaceId)}/images`,
 		{ imageUrl },
 	);
-	return response.data;
-}
-
-export async function listProviderFeatureTypes() {
-	const response = await httpClient.get<ProviderFeatureType[]>(`${endpoints.provider.spaces}/feature-types`);
 	return response.data;
 }
 

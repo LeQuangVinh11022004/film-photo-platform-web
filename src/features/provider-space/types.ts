@@ -5,12 +5,6 @@ export type ProviderSpaceImage = {
 	imageType?: "COVER" | "INTERIOR" | string | null;
 };
 
-export type ProviderFeatureType = {
-	featureTypeId: string;
-	name: string;
-	description: string | null;
-};
-
 export type ProviderSpaceDetails = {
 	lengthM: number | null;
 	widthM: number | null;
@@ -52,7 +46,7 @@ export type ProviderSpace = {
 	createdAt: string | null;
 	updatedAt: string | null;
 	details: ProviderSpaceDetails | null;
-	features: ProviderFeatureType[];
+	hourlyRate?: number | null;
 	images: ProviderSpaceImage[];
 };
 
@@ -64,7 +58,7 @@ export type ProviderSpaceRequest = {
 	capacity: number | null;
 	status: "ACTIVE" | "INACTIVE";
 	details?: ProviderSpaceDetails | null;
-	featureTypeIds?: string[];
+	hourlyRate?: number | null;
 };
 
 export type ListProviderSpacesParams = {

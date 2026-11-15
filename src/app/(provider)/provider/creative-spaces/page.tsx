@@ -11,14 +11,12 @@ import {
   deleteMyProviderSpace,
   getMyProviderSpace,
   listMyProviderSpaces,
-  listProviderFeatureTypes,
   updateMyProviderSpace,
 } from "@/features/provider-space/api";
 import { uploadProviderSpaceImage } from "@/features/provider-space/api/uploadImage";
 import { providerSpaceImageUrl } from "@/features/provider-space/imageUrl";
 import { ProviderSpaceDetailsDialog } from "@/features/provider-space/components/ProviderSpaceDetailsDialog";
 import type {
-  ProviderFeatureType,
   ProviderSpace,
   ProviderSpaceImage,
   ProviderSpaceRequest,
@@ -104,7 +102,6 @@ export default function CreativeSpacesPage() {
   const [result, setResult] = useState<PagedResponse<ProviderSpace> | null>(
     null,
   );
-  const [featureTypes, setFeatureTypes] = useState<ProviderFeatureType[]>([]);
   const [activeCount, setActiveCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -157,20 +154,6 @@ export default function CreativeSpacesPage() {
       cancelled = true;
     };
   }, [currentPage, reloadKey, status]);
-
-  useEffect(() => {
-    let cancelled = false;
-    listProviderFeatureTypes()
-      .then((items) => {
-        if (!cancelled) setFeatureTypes(items);
-      })
-      .catch((requestError: unknown) => {
-        if (!cancelled) setError(errorMessage(requestError));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const spaces = result?.items ?? [];
   const filteredSpaces = spaces.filter((space) =>
@@ -658,7 +641,6 @@ export default function CreativeSpacesPage() {
           open
           mode={spaceModalMode}
           space={editingSpace}
-          featureTypes={featureTypes}
           error={error || undefined}
           onClose={() => {
             setSpaceModalOpen(false);

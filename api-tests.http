@@ -103,12 +103,52 @@ Authorization: Bearer {{adminLogin.response.body.$.token}}
 GET {{baseUrl}}/admin/bookings/{{bookingId}}
 Authorization: Bearer {{adminLogin.response.body.$.token}}
 
+### Mark admin booking as no-show (changes booking status)
+PATCH {{baseUrl}}/admin/bookings/{{bookingId}}/no-show
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "staffNote": "API test"
+}
+
 ### Admin providers list
 GET {{baseUrl}}/admin/providers?page=1&pageSize=10
 Authorization: Bearer {{adminLogin.response.body.$.token}}
 
 ### Admin provider detail
 GET {{baseUrl}}/admin/providers/{{providerId}}
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+
+### Create admin provider (creates an account)
+POST {{baseUrl}}/admin/providers
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "fullName": "API Test Provider",
+  "email": "replace-with-a-new-email@example.com",
+  "password": "replace-with-a-valid-password",
+  "businessName": "API Test Studio",
+  "description": "Temporary provider for API testing",
+  "address": "Replace with a valid address",
+  "phone": "0900000000"
+}
+
+### Update admin provider
+PUT {{baseUrl}}/admin/providers/{{providerId}}
+Authorization: Bearer {{adminLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "businessName": "API Test Studio Updated",
+  "description": "Updated by API test",
+  "address": "Replace with a valid address",
+  "phone": "0900000000"
+}
+
+### Delete admin provider (permanent)
+DELETE {{baseUrl}}/admin/providers/{{providerId}}
 Authorization: Bearer {{adminLogin.response.body.$.token}}
 
 ### Approve admin provider (changes provider approval status)
@@ -137,7 +177,7 @@ Content-Type: application/json
   "fullName": "API Test User",
   "email": "replace-with-a-new-email@example.com",
   "password": "replace-with-a-valid-password",
-  "role": "USER",
+  "role": "PHOTOGRAPHER",
   "status": "ACTIVE"
 }
 
@@ -149,7 +189,7 @@ Content-Type: application/json
 {
   "fullName": "API Test User Updated",
   "email": "{{testEmail}}",
-  "role": "USER",
+  "role": "PHOTOGRAPHER",
   "status": "ACTIVE"
 }
 
@@ -174,13 +214,13 @@ Authorization: Bearer {{adminLogin.response.body.$.token}}
 GET {{baseUrl}}/admin/spaces/{{adminSpaceId}}
 Authorization: Bearer {{adminLogin.response.body.$.token}}
 
-### Admin space approval (replace decision with a value accepted by the backend)
-PATCH {{baseUrl}}/admin/spaces/{{adminSpaceId}}/approval
+### Change admin space status (ACTIVE or INACTIVE)
+PATCH {{baseUrl}}/admin/spaces/{{adminSpaceId}}/status
 Authorization: Bearer {{adminLogin.response.body.$.token}}
 Content-Type: application/json
 
 {
-  "decision": "replace-with-backend-supported-decision"
+  "status": "INACTIVE"
 }
 
 ### Create admin space
@@ -217,44 +257,20 @@ Content-Type: application/json
 DELETE {{baseUrl}}/admin/spaces/{{adminSpaceId}}
 Authorization: Bearer {{adminLogin.response.body.$.token}}
 
-{
-  "status": "Published",
-  "moderationNote": "API test"
-}
-
-
-{
-  "title": "API test notification",
-  "message": "Temporary notification created by API test",
-  "href": "/"
-}
-
-### Get provider profile
-GET {{baseUrl}}/provider/profile
+### Get provider account
+GET {{baseUrl}}/provider/account
 Authorization: Bearer {{providerLogin.response.body.$.token}}
 
-### Create provider profile
-POST {{baseUrl}}/provider/profile
+### Update provider account (changes business info)
+PUT {{baseUrl}}/provider/account
 Authorization: Bearer {{providerLogin.response.body.$.token}}
 Content-Type: application/json
 
 {
   "businessName": "API Test Studio",
-  "description": "Temporary profile for API testing",
-  "address": "Replace with a valid address",
-  "phone": "0900000000"
-}
-
-### Update provider profile
-PUT {{baseUrl}}/provider/profile
-Authorization: Bearer {{providerLogin.response.body.$.token}}
-Content-Type: application/json
-
-{
-  "businessName": "API Test Studio Updated",
-  "description": "Updated by API test",
-  "address": "Replace with a valid address",
-  "phone": "0900000000"
+  "businessDescription": "Updated by API test",
+  "businessAddress": "Replace with a valid address",
+  "businessPhone": "0900000000"
 }
 
 ### List provider spaces
@@ -276,8 +292,7 @@ Content-Type: application/json
   "description": "Temporary space for API testing",
   "address": "Replace with a valid address",
   "capacity": 4,
-  "details": null,
-  "featureTypeIds": []
+  "details": null
 }
 
 ### Update provider space
@@ -292,16 +307,11 @@ Content-Type: application/json
   "address": "Replace with a valid address",
   "capacity": 4,
   "status": "ACTIVE",
-  "details": null,
-  "featureTypeIds": []
+  "details": null
 }
 
 ### Delete provider space (permanent)
 DELETE {{baseUrl}}/provider/spaces/{{providerSpaceId}}
-Authorization: Bearer {{providerLogin.response.body.$.token}}
-
-### List provider feature types
-GET {{baseUrl}}/provider/spaces/feature-types
 Authorization: Bearer {{providerLogin.response.body.$.token}}
 
 ### Add image by URL to provider space
@@ -382,6 +392,14 @@ Content-Type: application/json
 
 ### List photographer space availability
 GET {{baseUrl}}/photographer/spaces/{{providerSpaceId}}/availability?fromDate=2026-01-01&toDate=2026-12-31
+Authorization: Bearer {{photographerLogin.response.body.$.token}}
+
+### List photographer studios
+GET {{baseUrl}}/photographer/studios?fromDate=2026-01-01&toDate=2026-12-31
+Authorization: Bearer {{photographerLogin.response.body.$.token}}
+
+### List photographer darkrooms
+GET {{baseUrl}}/photographer/darkrooms?fromDate=2026-01-01&toDate=2026-12-31
 Authorization: Bearer {{photographerLogin.response.body.$.token}}
 
 ### List photographer bookings
