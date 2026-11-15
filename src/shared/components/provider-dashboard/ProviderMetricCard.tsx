@@ -12,47 +12,12 @@ type ProviderMetricCardProps = {
 	delay?: number;
 };
 
-function MiniTrend({ values }: { values: number[] }) {
-	if (!values.length) return null;
-
-	const min = Math.min(...values);
-	const max = Math.max(...values);
-	const range = max - min || 1;
-
-	const points = values
-		.map((value, index) => {
-			const x = (index / (values.length - 1 || 1)) * 100;
-			const y = 30 - ((value - min) / range) * 24;
-
-			return `${x},${y}`;
-		})
-		.join(" ");
-
-	return (
-		<svg
-			viewBox="0 0 100 36"
-			aria-hidden="true"
-			className="h-9 w-20 opacity-50 transition-opacity duration-300 group-hover:opacity-100"
-		>
-			<polyline
-				points={points}
-				fill="none"
-				stroke="currentColor"
-				strokeWidth="2.5"
-				strokeLinecap="round"
-				strokeLinejoin="round"
-			/>
-		</svg>
-	);
-}
-
 export function ProviderMetricCard({
 	label,
 	value,
 	change,
 	changeLabel = "vs previous period",
 	href,
-	trend,
 	delay = 0,
 }: ProviderMetricCardProps) {
 	const content = (

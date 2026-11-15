@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Trash2, X } from "lucide-react";
-import type { ProviderFeatureType, ProviderSpace, ProviderSpaceDetails, ProviderSpaceRequest } from "@/features/provider-space";
+import type { ProviderSpace, ProviderSpaceDetails, ProviderSpaceRequest } from "@/features/provider-space";
 import { providerSpaceImageUrl } from "@/features/provider-space/imageUrl";
 
 type ImagePreviewItem = {
@@ -15,7 +15,6 @@ type CreativeSpaceModalProps = {
   open: boolean;
   mode: "create" | "edit";
   space?: ProviderSpace | null;
-  featureTypes: ProviderFeatureType[];
   error?: string;
   onClose: () => void;
   onSubmit: (data: ProviderSpaceRequest, imageFiles?: File[]) => void;
@@ -32,7 +31,6 @@ export function CreativeSpaceModal({
   open,
   mode,
   space,
-  featureTypes,
   error,
   onClose,
   onSubmit,
@@ -44,11 +42,9 @@ export function CreativeSpaceModal({
   const [capacity, setCapacity] = useState(space?.capacity == null ? "" : String(space.capacity));
   const [description, setDescription] = useState(space?.description ?? "");
   const [status, setStatus] = useState<ProviderSpaceRequest["status"]>(space?.status.toUpperCase() === "ACTIVE" ? "ACTIVE" : "INACTIVE");
-  const [featureTypeIds, setFeatureTypeIds] = useState<string[]>(space?.features.map((feature) => feature.featureTypeId) ?? []);
   const [imagePreviews, setImagePreviews] = useState<ImagePreviewItem[]>([]);
   const [imageError, setImageError] = useState("");
   const imagePreviewsRef = useRef<ImagePreviewItem[]>([]);
-  imagePreviewsRef.current = imagePreviews;
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const [details, setDetails] = useState<ProviderSpaceDetails>(space?.details ?? {
     lengthM: null,
@@ -60,6 +56,10 @@ export function CreativeSpaceModal({
     acousticDetails: "",
     usagePolicies: "",
   });
+
+  useEffect(() => {
+    imagePreviewsRef.current = imagePreviews;
+  }, [imagePreviews]);
 
   useEffect(() => {
     return () => {
@@ -87,7 +87,6 @@ export function CreativeSpaceModal({
       capacity: capacity === "" ? null : Number(capacity),
       status,
       details,
-      featureTypeIds,
     }, imagePreviews.map((item) => item.file));
   };
 
@@ -353,16 +352,6 @@ export function CreativeSpaceModal({
                 <option value="ACTIVE">Active</option>
               </select>
             </div>
-
-            <details open={isEditMode} className="rounded-md border border-[#e0e0da] px-3 py-2 sm:col-span-2">
-              <summary className="cursor-pointer text-sm font-medium text-[#343630]">Features ({featureTypeIds.length} selected)</summary>
-              {featureTypes.length ? <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {featureTypes.map((feature) => <label key={feature.featureTypeId} className="flex items-start gap-2 rounded-md border border-[#e0e0da] px-3 py-2 text-sm text-[#454741]">
-                  <input type="checkbox" checked={featureTypeIds.includes(feature.featureTypeId)} onChange={(event) => setFeatureTypeIds((current) => event.target.checked ? [...current, feature.featureTypeId] : current.filter((id) => id !== feature.featureTypeId))} className="mt-0.5 accent-[#39724b]" />
-                  <span>{feature.name}{feature.description && <span className="mt-0.5 block text-xs text-[#777973]">{feature.description}</span>}</span>
-                </label>)}
-              </div> : <p className="mt-2 text-sm text-[#777973]">No feature types available.</p>}
-            </details>
 
             <details open={isEditMode} className="rounded-md border border-[#e0e0da] px-3 py-2 sm:col-span-2">
               <summary className="cursor-pointer text-sm font-medium text-[#343630]">Additional space details</summary>

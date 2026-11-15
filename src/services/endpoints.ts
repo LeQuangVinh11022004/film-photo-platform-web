@@ -24,7 +24,7 @@ export const endpoints = {
     spaces: "/admin/spaces",
   },
   provider: {
-    profile: "/provider/profile",
+    account: "/provider/account",
     spaces: "/provider/spaces",
     bookings: "/provider/bookings",
   },

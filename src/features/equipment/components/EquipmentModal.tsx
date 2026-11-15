@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Equipment } from "@/features/equipment";
 
 type EquipmentFormData = {
@@ -55,7 +55,6 @@ export function EquipmentModal({
   const setCategory = (value: string) => setForm((current) => ({ ...current, category: value }));
   const setPrice = (value: string) => setForm((current) => ({ ...current, price: value }));
   const setQuantity = (value: string) => setForm((current) => ({ ...current, quantity: value }));
-  const setIsAvailable = (value: boolean) => setForm((current) => ({ ...current, isAvailable: value }));
 
   if (!open) return null;
 
