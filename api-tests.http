@@ -16,6 +16,9 @@
 @providerSpaceId = replace-with-provider-space-id
 @availabilityId = replace-with-availability-id
 @imageId = replace-with-image-id
+@equipmentId = replace-with-equipment-id
+@chemicalId = replace-with-chemical-id
+@packageId = replace-with-package-id
 @bookingId = replace-with-booking-id
 @contentId = replace-with-content-id
 @notificationId = replace-with-notification-id
@@ -371,6 +374,156 @@ Content-Type: application/json
 
 ### Delete provider space availability (permanent)
 DELETE {{baseUrl}}/provider/spaces/{{providerSpaceId}}/availability/{{availabilityId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### List provider equipment
+GET {{baseUrl}}/provider/equipment?page=1&pageSize=10
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Provider equipment detail
+GET {{baseUrl}}/provider/equipment/{{equipmentId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Create provider equipment
+POST {{baseUrl}}/provider/equipment
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "spaceId": "{{providerSpaceId}}",
+  "equipmentType": "STUDIO",
+  "name": "API Test Camera",
+  "category": "Film Camera",
+  "variant": "35mm SLR",
+  "description": "Temporary equipment for API testing",
+  "specificationsJson": null,
+  "quantityTotal": 2,
+  "rentalPrice": 250000
+}
+
+### Update provider equipment
+PUT {{baseUrl}}/provider/equipment/{{equipmentId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "equipmentType": "STUDIO",
+  "name": "API Test Camera Updated",
+  "category": "Film Camera",
+  "variant": "35mm SLR",
+  "description": "Updated by API test",
+  "specificationsJson": null,
+  "quantityTotal": 3,
+  "rentalPrice": 300000,
+  "status": "ACTIVE",
+  "conditionStatus": "GOOD",
+  "statusNote": null
+}
+
+### Delete provider equipment (permanent)
+DELETE {{baseUrl}}/provider/equipment/{{equipmentId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### List provider chemicals
+GET {{baseUrl}}/provider/chemicals?page=1&pageSize=10
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Provider chemical detail
+GET {{baseUrl}}/provider/chemicals/{{chemicalId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Create provider chemical
+POST {{baseUrl}}/provider/chemicals
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "darkroomId": "{{providerSpaceId}}",
+  "name": "API Test Developer",
+  "chemicalType": "DEVELOPER",
+  "brand": "Ilford",
+  "stockQuantity": 5,
+  "stockUnit": "L",
+  "minimumStock": 1,
+  "unitCost": 350000,
+  "expiresOn": "2027-06-30",
+  "status": "ACTIVE",
+  "statusNote": null
+}
+
+### Update provider chemical
+PUT {{baseUrl}}/provider/chemicals/{{chemicalId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "name": "API Test Developer Updated",
+  "chemicalType": "DEVELOPER",
+  "brand": "Ilford",
+  "stockQuantity": 5,
+  "stockUnit": "L",
+  "minimumStock": 2,
+  "unitCost": 380000,
+  "expiresOn": "2027-06-30",
+  "status": "ACTIVE",
+  "statusNote": null
+}
+
+### Adjust provider chemical stock
+POST {{baseUrl}}/provider/chemicals/{{chemicalId}}/stock-adjustments
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "movementType": "PURCHASE",
+  "quantityDelta": 2,
+  "unitCost": 380000,
+  "supplierOrReference": "PO-TEST-01",
+  "note": "Restocked by API test"
+}
+
+### Delete provider chemical (permanent)
+DELETE {{baseUrl}}/provider/chemicals/{{chemicalId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### List provider service packages
+GET {{baseUrl}}/provider/service-packages?page=1&pageSize=10
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Provider service package detail
+GET {{baseUrl}}/provider/service-packages/{{packageId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Create provider service package
+POST {{baseUrl}}/provider/service-packages
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "name": "API Test Darkroom Pass",
+  "description": "Temporary service package for API testing",
+  "price": 1200000,
+  "usesPerMonth": 4,
+  "validityMonths": 1,
+  "status": "ACTIVE"
+}
+
+### Update provider service package
+PUT {{baseUrl}}/provider/service-packages/{{packageId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "name": "API Test Darkroom Pass Updated",
+  "description": "Updated by API test",
+  "price": 1500000,
+  "usesPerMonth": 6,
+  "validityMonths": 3,
+  "status": "ACTIVE"
+}
+
+### Delete provider service package (permanent)
+DELETE {{baseUrl}}/provider/service-packages/{{packageId}}
 Authorization: Bearer {{providerLogin.response.body.$.token}}
 
 ### List provider bookings

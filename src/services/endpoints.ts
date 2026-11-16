@@ -26,6 +26,9 @@ export const endpoints = {
   provider: {
     account: "/provider/account",
     spaces: "/provider/spaces",
+    equipment: "/provider/equipment",
+    chemicals: "/provider/chemicals",
+    servicePackages: "/provider/service-packages",
     bookings: "/provider/bookings",
   },
 } as const;
