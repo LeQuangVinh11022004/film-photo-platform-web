@@ -15,7 +15,7 @@ import type { PagedResponse } from "@/types";
 
 const pageSize = 20;
 const fieldClassName = "h-10 w-full rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#343630] outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
-const blankForm: AdminSpaceRequest = { providerId: "", name: "", type: "", description: "", address: "", capacity: null, status: "INACTIVE" };
+const blankForm: AdminSpaceRequest = { providerId: "", name: "", type: "STUDIO", description: "", address: "", capacity: null, status: "INACTIVE" };
 
 function errorMessage(error: unknown) {
 	if (axios.isAxiosError(error)) {
@@ -130,7 +130,9 @@ export default function AdminSpacesPage() {
 			<PageHeader eyebrow="Admin workspace" title="Creative spaces" description="Review and manage provider space listings." />
 			<div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 				<div className="grid gap-2 sm:grid-cols-3">
-					<input aria-label="Filter by space type" value={type} onChange={(event) => { setLoading(true); setType(event.target.value); setPage(1); }} placeholder="Filter by type" className={fieldClassName} />
+					<select aria-label="Filter by space type" value={type} onChange={(event) => { setLoading(true); setType(event.target.value); setPage(1); }} className={fieldClassName}>
+						<option value="">All types</option><option value="STUDIO">STUDIO</option><option value="DARKROOM">DARKROOM</option>
+					</select>
 					<select aria-label="Filter by status" value={status} onChange={(event) => { setLoading(true); setStatus(event.target.value); setPage(1); }} className={fieldClassName}>
 						<option value="">All statuses</option><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option>
 					</select>
@@ -160,7 +162,7 @@ export default function AdminSpacesPage() {
 			{modalOpen && <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#171815]/40 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setModalOpen(false); }}><section role="dialog" aria-modal="true" aria-labelledby="admin-space-form-title" className="my-auto w-full max-w-xl rounded-lg border border-[#e0e0da] bg-white shadow-xl"><div className="flex items-center justify-between border-b border-[#e8e8e2] px-5 py-4"><h2 id="admin-space-form-title" className="text-lg font-semibold text-[#20221f]">{editingSpace ? "Edit space" : "Add space"}</h2><button type="button" onClick={() => setModalOpen(false)} aria-label="Close form" className="flex h-8 w-8 items-center justify-center rounded-md text-[#686a64] hover:bg-[#f0f0ec]"><X size={18} /></button></div><form onSubmit={handleSubmit} className="grid gap-4 p-5 sm:grid-cols-2">
 				<label className="grid gap-1.5 text-sm font-medium text-[#454741] sm:col-span-2">Provider<select required value={form.providerId} onChange={(event) => setField("providerId", event.target.value)} className={fieldClassName}><option value="" disabled>Select provider</option>{providers.map((provider) => <option key={provider.providerId} value={provider.providerId}>{provider.businessName || provider.email}</option>)}</select></label>
 				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Name<input required maxLength={200} value={form.name} onChange={(event) => setField("name", event.target.value)} className={fieldClassName} /></label>
-				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Type<input required maxLength={50} value={form.type} onChange={(event) => setField("type", event.target.value)} className={fieldClassName} /></label>
+				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Type<select required value={form.type} onChange={(event) => setField("type", event.target.value)} className={fieldClassName}><option value="STUDIO">STUDIO</option><option value="DARKROOM">DARKROOM</option></select></label>
 				<label className="grid gap-1.5 text-sm font-medium text-[#454741] sm:col-span-2">Address<input required maxLength={500} value={form.address} onChange={(event) => setField("address", event.target.value)} className={fieldClassName} /></label>
 				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Capacity<input type="number" min="1" value={form.capacity ?? ""} onChange={(event) => setField("capacity", event.target.value === "" ? null : Number(event.target.value))} className={fieldClassName} /></label>
 				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Status<select value={form.status} onChange={(event) => setField("status", event.target.value as AdminSpaceRequest["status"])} className={fieldClassName}><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select></label>

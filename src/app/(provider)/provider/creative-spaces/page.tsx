@@ -440,7 +440,6 @@ export default function CreativeSpacesPage() {
                     <option value="">All statuses</option>
                     <option value="ACTIVE">Active</option>
                     <option value="INACTIVE">Inactive</option>
-                    <option value="PENDING">Pending</option>
                   </select>
                 </div>
                 <button

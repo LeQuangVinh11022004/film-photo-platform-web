@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChevronDown, LogOut, Menu, Monitor, Moon, Palette, PanelLeftClose, PanelLeftOpen, Search, Shield, Sun, UserRound } from "lucide-react";
+import { ChevronDown, LogOut, Menu, Moon, Palette, PanelLeftClose, PanelLeftOpen, Search, Shield, Sun, UserRound } from "lucide-react";
 import { Sidebar } from "@/shared/components/Sidebar";
 import { ProviderLanguageProvider, useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 import { ProviderProfileProvider, useProviderProfile } from "@/shared/providers/ProviderProfileProvider";
@@ -78,15 +78,13 @@ function ProviderToolbar({
     { label: messages.nav.transactions, href: "/provider/transaction" },
     { label: messages.nav.ratingFeedback, href: "/provider/rating-feedback" },
     { label: messages.nav.pricingPolicy, href: "/provider/pricing-policy" },
-    { label: messages.nav.settings, href: "/settings/profile" },
+    { label: messages.nav.settings, href: "/provider/settings" },
   ];
 
   const settingsItems = [
-    { key: "profile", label: messages.settings.sections.profile, icon: UserRound, href: "/settings/profile?tab=profile" },
-    { key: "account", label: messages.settings.sections.account, icon: Shield, href: "/settings/profile?tab=account" },
-    { key: "appearance", label: messages.settings.sections.appearance, icon: Palette, href: "/settings/profile?tab=appearance" },
-    { key: "notifications", label: messages.settings.sections.notifications, icon: Bell, href: "/settings/profile?tab=notifications" },
-    { key: "display", label: messages.settings.sections.display, icon: Monitor, href: "/settings/profile?tab=display" },
+    { key: "profile", label: messages.settings.sections.profile, icon: UserRound, href: "/provider/settings?tab=profile" },
+    { key: "account", label: messages.settings.sections.account, icon: Shield, href: "/provider/settings?tab=account" },
+    { key: "appearance", label: messages.settings.sections.appearance, icon: Palette, href: "/provider/settings?tab=appearance" },
   ];
 
   const avatarInitials = displayName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "PV";
@@ -220,7 +218,7 @@ function ProviderToolbar({
                   role="menuitem"
                   onClick={() => { onNavigate(href); setAccountMenuOpen(false); }}
                   className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-sm transition-colors ${
-                    pathname.startsWith("/settings/profile") ? "bg-slate-100 font-medium text-slate-950" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+                    pathname.startsWith("/provider/settings") ? "bg-slate-100 font-medium text-slate-950" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
                   }`}
                 >
                   <Icon size={16} strokeWidth={1.8} className="text-slate-500" />

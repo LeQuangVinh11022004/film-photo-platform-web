@@ -30,6 +30,7 @@ const iconByPath: Record<string, LucideIcon> = {
   "/provider/transaction": CreditCard,
   "/provider/rating-feedback": MessageSquareWarning,
   "/provider/pricing-policy": BadgeDollarSign,
+  "/provider/settings": Settings2,
 
   "/moderator/creative-spaces": Aperture,
   "/moderator/equipment": Camera,
@@ -77,7 +78,7 @@ export function Sidebar({ role, collapsed = false, onNavigate }: { role: "provid
           { label: providerMessages.nav.transactions, href: "/provider/transaction" },
           { label: providerMessages.nav.ratingFeedback, href: "/provider/rating-feedback" },
           { label: providerMessages.nav.pricingPolicy, href: "/provider/pricing-policy" },
-          { label: providerMessages.nav.settings, href: "/settings/profile" },
+          { label: providerMessages.nav.settings, href: "/provider/settings" },
         ]
       : moderatorLinks.map(([label, href]) => ({ label, href }));
 
@@ -96,7 +97,10 @@ export function Sidebar({ role, collapsed = false, onNavigate }: { role: "provid
         {!collapsed && <p className="mb-2 mt-9 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">{role === "admin" ? adminMessages.common.general : role === "provider" ? providerMessages.common.general : "Workplace"}</p>}
         <nav className="flex flex-col gap-1 overflow-x-auto">
           {links.map(({ label, href }) => {
-            const isActive = pathname === href || (href === "/settings/profile" && pathname.startsWith("/settings"));
+            const isActive =
+              pathname === href ||
+              (href === "/settings/profile" && pathname.startsWith("/settings")) ||
+              (href === "/provider/settings" && pathname.startsWith("/provider/settings"));
             const Icon = iconByPath[href] ?? LayoutDashboard;
             return (
               <Link
@@ -127,7 +131,7 @@ export function Sidebar({ role, collapsed = false, onNavigate }: { role: "provid
       {(role === "admin" || role === "provider") && (
         <div className={`shrink-0 border-t border-slate-200 pt-4 ${collapsed ? "flex justify-center px-0" : "px-2"}`}>
           <Link
-            href="/settings/profile"
+            href={role === "admin" ? "/settings/profile" : "/provider/settings"}
             onClick={onNavigate}
             aria-label={`${currentDisplayName}, ${currentRoleLabel}`}
             title={collapsed ? `${currentDisplayName} · ${currentRoleLabel}` : undefined}

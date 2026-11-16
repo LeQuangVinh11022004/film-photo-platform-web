@@ -4,21 +4,32 @@ import { clearAuthToken, setAuthToken } from "@/services/authToken";
 
 export type UserRole = "provider" | "moderator" | "admin";
 export type AuthUser = { id: string; name: string; email: string; role: UserRole };
+export type AuthErrorCode = "401" | "403" | null;
 
-type AuthState = { token: string | null; user: AuthUser | null; expiresAtUtc: string | null; setSession: (token: string, user: AuthUser, expiresAtUtc?: string | null) => void; clearSession: () => void };
+type AuthState = {
+  token: string | null;
+  user: AuthUser | null;
+  expiresAtUtc: string | null;
+  authErrorCode: AuthErrorCode;
+  setSession: (token: string, user: AuthUser, expiresAtUtc?: string | null) => void;
+  setAuthError: (code: AuthErrorCode) => void;
+  clearSession: () => void;
+};
 
 export const useAuthStore = create<AuthState>()(persist((set) => ({
   token: null,
   user: null,
   expiresAtUtc: null,
+  authErrorCode: null,
   setSession: (token, user, expiresAtUtc) => {
     if (expiresAtUtc !== undefined) setAuthToken(token, expiresAtUtc);
     else setAuthToken(token);
-    set((state) => ({ token, user, expiresAtUtc: expiresAtUtc === undefined ? state.expiresAtUtc : expiresAtUtc }));
+    set((state) => ({ token, user, authErrorCode: null, expiresAtUtc: expiresAtUtc === undefined ? state.expiresAtUtc : expiresAtUtc }));
   },
+  setAuthError: (authErrorCode) => set({ authErrorCode }),
   clearSession: () => {
     clearAuthToken();
-    set({ token: null, user: null, expiresAtUtc: null });
+    set({ token: null, user: null, expiresAtUtc: null, authErrorCode: null });
   },
 }), {
   name: "film-photo.auth-session",
