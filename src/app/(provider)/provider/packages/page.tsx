@@ -235,7 +235,11 @@ export default function PackagesPage() {
         setSelectedPackage(null);
       }
       setPendingDeletePackage(null);
-      setReloadKey((k) => k + 1);
+      if ((result?.items.length ?? 0) <= 1 && currentPage > 1) {
+        setCurrentPage((p) => p - 1);
+      } else {
+        setReloadKey((k) => k + 1);
+      }
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -566,6 +570,13 @@ export default function PackagesPage() {
             <form
               onSubmit={handleSubmit}
               className="grid gap-4 p-6 sm:grid-cols-2">
+              {error && (
+                <p
+                  role="alert"
+                  className="rounded-md border border-[#e6c3bd] bg-[#fbefed] px-3 py-2 text-sm text-[#9c4339] sm:col-span-2">
+                  {error}
+                </p>
+              )}
               <label className="grid gap-1.5 text-sm font-medium text-[#343630] sm:col-span-2">
                 Package name
                 <input

@@ -327,7 +327,11 @@ export default function EquipmentPage() {
         setSelectedEquipment(null);
       }
       setPendingDeleteEquipment(null);
-      setEquipmentReloadKey((k) => k + 1);
+      if ((equipmentResult?.items.length ?? 0) <= 1 && equipmentPage > 1) {
+        setEquipmentPage((p) => p - 1);
+      } else {
+        setEquipmentReloadKey((k) => k + 1);
+      }
     } catch (err) {
       setEquipmentError(errorMessage(err));
     } finally {
@@ -479,7 +483,11 @@ export default function EquipmentPage() {
         setSelectedChemical(null);
       }
       setPendingDeleteChemical(null);
-      setChemicalReloadKey((k) => k + 1);
+      if ((chemicalResult?.items.length ?? 0) <= 1 && chemicalPage > 1) {
+        setChemicalPage((p) => p - 1);
+      } else {
+        setChemicalReloadKey((k) => k + 1);
+      }
     } catch (err) {
       setChemicalError(errorMessage(err));
     } finally {
@@ -1214,6 +1222,13 @@ export default function EquipmentPage() {
             <form
               onSubmit={handleSaveChemical}
               className="grid gap-4 p-6 sm:grid-cols-2">
+              {chemicalError && (
+                <p
+                  role="alert"
+                  className="rounded-md border border-[#e6c3bd] bg-[#fbefed] px-3 py-2 text-sm text-[#9c4339] sm:col-span-2">
+                  {chemicalError}
+                </p>
+              )}
               {!editingChemical && (
                 <label className="grid gap-1.5 text-sm font-medium text-[#343630] sm:col-span-2">
                   Darkroom
@@ -1401,6 +1416,13 @@ export default function EquipmentPage() {
               </button>
             </div>
             <form onSubmit={handleAdjustStock} className="grid gap-4 p-6">
+              {chemicalError && (
+                <p
+                  role="alert"
+                  className="rounded-md border border-[#e6c3bd] bg-[#fbefed] px-3 py-2 text-sm text-[#9c4339]">
+                  {chemicalError}
+                </p>
+              )}
               <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
                 Movement type
                 <select
