@@ -1,93 +1,129 @@
 "use client";
 
-import { useState } from "react";
-import type { Equipment } from "@/features/equipment";
-
-type EquipmentFormData = {
-  name: string;
-  category: string;
-  price: number;
-  quantity: number;
-  isAvailable: boolean;
-};
+import { useState, type FormEvent } from "react";
+import { X } from "lucide-react";
+import type {
+  ProviderEquipment,
+  ProviderEquipmentConditionStatus,
+  ProviderEquipmentCreateRequest,
+  ProviderEquipmentStatus,
+  ProviderEquipmentUpdateRequest,
+} from "@/features/equipment";
+import type { ProviderSpace } from "@/features/provider-space";
 
 type EquipmentModalProps = {
   open: boolean;
   mode: "create" | "edit";
-  equipment?: Equipment | null;
+  spaces: ProviderSpace[];
+  equipment?: ProviderEquipment | null;
+  error?: string;
+  submitting?: boolean;
   onClose: () => void;
-  onSubmit: (data: EquipmentFormData) => void;
+  onCreate: (data: ProviderEquipmentCreateRequest) => void;
+  onUpdate: (data: ProviderEquipmentUpdateRequest) => void;
 };
 
 const inputClassName =
   "h-10 w-full rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#343630] outline-none transition-colors focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
 
-const categories = ["Camera", "Lens", "Lighting", "Audio", "Support", "Other"];
+const textareaClassName =
+  "min-h-20 w-full resize-y rounded-md border border-[#d8d8d1] bg-white px-3 py-2 text-sm text-[#343630] outline-none transition-colors focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
+
+const categories = [
+  "Camera",
+  "Lens",
+  "Lighting",
+  "Darkroom",
+  "Enlarger",
+  "Film Processor",
+  "Audio",
+  "Support",
+  "Other",
+];
+
+const conditionOptions: { value: ProviderEquipmentConditionStatus; label: string }[] = [
+  { value: "GOOD", label: "Good (GOOD)" },
+  { value: "NEEDS_REPAIR", label: "Needs Repair (NEEDS_REPAIR)" },
+  { value: "DAMAGED", label: "Damaged (DAMAGED)" },
+  { value: "UNDER_MAINTENANCE", label: "Under Maintenance (UNDER_MAINTENANCE)" },
+];
 
 export function EquipmentModal({
   open,
   mode,
+  spaces,
   equipment,
+  error,
+  submitting = false,
   onClose,
-  onSubmit,
+  onCreate,
+  onUpdate,
 }: EquipmentModalProps) {
-  const createForm = () => ({
-    name: equipment?.name ?? "",
-    category: equipment?.category ?? "Camera",
-    price: equipment ? String(equipment.price) : "",
-    quantity: equipment ? String(equipment.quantity) : "",
-    isAvailable: equipment?.isAvailable ?? true,
-  });
-  const [form, setForm] = useState(createForm);
-  const [previousContext, setPreviousContext] = useState({ open, mode, equipment });
-
-  if (
-    previousContext.open !== open ||
-    previousContext.mode !== mode ||
-    previousContext.equipment !== equipment
-  ) {
-    setPreviousContext({ open, mode, equipment });
-    setForm(createForm());
-  }
-
-  const { name, category, price, quantity, isAvailable } = form;
-  const setName = (value: string) => setForm((current) => ({ ...current, name: value }));
-  const setCategory = (value: string) => setForm((current) => ({ ...current, category: value }));
-  const setPrice = (value: string) => setForm((current) => ({ ...current, price: value }));
-  const setQuantity = (value: string) => setForm((current) => ({ ...current, quantity: value }));
+  const isEditMode = mode === "edit";
+  const [spaceId, setSpaceId] = useState(
+    equipment?.spaceId ?? spaces[0]?.spaceId ?? "",
+  );
+  const selectedSpace = spaces.find((s) => s.spaceId === spaceId);
+  const derivedSpaceType =
+    equipment?.spaceType?.toUpperCase() === "DARKROOM" ||
+    selectedSpace?.type?.toUpperCase() === "DARKROOM"
+      ? "DARKROOM"
+      : "STUDIO";
+  const [name, setName] = useState(equipment?.name ?? "");
+  const [category, setCategory] = useState(equipment?.category ?? "Film Camera");
+  const [variant, setVariant] = useState(equipment?.variant ?? "");
+  const [description, setDescription] = useState(equipment?.description ?? "");
+  const [specificationsJson, setSpecificationsJson] = useState(
+    equipment?.specificationsJson ?? "",
+  );
+  const [quantityTotal, setQuantityTotal] = useState(
+    equipment ? String(equipment.quantityTotal) : "1",
+  );
+  const [rentalPrice, setRentalPrice] = useState(
+    equipment?.rentalPrice != null ? String(equipment.rentalPrice) : "",
+  );
+  const [status, setStatus] = useState<ProviderEquipmentStatus>(
+    equipment?.status?.toUpperCase() === "INACTIVE" ? "INACTIVE" : "ACTIVE",
+  );
+  const [conditionStatus, setConditionStatus] =
+    useState<ProviderEquipmentConditionStatus>(
+      (equipment?.conditionStatus?.toUpperCase() as ProviderEquipmentConditionStatus) ||
+        "GOOD",
+    );
+  const [statusNote, setStatusNote] = useState(equipment?.statusNote ?? "");
 
   if (!open) return null;
 
-  const isEditMode = mode === "edit";
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const parsedQty = Math.max(1, Number.parseInt(quantityTotal, 10) || 1);
+    const parsedPrice =
+      rentalPrice.trim() === "" ? null : Number(rentalPrice);
 
-    const trimmedName = name.trim();
+    const common = {
+      equipmentType: derivedSpaceType,
+      name: name.trim(),
+      category: category.trim(),
+      variant: variant.trim() || null,
+      description: description.trim() || null,
+      specificationsJson: specificationsJson.trim() || null,
+      quantityTotal: parsedQty,
+      rentalPrice: parsedPrice,
+    };
 
-    if (!trimmedName || !category || !price.trim() || !quantity.trim()) {
-      return;
+    if (isEditMode) {
+      onUpdate({
+        ...common,
+        status,
+        conditionStatus,
+        statusNote: statusNote.trim() || null,
+      });
+    } else {
+      onCreate({
+        spaceId,
+        ...common,
+      });
     }
-
-    const parsedPrice = Number(price);
-    const parsedQuantity = Number(quantity);
-
-    if (
-      !Number.isFinite(parsedPrice) ||
-      parsedPrice < 0 ||
-      !Number.isInteger(parsedQuantity) ||
-      parsedQuantity < 1
-    ) {
-      return;
-    }
-
-    onSubmit({
-      name: trimmedName,
-      category,
-      price: parsedPrice,
-      quantity: parsedQuantity,
-      isAvailable,
-    });
   };
 
   return (
@@ -98,171 +134,222 @@ export function EquipmentModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="equipment-modal-title"
-        className="my-auto w-full max-w-lg rounded-lg border border-[#e0e0da] bg-white shadow-xl"
+        className="my-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-lg border border-[#e0e0da] bg-white shadow-xl"
         onClick={(event) => event.stopPropagation()}>
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-[#eeeeea] px-6 py-5">
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[#eeeeea] px-6 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#777973]">
               Equipment management
             </p>
-
             <h2
               id="equipment-modal-title"
               className="mt-1 text-xl font-semibold text-[#20221f]">
               {isEditMode ? "Edit equipment" : "Add new equipment"}
             </h2>
-
-            <p className="mt-1 text-sm text-[#777973]">
-              {isEditMode
-                ? "Update the information of this equipment listing."
-                : "Add a new equipment item to your provider catalogue."}
-            </p>
           </div>
-
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-md px-2 py-1 text-lg text-[#777973] transition-colors hover:bg-[#f0f0ec]">
-            ×
+            className="flex h-9 w-9 items-center justify-center rounded-md text-[#777973] hover:bg-[#f0f0ec]">
+            <X size={18} />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-5 px-6 py-6">
-            {/* Equipment name */}
-            <div>
-              <label
-                htmlFor="equipment-name"
-                className="mb-1.5 block text-sm font-medium text-[#343630]">
-                Equipment name
-              </label>
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="grid min-h-0 gap-4 overflow-y-auto px-6 py-5 sm:grid-cols-2">
+            {error && (
+              <p
+                role="alert"
+                className="rounded-md border border-[#e6c3bd] bg-[#fbefed] px-3 py-2 text-sm text-[#9c4339] sm:col-span-2">
+                {error}
+              </p>
+            )}
 
+            {!isEditMode && (
+              <label className="grid gap-1.5 text-sm font-medium text-[#343630] sm:col-span-2">
+                Studio / Darkroom (Space)
+                <select
+                  required
+                  value={spaceId}
+                  onChange={(event) => setSpaceId(event.target.value)}
+                  className={inputClassName}>
+                  <option value="" disabled>
+                    Select studio or darkroom
+                  </option>
+                  {spaces.map((space) => (
+                    <option key={space.spaceId} value={space.spaceId}>
+                      {space.name} ({space.type})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
+              Equipment name
               <input
-                id="equipment-name"
                 type="text"
+                required
+                maxLength={200}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="e.g. Sony A7 IV"
-                required
-                maxLength={120}
+                placeholder="e.g. Hasselblad 500C/M"
                 className={inputClassName}
               />
-            </div>
+            </label>
 
-            {/* Category */}
-            <div>
-              <label
-                htmlFor="equipment-category"
-                className="mb-1.5 block text-sm font-medium text-[#343630]">
-                Category
-              </label>
+            <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
+              Owner type (EquipmentType)
+              <input
+                type="text"
+                readOnly
+                value={derivedSpaceType}
+                className={`${inputClassName} bg-[#f8f8f5] text-[#777973]`}
+              />
+            </label>
 
+            <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
+              Category
               <select
-                id="equipment-category"
                 value={category}
                 onChange={(event) => setCategory(event.target.value)}
-                required
                 className={inputClassName}>
+                {!categories.includes(category) && category && (
+                  <option value={category}>{category}</option>
+                )}
                 {categories.map((item) => (
                   <option key={item} value={item}>
                     {item}
                   </option>
                 ))}
               </select>
-            </div>
+            </label>
 
-            {/* Price and quantity */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label
-                  htmlFor="equipment-price"
-                  className="mb-1.5 block text-sm font-medium text-[#343630]">
-                  Rental price (VND)
+            <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
+              Variant / Model (optional)
+              <input
+                type="text"
+                maxLength={150}
+                value={variant}
+                onChange={(event) => setVariant(event.target.value)}
+                placeholder="e.g. 80mm f/2.8 Planar"
+                className={inputClassName}
+              />
+            </label>
+
+            <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
+              Total quantity
+              <input
+                type="number"
+                required
+                min={1}
+                step={1}
+                value={quantityTotal}
+                onChange={(event) => setQuantityTotal(event.target.value)}
+                className={inputClassName}
+              />
+            </label>
+
+            <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
+              Rental price (VND)
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={rentalPrice}
+                onChange={(event) => setRentalPrice(event.target.value)}
+                placeholder="e.g. 350000"
+                className={inputClassName}
+              />
+            </label>
+
+            {isEditMode && (
+              <>
+                <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
+                  Status
+                  <select
+                    value={status}
+                    onChange={(event) =>
+                      setStatus(event.target.value as ProviderEquipmentStatus)
+                    }
+                    className={inputClassName}>
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                  </select>
                 </label>
 
-                <input
-                  id="equipment-price"
-                  type="number"
-                  min={0}
-                  step={1000}
-                  value={price}
-                  onChange={(event) => setPrice(event.target.value)}
-                  placeholder="e.g. 650000"
-                  required
-                  className={inputClassName}
-                />
-
-                <p className="mt-1 text-xs text-[#858680]">
-                  Rental price per day.
-                </p>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="equipment-quantity"
-                  className="mb-1.5 block text-sm font-medium text-[#343630]">
-                  Quantity
+                <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
+                  Condition status
+                  <select
+                    value={conditionStatus}
+                    onChange={(event) =>
+                      setConditionStatus(
+                        event.target.value as ProviderEquipmentConditionStatus,
+                      )
+                    }
+                    className={inputClassName}>
+                    {conditionOptions.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
                 </label>
 
-                <input
-                  id="equipment-quantity"
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={quantity}
-                  onChange={(event) => setQuantity(event.target.value)}
-                  placeholder="e.g. 3"
-                  required
-                  className={inputClassName}
-                />
-              </div>
-            </div>
+                <label className="grid gap-1.5 text-sm font-medium text-[#343630] sm:col-span-2">
+                  Status / Maintenance note (optional)
+                  <input
+                    type="text"
+                    maxLength={1000}
+                    value={statusNote}
+                    onChange={(event) => setStatusNote(event.target.value)}
+                    placeholder="Reason for status or condition change"
+                    className={inputClassName}
+                  />
+                </label>
+              </>
+            )}
 
-            {/* Availability */}
-            <div className="flex items-center justify-between gap-4 rounded-md border border-[#e0e0da] bg-[#fafaf7] px-4 py-3">
-              <div>
-                <p className="text-sm font-medium text-[#343630]">
-                  Available for booking
-                </p>
-                <p className="mt-0.5 text-xs text-[#858680]">
-                  Set whether customers can book this equipment.
-                </p>
-              </div>
+            <label className="grid gap-1.5 text-sm font-medium text-[#343630] sm:col-span-2">
+              Description (optional)
+              <textarea
+                rows={2}
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="Describe this equipment item..."
+                className={textareaClassName}
+              />
+            </label>
 
-              {/* <button
-                type="button"
-                role="switch"
-                aria-checked={isAvailable}
-                aria-label="Available for booking"
-                onClick={() => setIsAvailable(!isAvailable)}
-                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                  isAvailable ? "bg-[#39724b]" : "bg-[#c8c9c2]"
-                }`}>
-                <span
-                  className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                    isAvailable ? "translate-x-6" : "translate-x-1"
-                  }`}
-                />
-              </button> */}
-            </div>
+            <label className="grid gap-1.5 text-sm font-medium text-[#343630] sm:col-span-2">
+              Specifications JSON (optional)
+              <input
+                type="text"
+                value={specificationsJson}
+                onChange={(event) => setSpecificationsJson(event.target.value)}
+                placeholder='e.g. {"mount":"FE","format":"35mm"}'
+                className={inputClassName}
+              />
+            </label>
           </div>
 
-          {/* Footer */}
-          <div className="flex justify-end gap-2 border-t border-[#eeeeea] px-6 py-4">
+          <div className="flex shrink-0 justify-end gap-2 border-t border-[#eeeeea] px-6 py-4">
             <button
               type="button"
               onClick={onClose}
-              className="h-9 rounded-md border border-[#d8d8d1] bg-white px-4 text-sm font-medium text-[#555750] transition-colors hover:bg-[#f5f5f1]">
+              className="h-9 rounded-md border border-[#d8d8d1] bg-white px-4 text-sm font-medium text-[#555750] hover:bg-[#f5f5f1]">
               Cancel
             </button>
-
             <button
               type="submit"
-              className="h-9 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#2f603e]">
-              {isEditMode ? "Save changes" : "Add equipment"}
+              disabled={submitting || (!isEditMode && !spaceId)}
+              className="h-9 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white hover:bg-[#2f603e] disabled:opacity-60">
+              {submitting
+                ? "Saving…"
+                : isEditMode
+                  ? "Save changes"
+                  : "Add equipment"}
             </button>
           </div>
         </form>

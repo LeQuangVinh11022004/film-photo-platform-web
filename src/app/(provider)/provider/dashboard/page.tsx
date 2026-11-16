@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
+import { listMyProviderSpaces } from "@/features/provider-space/api";
+import { listMyProviderEquipment } from "@/features/equipment/api";
+import { listProviderBookings } from "@/features/reservation/api";
+import { listMyProviderServicePackages } from "@/features/service-package/api";
 import {
 	ProviderMetricCard,
 	ProviderPerformanceChart,
@@ -44,14 +48,14 @@ const performanceData = {
 	{ label: string; reservations: number; revenue: number }[]
 >;
 
-const reservationStatus = [
+const fallbackReservationStatus = [
 	{ name: "Confirmed", value: 82 },
 	{ name: "Pending", value: 18 },
 	{ name: "Completed", value: 21 },
 	{ name: "Cancelled", value: 7 },
 ];
 
-const spacePerformance = [
+const fallbackSpacePerformance = [
 	{ name: "North Light Studio", bookings: 42 },
 	{ name: "Darkroom Studio", bookings: 34 },
 	{ name: "Film Lab", bookings: 27 },
@@ -59,14 +63,21 @@ const spacePerformance = [
 	{ name: "Product Studio", bookings: 13 },
 ];
 
-const upcomingReservations = [
+const fallbackUpcomingReservations: {
+	id: string;
+	customer: string;
+	space: string;
+	date: string;
+	time: string;
+	status: "Confirmed" | "Pending";
+}[] = [
 	{
 		id: "RES-1001",
 		customer: "Nguyen Minh Anh",
 		space: "North Light Studio",
 		date: "Today",
 		time: "10:00 AM – 12:00 PM",
-		status: "Confirmed" as const,
+		status: "Confirmed",
 	},
 	{
 		id: "RES-1002",
@@ -74,49 +85,109 @@ const upcomingReservations = [
 		space: "Darkroom Studio",
 		date: "Today",
 		time: "02:00 PM – 04:00 PM",
-		status: "Confirmed" as const,
-	},
-	{
-		id: "RES-1003",
-		customer: "Le Gia Han",
-		space: "Film Lab",
-		date: "Tomorrow",
-		time: "09:00 AM – 11:00 AM",
-		status: "Pending" as const,
-	},
-	{
-		id: "RES-1004",
-		customer: "Pham Duc Minh",
-		space: "Portrait Room",
-		date: "Tomorrow",
-		time: "01:00 PM – 03:00 PM",
-		status: "Confirmed" as const,
+		status: "Confirmed",
 	},
 ];
-
-const metricTrends = {
-	revenue: [24, 31, 28, 39, 42, 51, 58],
-	reservations: [18, 22, 19, 28, 32, 36, 41],
-	spaces: [11, 14, 13, 18, 21, 22, 25],
-	equipment: [30, 27, 32, 34, 38, 40, 43],
-};
 
 export default function DashboardPage() {
 	const [period, setPeriod] = useState<ProviderPeriod>("30d");
 	const { messages } = useProviderLanguage();
 	const t = messages.dashboard;
 
+	const [liveTotals, setLiveTotals] = useState<{
+		totalSpaces: number;
+		activeSpaces: number;
+		totalEquipment: number;
+		activeEquipment: number;
+		totalBookings: number;
+		liveRevenue: number;
+		activePackages: number;
+	} | null>(null);
+	const [liveStatusDist, setLiveStatusDist] = useState(fallbackReservationStatus);
+	const [liveUpcoming, setLiveUpcoming] = useState(fallbackUpcomingReservations);
+	const [liveSpacePerf, setLiveSpacePerf] = useState(fallbackSpacePerformance);
+
+	useEffect(() => {
+		let cancelled = false;
+		Promise.allSettled([
+			listMyProviderSpaces({ page: 1, pageSize: 50 }),
+			listMyProviderEquipment({ page: 1, pageSize: 50 }),
+			listProviderBookings({ page: 1, pageSize: 50 }),
+			listMyProviderServicePackages({ status: "ACTIVE", page: 1, pageSize: 1 }),
+		]).then(([spacesRes, eqRes, bookingsRes, pkgRes]) => {
+			if (cancelled) return;
+			const spaces = spacesRes.status === "fulfilled" ? spacesRes.value : null;
+			const eq = eqRes.status === "fulfilled" ? eqRes.value : null;
+			const bookings = bookingsRes.status === "fulfilled" ? bookingsRes.value : null;
+			const pkgs = pkgRes.status === "fulfilled" ? pkgRes.value : null;
+
+			const activeSpaces = spaces?.items.filter((s) => s.status.toUpperCase() === "ACTIVE").length ?? 0;
+			const activeEq = eq?.items.filter((e) => e.status.toUpperCase() === "ACTIVE").length ?? 0;
+			const bookingItems = bookings?.items ?? [];
+			const revenue = bookingItems
+				.filter((b) => b.status.toUpperCase() !== "CANCELLED")
+				.reduce((sum, b) => sum + b.totalAmount, 0);
+
+			setLiveTotals({
+				totalSpaces: spaces?.totalItems ?? 0,
+				activeSpaces,
+				totalEquipment: eq?.totalItems ?? 0,
+				activeEquipment: activeEq,
+				totalBookings: bookings?.totalItems ?? 0,
+				liveRevenue: revenue,
+				activePackages: pkgs?.totalItems ?? 0,
+			});
+
+			if (bookingItems.length > 0) {
+				const counts = { Confirmed: 0, Pending: 0, Completed: 0, Cancelled: 0 };
+				const bySpace = new Map<string, number>();
+				for (const b of bookingItems) {
+					const st = b.status.toUpperCase();
+					if (st === "CONFIRMED") counts.Confirmed += 1;
+					else if (st === "COMPLETED") counts.Completed += 1;
+					else if (st === "CANCELLED") counts.Cancelled += 1;
+					else counts.Pending += 1;
+
+					bySpace.set(b.spaceName, (bySpace.get(b.spaceName) ?? 0) + 1);
+				}
+				setLiveStatusDist([
+					{ name: "Confirmed", value: counts.Confirmed },
+					{ name: "Pending", value: counts.Pending },
+					{ name: "Completed", value: counts.Completed },
+					{ name: "Cancelled", value: counts.Cancelled },
+				]);
+				setLiveSpacePerf(
+					[...bySpace.entries()]
+						.map(([name, bk]) => ({ name, bookings: bk }))
+						.sort((a, b) => b.bookings - a.bookings)
+						.slice(0, 5),
+				);
+				setLiveUpcoming(
+					bookingItems.slice(0, 4).map((b) => ({
+						id: b.bookingId.slice(0, 8).toUpperCase(),
+						customer: b.photographerName,
+						space: b.spaceName,
+						date: b.bookingDate,
+						time: `${b.startTime.slice(0, 5)} – ${b.endTime.slice(0, 5)}`,
+						status:
+							b.status.toUpperCase() === "CONFIRMED"
+								? ("Confirmed" as const)
+								: ("Pending" as const),
+					})),
+				);
+			}
+		});
+		return () => {
+			cancelled = true;
+		};
+	}, []);
+
 	const currentPerformance = performanceData[period];
-
-	const totalReservations = currentPerformance.reduce(
-		(total, item) => total + item.reservations,
-		0,
-	);
-
-	const totalRevenue = currentPerformance.reduce(
-		(total, item) => total + item.revenue,
-		0,
-	);
+	const fallbackRevenue = currentPerformance.reduce((total, item) => total + item.revenue, 0);
+	const displayRevenue = liveTotals ? liveTotals.liveRevenue : fallbackRevenue;
+	const displayBookings = liveTotals
+		? liveTotals.totalBookings
+		: currentPerformance.reduce((total, item) => total + item.reservations, 0);
 
 	return (
 		<div className="mx-auto w-full max-w-375">
@@ -133,38 +204,34 @@ export default function DashboardPage() {
 			>
 				<ProviderMetricCard
 					label={t.metrics.revenue}
-					value={`₫${new Intl.NumberFormat("vi-VN").format(totalRevenue)}`}
-					change="+12.4%"
-					changeLabel={t.metrics.vsPrevious}
-					trend={metricTrends.revenue}
+					value={`₫${new Intl.NumberFormat("vi-VN").format(displayRevenue)}`}
+					change={liveTotals ? `${liveTotals.activePackages} active pkgs` : "+12.4%"}
+					changeLabel={liveTotals ? "live bookings total" : t.metrics.vsPrevious}
 					delay={0}
 					href="/provider/transaction"
 				/>
 
 				<ProviderMetricCard
 					label={t.metrics.reservations}
-					value={totalReservations.toLocaleString()}
-					change="+8.7%"
-					changeLabel={t.metrics.vsPrevious}
-					trend={metricTrends.reservations}
+					value={displayBookings.toLocaleString()}
+					change={liveTotals ? "Live API" : "+8.7%"}
+					changeLabel={liveTotals ? "from /provider/bookings" : t.metrics.vsPrevious}
 					delay={80}
 					href="/provider/reservations"
 				/>
 
 				<ProviderMetricCard
 					label={t.metrics.creativeSpaces}
-					value="8"
-					change={`7 ${t.metrics.activeSpaces}`}
-					trend={metricTrends.spaces}
+					value={String(liveTotals?.totalSpaces ?? 8)}
+					change={`${liveTotals?.activeSpaces ?? 7} ${t.metrics.activeSpaces}`}
 					delay={160}
 					href="/provider/creative-spaces"
 				/>
 
 				<ProviderMetricCard
 					label={t.metrics.equipment}
-					value="42"
-					change={`36 ${t.metrics.availableEquipment}`}
-					trend={metricTrends.equipment}
+					value={String(liveTotals?.totalEquipment ?? 42)}
+					change={`${liveTotals?.activeEquipment ?? 36} ${t.metrics.availableEquipment}`}
 					delay={240}
 					href="/provider/equipment"
 				/>
@@ -179,21 +246,16 @@ export default function DashboardPage() {
 				/>
 
 				<ProviderReservationStatus
-					data={reservationStatus}
-					total={reservationStatus.reduce(
-						(total, item) => total + item.value,
-						0,
-					)}
+					data={liveStatusDist}
+					total={liveStatusDist.reduce((total, item) => total + item.value, 0)}
 				/>
 			</section>
 
 			{/* Space performance + upcoming reservations */}
 			<section className="mt-4 grid gap-4 xl:grid-cols-[minmax(320px,0.8fr)_minmax(0,1.65fr)]">
-				<ProviderSpacePerformance data={spacePerformance} />
+				<ProviderSpacePerformance data={liveSpacePerf} />
 
-				<ProviderUpcomingReservations
-					data={upcomingReservations}
-				/>
+				<ProviderUpcomingReservations data={liveUpcoming} />
 			</section>
 
 			{/* Quick links */}
