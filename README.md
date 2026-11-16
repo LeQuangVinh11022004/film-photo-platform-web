@@ -47,7 +47,7 @@ The frontend currently provides route groups for authentication, provider workfl
 | --- | --- |
 | Home | `/` |
 | Authentication | `/login`, `/register`, `/register-provider`, `/forgot-password`, `/reset-password` |
-| Provider workspace | `/provider/dashboard`, `/provider/creative-spaces`, `/provider/equipment`, `/provider/packages`, `/provider/pricing-policy`, `/provider/rating-feedback`, `/provider/reservations`, `/provider/transaction`, `/settings/profile` |
+| Provider workspace | `/provider/dashboard`, `/provider/creative-spaces`, `/provider/equipment`, `/provider/packages`, `/provider/pricing-policy`, `/provider/rating-feedback`, `/provider/reservations`, `/provider/transaction`, `/provider/settings` |
 | Administration | `/admin/dashboard`, `/content`, `/disputes`, `/providers`, `/reports`, `/settings`, `/settings/[section]`, `/spaces`, `/transactions`, `/users` |
 | Error pages | `/errors`, `/errors/401`, `/errors/403`, `/errors/404` |
 

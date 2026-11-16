@@ -37,7 +37,9 @@ export function CreativeSpaceModal({
   submitting = false,
 }: CreativeSpaceModalProps) {
   const [name, setName] = useState(space?.name ?? "");
-  const [type, setType] = useState(space?.type ?? "");
+  const [type, setType] = useState(
+    space?.type?.toUpperCase() === "DARKROOM" ? "DARKROOM" : "STUDIO",
+  );
   const [address, setAddress] = useState(space?.address ?? "");
   const [capacity, setCapacity] = useState(space?.capacity == null ? "" : String(space.capacity));
   const [description, setDescription] = useState(space?.description ?? "");
@@ -205,7 +207,15 @@ export function CreativeSpaceModal({
 
             <div>
               <label htmlFor="space-type" className="mb-1.5 block text-sm font-medium text-[#343630]">Space type</label>
-              <input id="space-type" type="text" maxLength={50} value={type} onChange={(event) => setType(event.target.value)} placeholder="e.g. Studio" required className={inputClassName} />
+              <select
+                id="space-type"
+                value={type}
+                onChange={(event) => setType(event.target.value)}
+                required
+                className={inputClassName}>
+                <option value="STUDIO">STUDIO</option>
+                <option value="DARKROOM">DARKROOM</option>
+              </select>
             </div>
 
             {/* Address */}

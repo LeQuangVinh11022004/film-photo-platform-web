@@ -3,16 +3,20 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AdminLanguageProvider, useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
+import { useAuthStore } from "@/store/authStore";
 
 type ErrorCode = "401" | "403" | "404";
 
 function ErrorStatusContent({ code }: { code: ErrorCode }) {
   const router = useRouter();
   const { messages } = useAdminLanguage();
+  const currentRole = useAuthStore((state) => state.user?.role);
+  const setAuthError = useAuthStore((state) => state.setAuthError);
   const t = messages.errors;
   const title = code === "401" ? t.unauthorizedTitle : code === "403" ? t.forbiddenTitle : t.notFoundTitle;
   const description = code === "401" ? t.unauthorizedDescription : code === "403" ? t.forbiddenDescription : t.notFoundDescription;
-  const destination = code === "401" ? "/login" : code === "403" ? "/admin/dashboard" : "/";
+  const dashboardHref = currentRole === "provider" ? "/provider/dashboard" : "/admin/dashboard";
+  const destination = code === "401" ? "/login" : code === "403" ? dashboardHref : "/";
   const destinationLabel = code === "401" ? t.signIn : code === "403" ? t.dashboard : t.backHome;
 
   return (
@@ -22,8 +26,8 @@ function ErrorStatusContent({ code }: { code: ErrorCode }) {
         <h2 className="mt-7 text-lg font-semibold text-slate-950">{title}</h2>
         <p className="mx-auto mt-3 max-w-lg text-base leading-7 text-slate-500">{description}</p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          <button type="button" onClick={() => router.back()} className="h-11 rounded-md border border-slate-200 bg-white px-5 text-sm font-medium text-slate-950 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500">{t.goBack}</button>
-          <Link href={destination} className="inline-flex h-11 items-center justify-center rounded-md bg-slate-950 px-5 text-sm font-medium text-white transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500">{destinationLabel}</Link>
+          <button type="button" onClick={() => { setAuthError(null); router.back(); }} className="h-11 rounded-md border border-slate-200 bg-white px-5 text-sm font-medium text-slate-950 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500">{t.goBack}</button>
+          <Link href={destination} onClick={() => setAuthError(null)} className="inline-flex h-11 items-center justify-center rounded-md bg-slate-950 px-5 text-sm font-medium text-white transition-colors hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500">{destinationLabel}</Link>
         </div>
       </section>
     </main>

@@ -142,8 +142,8 @@ export function AdminSettingsPage({ section }: { section: SettingsSection }) {
       {section === "account" && (
         <SettingsPanel title={sectionNames.account} description={t.accountDescription}>
           <dl className="max-w-xl divide-y divide-slate-100 text-sm">
-            <SettingsRow label={t.role} value={user?.role ?? t.adminRole} />
-            <SettingsRow label={t.authStatus} value={t.notConnected} />
+            <SettingsRow label={t.role} value={user?.role ? t.adminRole : t.adminRole} />
+            <SettingsRow label={t.authStatus} value={token ? "Connected" : t.notConnected} />
             <SettingsRow label={t.email} value={user?.email ?? t.emailUnavailable} />
           </dl>
         </SettingsPanel>
