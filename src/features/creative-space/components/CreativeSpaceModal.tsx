@@ -22,7 +22,7 @@ type CreativeSpaceModalProps = {
 };
 
 const inputClassName =
-    "h-10 w-full rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#343630] outline-none transition-colors focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
+    "h-10 w-full rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#343630] outline-none transition-colors focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15 disabled:bg-[#f5f5f1] disabled:text-[#777973] disabled:cursor-not-allowed";
 
 const textareaClassName =
     "min-h-24 w-full resize-y rounded-md border border-[#d8d8d1] bg-white px-3 py-2 text-sm text-[#343630] outline-none transition-colors focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
@@ -54,7 +54,7 @@ const DARKROOM_AMENITIES = [
     "Print Washer & Drying Racks"
 ];
 
-// Hàm phụ trợ để chuẩn hóa dữ liệu amenities cũ (có thể là mảng, chuỗi phân tách bằng dấu phẩy, v.v.) về dạng string[]
+// Hàm phụ trợ để chuẩn hóa dữ liệu amenities cũ về dạng string[]
 function parseAmenities(amenities: ProviderSpaceDetails["amenities"]): string[] {
     if (!amenities) return [];
     if (Array.isArray(amenities)) return amenities;
@@ -117,6 +117,7 @@ export function CreativeSpaceModal({
     }
 
     const isEditMode = mode === "edit";
+    const isDarkroom = type.toUpperCase() === "DARKROOM";
 
     // Lấy danh sách amenities hiện tại dưới dạng mảng để check giao diện
     const currentAmenitiesList = parseAmenities(details.amenities);
@@ -201,7 +202,7 @@ export function CreativeSpaceModal({
     };
 
     // Chọn danh sách checkbox phù hợp dựa vào type hiện tại
-    const availableAmenities = type.toUpperCase() === "DARKROOM" ? DARKROOM_AMENITIES : STUDIO_AMENITIES;
+    const availableAmenities = isDarkroom ? DARKROOM_AMENITIES : STUDIO_AMENITIES;
 
     return (
         <div
@@ -272,11 +273,8 @@ export function CreativeSpaceModal({
                             <select
                                 id="space-type"
                                 value={type}
-                                onChange={(event) => {
-                                    const newType = event.target.value;
-                                    setType(newType);
-                                    // Khi đổi type phòng, có thể reset lại amenities hoặc giữ nguyên tùy ý bạn
-                                }}
+                                disabled={isEditMode} // Disable khi đang ở chế độ Edit
+                                onChange={(event) => setType(event.target.value)}
                                 required
                                 className={inputClassName}>
                                 <option value="STUDIO">STUDIO</option>
@@ -447,25 +445,31 @@ export function CreativeSpaceModal({
                                     </label>
                                 ))}
                                 
-                                <label className="grid gap-1.5 text-sm text-[#454741] sm:col-span-3">
-                                    Artistic style
-                                    <input
-                                        maxLength={255}
-                                        value={details.artisticStyle ?? ""}
-                                        onChange={(event) => setDetails((current) => ({ ...current, artisticStyle: event.target.value }))}
-                                        className={inputClassName}
-                                    />
-                                </label>
+                                {/* Chỉ hiện Artistic style nếu là STUDIO */}
+                                {!isDarkroom && (
+                                    <label className="grid gap-1.5 text-sm text-[#454741] sm:col-span-3">
+                                        Artistic style
+                                        <input
+                                            maxLength={255}
+                                            value={details.artisticStyle ?? ""}
+                                            onChange={(event) => setDetails((current) => ({ ...current, artisticStyle: event.target.value }))}
+                                            className={inputClassName}
+                                        />
+                                    </label>
+                                )}
 
-                                <label className="grid gap-1.5 text-sm text-[#454741] sm:col-span-3">
-                                    Supported processes
-                                    <input
-                                        value={typeof details.supportedProcesses === "string" ? details.supportedProcesses : ""}
-                                        onChange={(event) => setDetails((current) => ({ ...current, supportedProcesses: event.target.value }))}
-                                        className={inputClassName}
-                                        placeholder="e.g. C-41, Black & White development"
-                                    />
-                                </label>
+                                {/* Chỉ hiện Supported processes nếu là DARKROOM */}
+                                {isDarkroom && (
+                                    <label className="grid gap-1.5 text-sm text-[#454741] sm:col-span-3">
+                                        Supported processes
+                                        <input
+                                            value={typeof details.supportedProcesses === "string" ? details.supportedProcesses : ""}
+                                            onChange={(event) => setDetails((current) => ({ ...current, supportedProcesses: event.target.value }))}
+                                            className={inputClassName}
+                                            placeholder="e.g. C-41, Black & White development"
+                                        />
+                                    </label>
+                                )}
 
                                 {(['lightingConditions', 'ventilationDetails', 'acousticDetails', 'usagePolicies'] as const).map((field) => (
                                     <label key={field} className="grid gap-1.5 text-sm text-[#454741] sm:col-span-3">
