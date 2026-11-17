@@ -5,15 +5,28 @@ export type ProviderSpaceImage = {
 	imageType?: "COVER" | "INTERIOR" | string | null;
 };
 
+export type OperatingHours = {
+    monday?: string | null;
+    tuesday?: string | null;
+    wednesday?: string | null;
+    thursday?: string | null;
+    friday?: string | null;
+    saturday?: string | null;
+    sunday?: string | null;
+};
+
 export type ProviderSpaceDetails = {
 	lengthM: number | null;
 	widthM: number | null;
 	heightM: number | null;
 	artisticStyle: string | null;
+	supportedProcesses: string | null;
 	lightingConditions: string | null;
 	ventilationDetails: string | null;
 	acousticDetails: string | null;
 	usagePolicies: string | null;
+	amenities: string[] | string | null;
+    operatingHours: OperatingHours | string | null;
 };
 
 export type ProviderSpaceAvailability = {
