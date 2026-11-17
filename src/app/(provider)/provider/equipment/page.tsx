@@ -1,12 +1,30 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { AlertTriangle, Camera, FlaskConical, PackagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
+import {
+  AlertTriangle,
+  Camera,
+  FlaskConical,
+  PackagePlus,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { Pagination } from "@/shared/components/Pagination";
 import { ConfirmDeleteDialog } from "@/shared/components/ConfirmDeleteDialog";
 import { EquipmentModal } from "@/features/equipment/components/EquipmentModal";
+import { EquipmentDetailsModal } from "@/features/equipment/components/EquipmentDetailsModal";
+import { ChemicalDetailsModal } from "@/features/equipment/components/ChemicalDetailsModal";
+import {
+  ChemicalModal,
+  type ChemicalFormValues,
+} from "@/features/equipment/components/ChemicalModal";
+import {
+  ChemicalStockAdjustmentModal,
+  type StockAdjustmentFormValues,
+} from "@/features/equipment/components/ChemicalStockAdjustmentModal";
 import {
   createMyProviderEquipment,
   deleteMyProviderEquipment,
@@ -30,9 +48,7 @@ import {
 import type {
   ProviderChemical,
   ProviderChemicalCreateRequest,
-  ProviderChemicalMovementType,
   ProviderChemicalRequest,
-  ProviderChemicalStatus,
   ProviderChemicalStockAdjustmentRequest,
 } from "@/features/provider-chemical";
 import { listMyProviderSpaces } from "@/features/provider-space/api";
@@ -92,7 +108,9 @@ function formatPrice(value: number | null) {
 export default function EquipmentPage() {
   const { messages } = useProviderLanguage();
   const eq = messages.equipment;
-  const [activeTab, setActiveTab] = useState<"equipment" | "chemicals">("equipment");
+  const [activeTab, setActiveTab] = useState<"equipment" | "chemicals">(
+    "equipment",
+  );
   const [spaces, setSpaces] = useState<ProviderSpace[]>([]);
 
   // Equipment state
@@ -110,9 +128,9 @@ export default function EquipmentPage() {
     useState<ProviderEquipment | null>(null);
   const [equipmentModalOpen, setEquipmentModalOpen] = useState(false);
   const [equipmentModalVersion, setEquipmentModalVersion] = useState(0);
-  const [equipmentModalMode, setEquipmentModalMode] = useState<"create" | "edit">(
-    "create",
-  );
+  const [equipmentModalMode, setEquipmentModalMode] = useState<
+    "create" | "edit"
+  >("create");
   const [editingEquipment, setEditingEquipment] =
     useState<ProviderEquipment | null>(null);
   const [savingEquipment, setSavingEquipment] = useState(false);
@@ -141,27 +159,32 @@ export default function EquipmentPage() {
   const [deletingChemical, setDeletingChemical] = useState(false);
 
   // Chemical form state
-  const [chemDarkroom, setChemDarkroom] = useState("");
-  const [chemName, setChemName] = useState("");
-  const [chemType, setChemType] = useState("DEVELOPER");
-  const [chemBrand, setChemBrand] = useState("");
-  const [chemStockQuantity, setChemStockQuantity] = useState("1");
-  const [chemStockUnit, setChemStockUnit] = useState("L");
-  const [chemMinimumStock, setChemMinimumStock] = useState("0.5");
-  const [chemUnitCost, setChemUnitCost] = useState("");
-  const [chemExpiresOn, setChemExpiresOn] = useState("");
-  const [chemStatus, setChemStatus] = useState<ProviderChemicalStatus>("ACTIVE");
-  const [chemStatusNote, setChemStatusNote] = useState("");
+  const [chemicalForm, setChemicalForm] = useState<ChemicalFormValues>({
+    darkroomId: "",
+    name: "",
+    chemicalType: "DEVELOPER",
+    brand: "",
+    stockQuantity: "1",
+    stockUnit: "L",
+    minimumStock: "0.5",
+    unitCost: "",
+    expiresOn: "",
+    status: "ACTIVE",
+    statusNote: "",
+  });
 
   // Chemical stock adjustment modal state
   const [adjustingChemical, setAdjustingChemical] =
     useState<ProviderChemical | null>(null);
-  const [movementType, setMovementType] =
-    useState<ProviderChemicalMovementType>("PURCHASE");
-  const [quantityDelta, setQuantityDelta] = useState("1");
-  const [adjustUnitCost, setAdjustUnitCost] = useState("");
-  const [supplierOrReference, setSupplierOrReference] = useState("");
-  const [adjustNote, setAdjustNote] = useState("");
+
+  const [stockForm, setStockForm] = useState<StockAdjustmentFormValues>({
+    movementType: "PURCHASE",
+    quantityDelta: "1",
+    unitCost: "",
+    supplierOrReference: "",
+    note: "",
+  });
+
   const [savingAdjustment, setSavingAdjustment] = useState(false);
 
   useEffect(() => {
@@ -323,7 +346,9 @@ export default function EquipmentPage() {
     setEquipmentError("");
     try {
       await deleteMyProviderEquipment(pendingDeleteEquipment.equipmentId);
-      if (selectedEquipment?.equipmentId === pendingDeleteEquipment.equipmentId) {
+      if (
+        selectedEquipment?.equipmentId === pendingDeleteEquipment.equipmentId
+      ) {
         setSelectedEquipment(null);
       }
       setPendingDeleteEquipment(null);
@@ -352,57 +377,49 @@ export default function EquipmentPage() {
   function startCreateChemical() {
     setChemicalError("");
     setEditingChemical(null);
-    setChemDarkroom(darkrooms[0]?.spaceId ?? spaces[0]?.spaceId ?? "");
-    setChemName("");
-    setChemType("DEVELOPER");
-    setChemBrand("");
-    setChemStockQuantity("1");
-    setChemStockUnit("L");
-    setChemMinimumStock("0.5");
-    setChemUnitCost("");
-    setChemExpiresOn("");
-    setChemStatus("ACTIVE");
-    setChemStatusNote("");
+    setChemicalForm({
+      darkroomId: darkrooms[0]?.spaceId ?? spaces[0]?.spaceId ?? "",
+      name: "",
+      chemicalType: "DEVELOPER",
+      brand: "",
+      stockQuantity: "1",
+      stockUnit: "L",
+      minimumStock: "0.5",
+      unitCost: "",
+      expiresOn: "",
+      status: "ACTIVE",
+      statusNote: "",
+    });
     setChemicalModalOpen(true);
   }
 
   function startEditChemical(item: ProviderChemical) {
     setChemicalError("");
     setEditingChemical(item);
-    setChemDarkroom(item.darkroomId);
-    setChemName(item.name);
-    setChemType(item.chemicalType);
-    setChemBrand(item.brand ?? "");
-    setChemStockQuantity(String(item.stockQuantity));
-    setChemStockUnit(item.stockUnit);
-    setChemMinimumStock(String(item.minimumStock));
-    setChemUnitCost(item.unitCost != null ? String(item.unitCost) : "");
-    setChemExpiresOn(item.expiresOn ?? "");
-    setChemStatus(
-      item.status.toUpperCase() === "INACTIVE" ? "INACTIVE" : "ACTIVE",
-    );
-    setChemStatusNote(item.statusNote ?? "");
+    setChemicalForm({
+      darkroomId: item.darkroomId,
+      name: item.name,
+      chemicalType: item.chemicalType,
+      brand: item.brand ?? "",
+      stockQuantity: String(item.stockQuantity),
+      stockUnit: item.stockUnit,
+      minimumStock: String(item.minimumStock),
+      unitCost: item.unitCost != null ? String(item.unitCost) : "",
+      expiresOn: item.expiresOn ?? "",
+      status: item.status.toUpperCase() === "INACTIVE" ? "INACTIVE" : "ACTIVE",
+      statusNote: item.statusNote ?? "",
+    });
     setChemicalModalOpen(true);
   }
 
-  async function handleSaveChemical(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleSaveChemical(
+    payload: ProviderChemicalRequest,
+    darkroomId: string,
+  ) {
     setSavingChemical(true);
     setChemicalError("");
-    try {
-      const payload: ProviderChemicalRequest = {
-        name: chemName.trim(),
-        chemicalType: chemType.trim(),
-        brand: chemBrand.trim() || null,
-        stockQuantity: Math.max(0, Number(chemStockQuantity) || 0),
-        stockUnit: chemStockUnit.trim() || "L",
-        minimumStock: Math.max(0, Number(chemMinimumStock) || 0),
-        unitCost: chemUnitCost.trim() === "" ? null : Number(chemUnitCost),
-        expiresOn: chemExpiresOn.trim() || null,
-        status: chemStatus,
-        statusNote: chemStatusNote.trim() || null,
-      };
 
+    try {
       if (editingChemical) {
         const updated = await updateMyProviderChemical(
           editingChemical.chemicalId,
@@ -414,13 +431,14 @@ export default function EquipmentPage() {
       } else {
         const createPayload: ProviderChemicalCreateRequest = {
           ...payload,
-          darkroomId: chemDarkroom,
+          darkroomId,
         };
         await createMyProviderChemical(createPayload);
       }
+
       setChemicalModalOpen(false);
       setEditingChemical(null);
-      setChemicalReloadKey((k) => k + 1);
+      setChemicalReloadKey((key) => key + 1);
     } catch (err) {
       setChemicalError(errorMessage(err));
     } finally {
@@ -431,41 +449,35 @@ export default function EquipmentPage() {
   function startAdjustStock(item: ProviderChemical) {
     setChemicalError("");
     setAdjustingChemical(item);
-    setMovementType("PURCHASE");
-    setQuantityDelta("1");
-    setAdjustUnitCost(item.unitCost != null ? String(item.unitCost) : "");
-    setSupplierOrReference("");
-    setAdjustNote("");
+    setStockForm({
+      movementType: "PURCHASE",
+      quantityDelta: "1",
+      unitCost: item.unitCost != null ? String(item.unitCost) : "",
+      supplierOrReference: "",
+      note: "",
+    });
   }
 
-  async function handleAdjustStock(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleAdjustStock(
+    input: ProviderChemicalStockAdjustmentRequest,
+  ) {
     if (!adjustingChemical) return;
+
     setSavingAdjustment(true);
     setChemicalError("");
+
     try {
-      const rawDelta = Number(quantityDelta);
-      const signedDelta =
-        (movementType === "CONSUMPTION" || movementType === "WASTE") &&
-        rawDelta > 0
-          ? -rawDelta
-          : rawDelta;
-      const input: ProviderChemicalStockAdjustmentRequest = {
-        movementType,
-        quantityDelta: signedDelta,
-        unitCost: adjustUnitCost.trim() === "" ? null : Number(adjustUnitCost),
-        supplierOrReference: supplierOrReference.trim() || null,
-        note: adjustNote.trim() || null,
-      };
       const updated = await adjustMyProviderChemicalStock(
         adjustingChemical.chemicalId,
         input,
       );
+
       if (selectedChemical?.chemicalId === updated.chemicalId) {
         setSelectedChemical(updated);
       }
+
       setAdjustingChemical(null);
-      setChemicalReloadKey((k) => k + 1);
+      setChemicalReloadKey((key) => key + 1);
     } catch (err) {
       setChemicalError(errorMessage(err));
     } finally {
@@ -1034,472 +1046,66 @@ export default function EquipmentPage() {
 
       {/* Equipment Detail Modal */}
       {selectedEquipment && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#171815]/35 p-4"
-          onClick={() => setSelectedEquipment(null)}>
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="equipment-detail-title"
-            className="w-full max-w-lg rounded-lg border border-[#e0e0da] bg-white p-6 shadow-xl"
-            onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#777973]">
-                  {selectedEquipment.equipmentId}
-                </p>
-                <h2
-                  id="equipment-detail-title"
-                  className="mt-1 text-xl font-semibold text-[#20221f]">
-                  {selectedEquipment.name}
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedEquipment(null)}
-                aria-label="Close equipment details"
-                className="flex h-8 w-8 items-center justify-center rounded-md text-[#777973] hover:bg-[#f0f0ec]">
-                <X size={18} />
-              </button>
-            </div>
-            <dl className="mt-5 divide-y divide-[#eeeeea] text-sm">
-              {[
-                [
-                  "Space",
-                  `${spaceNameById.get(selectedEquipment.spaceId) ?? selectedEquipment.spaceId} (${selectedEquipment.spaceType})`,
-                ],
-                ["Equipment type", selectedEquipment.equipmentType],
-                ["Category", selectedEquipment.category],
-                ["Variant", selectedEquipment.variant || "—"],
-                ["Quantity", String(selectedEquipment.quantityTotal)],
-                ["Rental price", formatPrice(selectedEquipment.rentalPrice)],
-                ["Condition", selectedEquipment.conditionStatus],
-                ["Status", selectedEquipment.status],
-                ["Status note", selectedEquipment.statusNote || "—"],
-                ["Description", selectedEquipment.description || "—"],
-              ].map(([label, value]) => (
-                <div key={label} className="flex justify-between gap-4 py-2.5">
-                  <dt className="text-[#777973]">{label}</dt>
-                  <dd className="max-w-[65%] text-right font-medium text-[#343630]">
-                    {value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            <div className="mt-5 flex justify-end gap-2 border-t border-[#eeeeea] pt-4">
-              <button
-                type="button"
-                onClick={() => {
-                  const item = selectedEquipment;
-                  setSelectedEquipment(null);
-                  startEditEquipment(item);
-                }}
-                className="h-9 rounded-md border border-[#39724b] px-4 text-sm font-semibold text-[#39724b] hover:bg-[#f3f5ef]">
-                Edit
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedEquipment(null)}
-                className="h-9 rounded-md bg-[#20221f] px-4 text-sm font-semibold text-white hover:bg-[#393b36]">
-                Close
-              </button>
-            </div>
-          </section>
-        </div>
+        <EquipmentDetailsModal
+          equipment={selectedEquipment}
+          spaceName={
+            selectedEquipment
+              ? spaceNameById.get(selectedEquipment.spaceId)
+              : undefined
+          }
+          onClose={() => setSelectedEquipment(null)}
+          onEdit={(item) => {
+            setSelectedEquipment(null);
+            startEditEquipment(item);
+          }}
+        />
       )}
 
       {/* Chemical Detail Modal */}
       {selectedChemical && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#171815]/35 p-4"
-          onClick={() => setSelectedChemical(null)}>
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="chemical-detail-title"
-            className="w-full max-w-lg rounded-lg border border-[#e0e0da] bg-white p-6 shadow-xl"
-            onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#777973]">
-                  {selectedChemical.chemicalId}
-                </p>
-                <h2
-                  id="chemical-detail-title"
-                  className="mt-1 text-xl font-semibold text-[#20221f]">
-                  {selectedChemical.name}
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedChemical(null)}
-                aria-label="Close chemical details"
-                className="flex h-8 w-8 items-center justify-center rounded-md text-[#777973] hover:bg-[#f0f0ec]">
-                <X size={18} />
-              </button>
-            </div>
-            <dl className="mt-5 divide-y divide-[#eeeeea] text-sm">
-              {[
-                [
-                  "Darkroom",
-                  spaceNameById.get(selectedChemical.darkroomId) ??
-                    selectedChemical.darkroomId,
-                ],
-                ["Chemical type", selectedChemical.chemicalType],
-                ["Brand", selectedChemical.brand || "—"],
-                [
-                  "Stock quantity",
-                  `${selectedChemical.stockQuantity} ${selectedChemical.stockUnit}`,
-                ],
-                [
-                  "Minimum stock",
-                  `${selectedChemical.minimumStock} ${selectedChemical.stockUnit}`,
-                ],
-                [
-                  "Low-stock alert",
-                  selectedChemical.isLowStock ? "YES (Low stock)" : "No",
-                ],
-                ["Unit cost", formatPrice(selectedChemical.unitCost)],
-                ["Expires on", selectedChemical.expiresOn || "—"],
-                ["Status", selectedChemical.status],
-                ["Status note", selectedChemical.statusNote || "—"],
-              ].map(([label, value]) => (
-                <div key={label} className="flex justify-between gap-4 py-2.5">
-                  <dt className="text-[#777973]">{label}</dt>
-                  <dd className="max-w-[65%] text-right font-medium text-[#343630]">
-                    {value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-            <div className="mt-5 flex justify-end gap-2 border-t border-[#eeeeea] pt-4">
-              <button
-                type="button"
-                onClick={() => {
-                  const item = selectedChemical;
-                  setSelectedChemical(null);
-                  startAdjustStock(item);
-                }}
-                className="h-9 rounded-md border border-[#39724b] px-3 text-sm font-semibold text-[#39724b] hover:bg-[#f3f5ef]">
-                Adjust stock
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedChemical(null)}
-                className="h-9 rounded-md bg-[#20221f] px-4 text-sm font-semibold text-white hover:bg-[#393b36]">
-                Close
-              </button>
-            </div>
-          </section>
-        </div>
+        <ChemicalDetailsModal
+          chemical={selectedChemical}
+          darkroomName={
+            selectedChemical
+              ? spaceNameById.get(selectedChemical.darkroomId)
+              : undefined
+          }
+          onClose={() => setSelectedChemical(null)}
+          onAdjustStock={(item) => {
+            setSelectedChemical(null);
+            startAdjustStock(item);
+          }}
+        />
       )}
 
       {/* Chemical Create/Edit Modal */}
       {chemicalModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#171815]/35 p-4"
-          onClick={() => setChemicalModalOpen(false)}>
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="chemical-modal-title"
-            className="my-auto w-full max-w-xl rounded-lg border border-[#e0e0da] bg-white shadow-xl"
-            onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[#eeeeea] px-6 py-4">
-              <h2
-                id="chemical-modal-title"
-                className="text-lg font-semibold text-[#20221f]">
-                {editingChemical ? "Edit chemical" : "Add darkroom chemical"}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setChemicalModalOpen(false)}
-                aria-label="Close"
-                className="flex h-8 w-8 items-center justify-center rounded-md text-[#777973] hover:bg-[#f0f0ec]">
-                <X size={18} />
-              </button>
-            </div>
-            <form
-              onSubmit={handleSaveChemical}
-              className="grid gap-4 p-6 sm:grid-cols-2">
-              {chemicalError && (
-                <p
-                  role="alert"
-                  className="rounded-md border border-[#e6c3bd] bg-[#fbefed] px-3 py-2 text-sm text-[#9c4339] sm:col-span-2">
-                  {chemicalError}
-                </p>
-              )}
-              {!editingChemical && (
-                <label className="grid gap-1.5 text-sm font-medium text-[#343630] sm:col-span-2">
-                  Darkroom
-                  <select
-                    required
-                    value={chemDarkroom}
-                    onChange={(event) => setChemDarkroom(event.target.value)}
-                    className={fieldClassName}>
-                    <option value="" disabled>
-                      Select darkroom
-                    </option>
-                    {darkrooms.map((dr) => (
-                      <option key={dr.spaceId} value={dr.spaceId}>
-                        {dr.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Name
-                <input
-                  required
-                  maxLength={200}
-                  value={chemName}
-                  onChange={(event) => setChemName(event.target.value)}
-                  placeholder="e.g. Ilford ID-11 Developer"
-                  className={fieldClassName}
-                />
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Chemical type
-                <select
-                  value={chemType}
-                  onChange={(event) => setChemType(event.target.value)}
-                  className={fieldClassName}>
-                  <option value="DEVELOPER">DEVELOPER</option>
-                  <option value="STOP_BATH">STOP_BATH</option>
-                  <option value="FIXER">FIXER</option>
-                  <option value="HYPO_CLEAR">HYPO_CLEAR</option>
-                  <option value="WETTING_AGENT">WETTING_AGENT</option>
-                  <option value="TONER">TONER</option>
-                  <option value="OTHER">OTHER</option>
-                </select>
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Brand (optional)
-                <input
-                  maxLength={100}
-                  value={chemBrand}
-                  onChange={(event) => setChemBrand(event.target.value)}
-                  placeholder="e.g. Ilford, Kodak"
-                  className={fieldClassName}
-                />
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Stock unit
-                <input
-                  required
-                  maxLength={30}
-                  value={chemStockUnit}
-                  onChange={(event) => setChemStockUnit(event.target.value)}
-                  placeholder="e.g. L, mL, pack"
-                  className={fieldClassName}
-                />
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Stock quantity
-                <input
-                  type="number"
-                  required
-                  min={0}
-                  step="0.001"
-                  value={chemStockQuantity}
-                  onChange={(event) => setChemStockQuantity(event.target.value)}
-                  className={fieldClassName}
-                />
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Minimum stock (low-stock threshold)
-                <input
-                  type="number"
-                  required
-                  min={0}
-                  step="0.001"
-                  value={chemMinimumStock}
-                  onChange={(event) => setChemMinimumStock(event.target.value)}
-                  className={fieldClassName}
-                />
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Unit cost (VND, optional)
-                <input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={chemUnitCost}
-                  onChange={(event) => setChemUnitCost(event.target.value)}
-                  className={fieldClassName}
-                />
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Expires on (optional)
-                <input
-                  type="date"
-                  value={chemExpiresOn}
-                  onChange={(event) => setChemExpiresOn(event.target.value)}
-                  className={fieldClassName}
-                />
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Status
-                <select
-                  value={chemStatus}
-                  onChange={(event) =>
-                    setChemStatus(event.target.value as ProviderChemicalStatus)
-                  }
-                  className={fieldClassName}>
-                  <option value="ACTIVE">ACTIVE</option>
-                  <option value="INACTIVE">INACTIVE</option>
-                </select>
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Status note (optional)
-                <input
-                  maxLength={1000}
-                  value={chemStatusNote}
-                  onChange={(event) => setChemStatusNote(event.target.value)}
-                  className={fieldClassName}
-                />
-              </label>
-              <div className="flex justify-end gap-2 border-t border-[#eeeeea] pt-4 sm:col-span-2">
-                <button
-                  type="button"
-                  onClick={() => setChemicalModalOpen(false)}
-                  className="h-9 rounded-md border border-[#d8d8d1] px-4 text-sm font-medium text-[#555750] hover:bg-[#f5f5f1]">
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingChemical}
-                  className="h-9 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white hover:bg-[#2f603e] disabled:opacity-60">
-                  {savingChemical
-                    ? "Saving…"
-                    : editingChemical
-                      ? "Save changes"
-                      : "Add chemical"}
-                </button>
-              </div>
-            </form>
-          </section>
-        </div>
+        <ChemicalModal
+          open={chemicalModalOpen}
+          chemical={editingChemical}
+          darkrooms={darkrooms}
+          values={chemicalForm}
+          error={chemicalError || undefined}
+          submitting={savingChemical}
+          onChange={setChemicalForm}
+          onClose={() => setChemicalModalOpen(false)}
+          onSubmit={(payload, darkroomId) =>
+            void handleSaveChemical(payload, darkroomId)
+          }
+        />
       )}
 
       {/* Stock Adjustment Modal */}
       {adjustingChemical && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-[#171815]/35 p-4"
-          onClick={() => setAdjustingChemical(null)}>
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="stock-adjust-title"
-            className="w-full max-w-md rounded-lg border border-[#e0e0da] bg-white shadow-xl"
-            onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-[#eeeeea] px-6 py-4">
-              <div>
-                <h2
-                  id="stock-adjust-title"
-                  className="text-lg font-semibold text-[#20221f]">
-                  Adjust stock
-                </h2>
-                <p className="text-xs text-[#777973]">
-                  {adjustingChemical.name} (Current:{" "}
-                  {adjustingChemical.stockQuantity}{" "}
-                  {adjustingChemical.stockUnit})
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setAdjustingChemical(null)}
-                aria-label="Close"
-                className="flex h-8 w-8 items-center justify-center rounded-md text-[#777973] hover:bg-[#f0f0ec]">
-                <X size={18} />
-              </button>
-            </div>
-            <form onSubmit={handleAdjustStock} className="grid gap-4 p-6">
-              {chemicalError && (
-                <p
-                  role="alert"
-                  className="rounded-md border border-[#e6c3bd] bg-[#fbefed] px-3 py-2 text-sm text-[#9c4339]">
-                  {chemicalError}
-                </p>
-              )}
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Movement type
-                <select
-                  value={movementType}
-                  onChange={(event) =>
-                    setMovementType(
-                      event.target.value as ProviderChemicalMovementType,
-                    )
-                  }
-                  className={fieldClassName}>
-                  <option value="PURCHASE">PURCHASE (+ restock)</option>
-                  <option value="CONSUMPTION">CONSUMPTION (- usage)</option>
-                  <option value="ADJUSTMENT">ADJUSTMENT (+/- delta)</option>
-                  <option value="WASTE">WASTE (- expired/spilled)</option>
-                </select>
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Quantity delta ({adjustingChemical.stockUnit})
-                <input
-                  type="number"
-                  required
-                  step="0.001"
-                  value={quantityDelta}
-                  onChange={(event) => setQuantityDelta(event.target.value)}
-                  className={fieldClassName}
-                />
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Unit cost (VND, optional)
-                <input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={adjustUnitCost}
-                  onChange={(event) => setAdjustUnitCost(event.target.value)}
-                  className={fieldClassName}
-                />
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Supplier or reference (optional)
-                <input
-                  maxLength={255}
-                  value={supplierOrReference}
-                  onChange={(event) =>
-                    setSupplierOrReference(event.target.value)
-                  }
-                  placeholder="e.g. PO-2026-11"
-                  className={fieldClassName}
-                />
-              </label>
-              <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
-                Note (optional)
-                <input
-                  maxLength={1000}
-                  value={adjustNote}
-                  onChange={(event) => setAdjustNote(event.target.value)}
-                  placeholder="Reason for adjustment"
-                  className={fieldClassName}
-                />
-              </label>
-              <div className="flex justify-end gap-2 border-t border-[#eeeeea] pt-4">
-                <button
-                  type="button"
-                  onClick={() => setAdjustingChemical(null)}
-                  className="h-9 rounded-md border border-[#d8d8d1] px-4 text-sm font-medium text-[#555750] hover:bg-[#f5f5f1]">
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingAdjustment}
-                  className="h-9 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white hover:bg-[#2f603e] disabled:opacity-60">
-                  {savingAdjustment ? "Saving…" : "Record movement"}
-                </button>
-              </div>
-            </form>
-          </section>
-        </div>
+        <ChemicalStockAdjustmentModal
+          chemical={adjustingChemical}
+          values={stockForm}
+          error={chemicalError || undefined}
+          submitting={savingAdjustment}
+          onChange={setStockForm}
+          onClose={() => setAdjustingChemical(null)}
+          onSubmit={(payload) => void handleAdjustStock(payload)}
+        />
       )}
 
       <EquipmentModal
