@@ -62,10 +62,7 @@ export function Sidebar({ role, collapsed = false, onNavigate }: { role: "provid
         { label: adminMessages.nav.users, href: "/users" },
         { label: adminMessages.nav.providers, href: "/providers" },
         { label: adminMessages.nav.spaces, href: "/spaces" },
-        { label: adminMessages.nav.content, href: "/content" },
         { label: adminMessages.nav.transactions, href: "/transactions" },
-        { label: adminMessages.nav.disputes, href: "/disputes" },
-        { label: adminMessages.nav.reports, href: "/reports" },
         { label: adminMessages.nav.settings, href: "/settings/profile" },
       ]
     : role === "provider"
@@ -75,9 +72,6 @@ export function Sidebar({ role, collapsed = false, onNavigate }: { role: "provid
           { label: providerMessages.nav.equipment, href: "/provider/equipment" },
           { label: providerMessages.nav.reservations, href: "/provider/reservations" },
           { label: providerMessages.nav.packages, href: "/provider/packages" },
-          { label: providerMessages.nav.transactions, href: "/provider/transaction" },
-          { label: providerMessages.nav.ratingFeedback, href: "/provider/rating-feedback" },
-          { label: providerMessages.nav.pricingPolicy, href: "/provider/pricing-policy" },
           { label: providerMessages.nav.settings, href: "/provider/settings" },
         ]
       : moderatorLinks.map(([label, href]) => ({ label, href }));
@@ -117,16 +111,6 @@ export function Sidebar({ role, collapsed = false, onNavigate }: { role: "provid
             );
           })}
         </nav>
-        {role === "admin" && (
-          <>
-            {!collapsed && <p className="mb-2 mt-8 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">{adminMessages.common.pages}</p>}
-            <nav className="mt-1 flex flex-col gap-1">
-              <Link href="/errors" onClick={onNavigate} aria-current={pathname.startsWith("/errors") ? "page" : undefined} title={collapsed ? adminMessages.nav.errors : undefined} className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 ${collapsed ? "justify-center px-0" : ""}`}>
-                <Bug size={17} strokeWidth={1.8} className="text-slate-500" />{!collapsed && adminMessages.nav.errors}
-              </Link>
-            </nav>
-          </>
-        )}
       </div>
       {(role === "admin" || role === "provider") && (
         <div className={`shrink-0 border-t border-slate-200 pt-4 ${collapsed ? "flex justify-center px-0" : "px-2"}`}>

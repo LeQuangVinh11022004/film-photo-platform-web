@@ -217,7 +217,7 @@ export default function DashboardPage() {
 					change={liveTotals ? `${liveTotals.activePackages} active pkgs` : "+12.4%"}
 					changeLabel={liveTotals ? "live bookings total" : t.metrics.vsPrevious}
 					delay={0}
-					href="/provider/transaction"
+					href="/provider/reservations"
 				/>
 
 				<ProviderMetricCard
@@ -311,6 +311,30 @@ export default function DashboardPage() {
 			{/* Quick links */}
 			<section className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
 				<Link
+					href="/provider/creative-spaces"
+					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
+				>
+					<p className="text-sm font-semibold text-[#20221f]">
+						{messages.nav.creativeSpaces}
+					</p>
+					<p className="mt-1 text-xs leading-5 text-[#777973]">
+						Manage studios, darkrooms, images, and availability slots.
+					</p>
+				</Link>
+
+				<Link
+					href="/provider/equipment"
+					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
+				>
+					<p className="text-sm font-semibold text-[#20221f]">
+						{messages.nav.equipment}
+					</p>
+					<p className="mt-1 text-xs leading-5 text-[#777973]">
+						Manage equipment, darkroom chemicals, and maintenance schedules.
+					</p>
+				</Link>
+
+				<Link
 					href="/provider/packages"
 					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
 				>
@@ -323,38 +347,14 @@ export default function DashboardPage() {
 				</Link>
 
 				<Link
-					href="/provider/rating-feedback"
+					href="/provider/reservations"
 					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
 				>
 					<p className="text-sm font-semibold text-[#20221f]">
-						{t.quickLinks.feedback}
+						{messages.nav.reservations}
 					</p>
 					<p className="mt-1 text-xs leading-5 text-[#777973]">
-						{t.quickLinks.feedbackDetail}
-					</p>
-				</Link>
-
-				<Link
-					href="/provider/pricing-policy"
-					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
-				>
-					<p className="text-sm font-semibold text-[#20221f]">
-						{t.quickLinks.pricing}
-					</p>
-					<p className="mt-1 text-xs leading-5 text-[#777973]">
-						{t.quickLinks.pricingDetail}
-					</p>
-				</Link>
-
-				<Link
-					href="/provider/transaction"
-					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
-				>
-					<p className="text-sm font-semibold text-[#20221f]">
-						{t.quickLinks.transactions}
-					</p>
-					<p className="mt-1 text-xs leading-5 text-[#777973]">
-						{t.quickLinks.transactionsDetail}
+						Review booking requests and manage resource slot allocations.
 					</p>
 				</Link>
 			</section>
