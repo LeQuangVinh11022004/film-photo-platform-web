@@ -1,10 +1,14 @@
 import type { NextConfig } from "next";
 
-// Backend the browser should reach through the dev proxy (avoids CORS and
-// self-signed certificate issues during local development).
-// Default to https://localhost:7104 so ASP.NET Core UseHttpsRedirection on :5038
-// does not issue a 307 cross-origin redirect that strips the Authorization header.
-const apiProxyTarget = (process.env.API_PROXY_TARGET ?? "https://localhost:7104").replace(/\/+$/, "");
+const defaultProxyTarget =
+  process.env.NODE_ENV === "production"
+    ? "https://filmbooking-api-h7bghwcydwb8eecn.japaneast-01.azurewebsites.net"
+    : "https://localhost:7104";
+
+// Strip trailing slashes and any accidental trailing "/api" so rewrites never become "/api/api/*"
+const apiProxyTarget = (process.env.API_PROXY_TARGET?.trim() || defaultProxyTarget)
+  .replace(/\/+$/, "")
+  .replace(/\/api$/i, "");
 
 const nextConfig: NextConfig = {
   async rewrites() {
