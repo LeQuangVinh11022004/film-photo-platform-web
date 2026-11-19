@@ -27,7 +27,6 @@ const inputClassName =
 const textareaClassName =
     "min-h-24 w-full resize-y rounded-md border border-[#d8d8d1] bg-white px-3 py-2 text-sm text-[#343630] outline-none transition-colors focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
 
-// Danh sách các tiện ích (amenities) tương ứng cho từng loại phòng
 const STUDIO_AMENITIES = [
     "Cyclorama Wall",
     "Blackout Curtains",
@@ -54,7 +53,6 @@ const DARKROOM_AMENITIES = [
     "Print Washer & Drying Racks"
 ];
 
-// Hàm phụ trợ để chuẩn hóa dữ liệu amenities cũ về dạng string[]
 function parseAmenities(amenities: ProviderSpaceDetails["amenities"]): string[] {
     if (!amenities) return [];
     if (Array.isArray(amenities)) return amenities;
@@ -79,13 +77,14 @@ export function CreativeSpaceModal({
     );
     const [address, setAddress] = useState(space?.address ?? "");
     const [capacity, setCapacity] = useState(space?.capacity == null ? "" : String(space.capacity));
+    const [hourlyRate, setHourlyRate] = useState(space?.hourlyRate == null ? "" : String(space.hourlyRate));
     const [description, setDescription] = useState(space?.description ?? "");
     const [status, setStatus] = useState<ProviderSpaceRequest["status"]>(space?.status.toUpperCase() === "ACTIVE" ? "ACTIVE" : "INACTIVE");
     const [imagePreviews, setImagePreviews] = useState<ImagePreviewItem[]>([]);
     const [imageError, setImageError] = useState("");
     const imagePreviewsRef = useRef<ImagePreviewItem[]>([]);
     const imageInputRef = useRef<HTMLInputElement | null>(null);
-    
+
     const [details, setDetails] = useState<ProviderSpaceDetails>(space?.details ?? {
         lengthM: null,
         widthM: null,
@@ -119,10 +118,8 @@ export function CreativeSpaceModal({
     const isEditMode = mode === "edit";
     const isDarkroom = type.toUpperCase() === "DARKROOM";
 
-    // Lấy danh sách amenities hiện tại dưới dạng mảng để check giao diện
     const currentAmenitiesList = parseAmenities(details.amenities);
 
-    // Xử lý khi thay đổi checkbox tiện ích
     const handleAmenityToggle = (amenity: string) => {
         setDetails((current) => {
             const existing = parseAmenities(current.amenities);
@@ -146,6 +143,7 @@ export function CreativeSpaceModal({
             description: description.trim(),
             address: address.trim(),
             capacity: capacity === "" ? null : Number(capacity),
+            hourlyRate: hourlyRate === "" ? null : Number(hourlyRate),
             status,
             details,
         }, imagePreviews.map((item) => item.file));
@@ -201,7 +199,6 @@ export function CreativeSpaceModal({
         }
     };
 
-    // Chọn danh sách checkbox phù hợp dựa vào type hiện tại
     const availableAmenities = isDarkroom ? DARKROOM_AMENITIES : STUDIO_AMENITIES;
 
     return (
@@ -247,7 +244,7 @@ export function CreativeSpaceModal({
                 <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
                     <div className="grid min-h-0 gap-4 overflow-y-auto px-5 py-4 sm:grid-cols-2 sm:px-6 sm:py-5">
                         {error && <p role="alert" className="rounded-md border border-[#e6c3bd] bg-[#fbefed] px-3 py-2 text-sm text-[#9c4339] sm:col-span-2">{error}</p>}
-                        
+
                         {/* Name */}
                         <div>
                             <label
@@ -273,7 +270,7 @@ export function CreativeSpaceModal({
                             <select
                                 id="space-type"
                                 value={type}
-                                disabled={isEditMode} // Disable khi đang ở chế độ Edit
+                                disabled={isEditMode}
                                 onChange={(event) => setType(event.target.value)}
                                 required
                                 className={inputClassName}>
@@ -402,6 +399,26 @@ export function CreativeSpaceModal({
                             />
                         </div>
 
+                        {/* Hourly Rate */}
+                        <div>
+                            <label
+                                htmlFor="space-hourly-rate"
+                                className="mb-1.5 block text-sm font-medium text-[#343630]">
+                                Hourly rate <span className="font-normal text-[#777973]">(VND/h)</span>
+                            </label>
+
+                            <input
+                                id="space-hourly-rate"
+                                type="number"
+                                min={0}
+                                step={1000}
+                                value={hourlyRate}
+                                onChange={(event) => setHourlyRate(event.target.value)}
+                                placeholder="e.g. 250000 (VND/h)"
+                                className={inputClassName}
+                            />
+                        </div>
+
                         {/* Description */}
                         <div className="sm:col-span-2">
                             <label
@@ -444,8 +461,7 @@ export function CreativeSpaceModal({
                                         />
                                     </label>
                                 ))}
-                                
-                                {/* Chỉ hiện Artistic style nếu là STUDIO */}
+
                                 {!isDarkroom && (
                                     <label className="grid gap-1.5 text-sm text-[#454741] sm:col-span-3">
                                         Artistic style
@@ -458,7 +474,6 @@ export function CreativeSpaceModal({
                                     </label>
                                 )}
 
-                                {/* Chỉ hiện Supported processes nếu là DARKROOM */}
                                 {isDarkroom && (
                                     <label className="grid gap-1.5 text-sm text-[#454741] sm:col-span-3">
                                         Supported processes
@@ -483,7 +498,6 @@ export function CreativeSpaceModal({
                                     </label>
                                 ))}
 
-                                {/* Amenities Checkbox Section */}
                                 <div className="sm:col-span-3 grid gap-1.5 text-sm text-[#454741]">
                                     <span className="font-medium text-[#343630]">Amenities</span>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1 rounded-md border border-[#d8d8d1] bg-[#fafaf8] p-3">
