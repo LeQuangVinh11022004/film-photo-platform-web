@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { X } from "lucide-react";
-import { listAdminBookings, getAdminBookingById } from "@/features/admin-booking/api";
+import { listAdminBookings, getAdminBookingById, markAdminBookingNoShow } from "@/features/admin-booking/api";
 import type { AdminBooking, AdminBookingDetail } from "@/features/admin-booking/types";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { AdminPagination } from "@/shared/components/AdminPagination";
@@ -45,6 +45,9 @@ export function AdminTransactionsPage() {
 	const [error, setError] = useState("");
 	const [selected, setSelected] = useState<AdminBookingDetail | null>(null);
 	const [detailLoading, setDetailLoading] = useState(false);
+	const [staffNote, setStaffNote] = useState("");
+	const [markingNoShow, setMarkingNoShow] = useState(false);
+	const [modalError, setModalError] = useState("");
 
 	useEffect(() => {
 		let cancelled = false;
@@ -63,12 +66,34 @@ export function AdminTransactionsPage() {
 		setSelected(null);
 		setDetailLoading(true);
 		setError("");
+		setModalError("");
+		setStaffNote("");
 		try {
 			setSelected(await getAdminBookingById(bookingId));
 		} catch (requestError) {
 			setError(errorMessage(requestError));
 		} finally {
 			setDetailLoading(false);
+		}
+	}
+
+	async function handleMarkNoShow() {
+		if (!selected) return;
+		setMarkingNoShow(true);
+		setModalError("");
+		try {
+			await markAdminBookingNoShow(selected.bookingId, staffNote.trim() || null);
+			const [updatedDetail, updatedList] = await Promise.all([
+				getAdminBookingById(selected.bookingId),
+				listAdminBookings({ status: status || undefined, page, pageSize }),
+			]);
+			setSelected(updatedDetail);
+			setResult(updatedList);
+			setStaffNote("");
+		} catch (requestError) {
+			setModalError(errorMessage(requestError));
+		} finally {
+			setMarkingNoShow(false);
 		}
 	}
 
@@ -85,7 +110,7 @@ export function AdminTransactionsPage() {
 						<input id="booking-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t.searchPlaceholder} className={fieldClassName} />
 						<label className="sr-only" htmlFor="booking-status">{t.columns.status}</label>
 						<select id="booking-status" value={status} onChange={(event) => { setLoading(true); setError(""); setStatus(event.target.value); setPage(1); }} className={fieldClassName}>
-							<option value="">{t.allStatuses}</option><option value="PENDING">Pending</option><option value="CONFIRMED">Confirmed</option><option value="COMPLETED">Completed</option><option value="CANCELLED">Cancelled</option>
+							<option value="">{t.allStatuses}</option><option value="PENDING">Pending</option><option value="CONFIRMED">Confirmed</option><option value="COMPLETED">Completed</option><option value="CANCELLED">Cancelled</option><option value="NO_SHOW">No Show</option>
 						</select>
 					</div>
 				</div>
@@ -116,6 +141,30 @@ export function AdminTransactionsPage() {
 				<dl className="mt-5 divide-y divide-[#eeeeea] text-sm">{[[t.columns.customer, `${selected.photographerName} · ${selected.photographerEmail}`], [t.columns.provider, `${selected.providerName} · ${selected.providerEmail}`], ["Phone", selected.providerPhone], ["Address", selected.spaceAddress], ["Booking date", `${dateLabel(selected.bookingDate, locale)} · ${selected.startTime}–${selected.endTime}`], [t.columns.status, humanize(selected.status)], [t.columns.amount, currency(selected.totalAmount, locale)], ["Package", selected.packageName ? `${selected.packageName}${selected.packagePrice === null ? "" : ` · ${currency(selected.packagePrice, locale)}`}` : "—"]].map(([label, value]) => <div key={label} className="flex justify-between gap-4 py-3"><dt className="text-[#777973]">{label}</dt><dd className="text-right font-medium text-[#343630]">{value}</dd></div>)}</dl>
 				<div className="mt-5 border-t border-[#e8e8e2] pt-4"><h3 className="text-sm font-semibold text-[#292b27]">Payment</h3>{selected.payment ? <dl className="mt-2 divide-y divide-[#eeeeea] text-sm">{[["Amount", currency(selected.payment.amount, locale)], ["Method", humanize(selected.payment.paymentMethod)], ["Status", humanize(selected.payment.status)], ["Transaction code", selected.payment.transactionCode || "—"], ["Paid at", selected.payment.paidAt ? new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", { dateStyle: "medium", timeStyle: "short" }).format(new Date(selected.payment.paidAt)) : "—"]].map(([label, value]) => <div key={label} className="flex justify-between gap-4 py-2"><dt className="text-[#777973]">{label}</dt><dd className="text-right font-medium text-[#343630]">{value}</dd></div>)}</dl> : <p className="mt-2 text-sm text-[#777973]">No payment record.</p>}</div>
 				{selected.equipment.length > 0 && <div className="mt-5 border-t border-[#e8e8e2] pt-4"><h3 className="text-sm font-semibold text-[#292b27]">Equipment</h3><ul className="mt-2 divide-y divide-[#eeeeea]">{selected.equipment.map((equipment) => <li key={equipment.equipmentId} className="flex justify-between gap-4 py-2 text-sm"><span>{equipment.name} × {equipment.quantity}</span><span>{currency(equipment.unitPrice, locale)}</span></li>)}</ul></div>}
+				{selected.status.toUpperCase() === "CONFIRMED" && (
+					<div className="mt-5 border-t border-[#e8e8e2] pt-4">
+						<h3 className="text-sm font-semibold text-[#292b27]">No-Show Resolution</h3>
+						<p className="mt-1 text-xs text-[#777973]">Mark this confirmed booking as No-Show if the photographer did not arrive after the scheduled start time.</p>
+						<div className="mt-3 flex flex-col gap-2 sm:flex-row">
+							<input
+								type="text"
+								value={staffNote}
+								onChange={(event) => setStaffNote(event.target.value)}
+								placeholder="Optional staff note…"
+								className={`${fieldClassName} flex-1`}
+							/>
+							<button
+								type="button"
+								disabled={markingNoShow}
+								onClick={() => void handleMarkNoShow()}
+								className="h-10 shrink-0 rounded-md bg-[#a34d42] px-4 text-sm font-semibold text-white hover:bg-[#8a3f36] disabled:opacity-60"
+							>
+								{markingNoShow ? "Updating…" : "Mark as No-Show"}
+							</button>
+						</div>
+						{modalError && <p role="alert" className="mt-2 text-xs text-[#a34d42]">{modalError}</p>}
+					</div>
+				)}
 			</section></div>}
 		</div>
 	);

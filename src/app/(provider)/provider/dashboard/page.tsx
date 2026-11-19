@@ -8,6 +8,8 @@ import { listMyProviderSpaces } from "@/features/provider-space/api";
 import { listMyProviderEquipment } from "@/features/equipment/api";
 import { listProviderBookings } from "@/features/reservation/api";
 import { listMyProviderServicePackages } from "@/features/service-package/api";
+import { getMyProviderDashboard } from "@/features/provider-dashboard/api";
+import type { ProviderDashboard } from "@/features/provider-dashboard/types";
 import {
 	ProviderMetricCard,
 	ProviderPerformanceChart,
@@ -94,6 +96,7 @@ export default function DashboardPage() {
 	const { messages } = useProviderLanguage();
 	const t = messages.dashboard;
 
+	const [dashboardSummary, setDashboardSummary] = useState<ProviderDashboard | null>(null);
 	const [liveTotals, setLiveTotals] = useState<{
 		totalSpaces: number;
 		activeSpaces: number;
@@ -110,30 +113,36 @@ export default function DashboardPage() {
 	useEffect(() => {
 		let cancelled = false;
 		Promise.allSettled([
+			getMyProviderDashboard(),
 			listMyProviderSpaces({ page: 1, pageSize: 50 }),
 			listMyProviderEquipment({ page: 1, pageSize: 50 }),
 			listProviderBookings({ page: 1, pageSize: 50 }),
 			listMyProviderServicePackages({ status: "ACTIVE", page: 1, pageSize: 1 }),
-		]).then(([spacesRes, eqRes, bookingsRes, pkgRes]) => {
+		]).then(([dashRes, spacesRes, eqRes, bookingsRes, pkgRes]) => {
 			if (cancelled) return;
+			const dash = dashRes.status === "fulfilled" ? dashRes.value : null;
 			const spaces = spacesRes.status === "fulfilled" ? spacesRes.value : null;
 			const eq = eqRes.status === "fulfilled" ? eqRes.value : null;
 			const bookings = bookingsRes.status === "fulfilled" ? bookingsRes.value : null;
 			const pkgs = pkgRes.status === "fulfilled" ? pkgRes.value : null;
 
-			const activeSpaces = spaces?.items.filter((s) => s.status.toUpperCase() === "ACTIVE").length ?? 0;
-			const activeEq = eq?.items.filter((e) => e.status.toUpperCase() === "ACTIVE").length ?? 0;
+			if (dash) {
+				setDashboardSummary(dash);
+			}
+
+			const activeSpaces = dash?.activeSpaces ?? (spaces?.items.filter((s) => s.status.toUpperCase() === "ACTIVE").length ?? 0);
+			const activeEq = dash?.activeEquipment ?? (eq?.items.filter((e) => e.status.toUpperCase() === "ACTIVE").length ?? 0);
 			const bookingItems = bookings?.items ?? [];
-			const revenue = bookingItems
+			const revenue = dash?.revenue ?? bookingItems
 				.filter((b) => b.status.toUpperCase() !== "CANCELLED")
 				.reduce((sum, b) => sum + b.totalAmount, 0);
 
 			setLiveTotals({
-				totalSpaces: spaces?.totalItems ?? 0,
+				totalSpaces: dash?.totalSpaces ?? (spaces?.totalItems ?? 0),
 				activeSpaces,
-				totalEquipment: eq?.totalItems ?? 0,
+				totalEquipment: dash?.totalEquipment ?? (eq?.totalItems ?? 0),
 				activeEquipment: activeEq,
-				totalBookings: bookings?.totalItems ?? 0,
+				totalBookings: bookings?.totalItems ?? ((dash?.pendingBookings ?? 0) + (dash?.confirmedBookings ?? 0)),
 				liveRevenue: revenue,
 				activePackages: pkgs?.totalItems ?? 0,
 			});
@@ -236,6 +245,47 @@ export default function DashboardPage() {
 					href="/provider/equipment"
 				/>
 			</section>
+
+			{dashboardSummary && (
+				<section
+					aria-label="Operational utilization and maintenance"
+					className="mt-3 grid gap-3 sm:grid-cols-3"
+				>
+					<div className="rounded-xl border border-[#e2e4dd] bg-white p-4">
+						<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]">
+							Space Occupancy Rate
+						</p>
+						<p className="mt-1.5 text-2xl font-bold text-[#20221f]">
+							{dashboardSummary.occupancyRate.toFixed(1)}%
+						</p>
+						<p className="mt-1 text-xs text-[#686a64]">
+							{dashboardSummary.confirmedBookings} confirmed · {dashboardSummary.pendingBookings} pending
+						</p>
+					</div>
+					<div className="rounded-xl border border-[#e2e4dd] bg-white p-4">
+						<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]">
+							Equipment Utilization Rate
+						</p>
+						<p className="mt-1.5 text-2xl font-bold text-[#20221f]">
+							{dashboardSummary.equipmentUtilizationRate.toFixed(1)}%
+						</p>
+						<p className="mt-1 text-xs text-[#686a64]">
+							{dashboardSummary.activeEquipment} / {dashboardSummary.totalEquipment} active units
+						</p>
+					</div>
+					<div className="rounded-xl border border-[#e2e4dd] bg-white p-4">
+						<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]">
+							Scheduled Maintenance
+						</p>
+						<p className="mt-1.5 text-2xl font-bold text-[#20221f]">
+							{dashboardSummary.scheduledMaintenance}
+						</p>
+						<p className="mt-1 text-xs text-[#686a64]">
+							Scheduled or in-progress maintenance jobs
+						</p>
+					</div>
+				</section>
+			)}
 
 			{/* Main analytics */}
 			<section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.8fr)]">

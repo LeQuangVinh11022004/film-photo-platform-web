@@ -4,5 +4,6 @@ export type {
 	AdminRegisterProviderRequest,
 	AdminRegisterProviderResponse,
 	AdminSessionUser,
+	RegisterPhotographerRequest,
 } from "./types";
-export { loginUser, loginAdmin, logoutAdmin, registerProvider } from "./api";
+export { loginUser, loginAdmin, logoutAdmin, registerPhotographer, registerProvider } from "./api";

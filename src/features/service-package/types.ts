@@ -28,4 +28,34 @@ export type ListProviderServicePackagesParams = {
 	pageSize?: number;
 };
 
+export type ProviderPackageComponentType =
+	| "STUDIO"
+	| "DARKROOM"
+	| "EQUIPMENT"
+	| "CHEMICAL"
+	| "SERVICE";
+
+/** Matches backend ProviderServicePackageItemResponseDTO. */
+export type ProviderServicePackageItem = {
+	packageItemId: string;
+	packageId: string;
+	componentType: ProviderPackageComponentType | string;
+	resourceId: string;
+	resourceName: string;
+	quantity: number;
+	includedDurationMinutes: number | null;
+	includedChemicalQuantity: number | null;
+	notes: string;
+};
+
+/** Matches backend ProviderServicePackageItemRequestDTO. */
+export type ProviderServicePackageItemRequest = {
+	componentType: ProviderPackageComponentType;
+	resourceId: string;
+	quantity: number;
+	includedDurationMinutes?: number | null;
+	includedChemicalQuantity?: number | null;
+	notes?: string | null;
+};
+
 export type ServicePackage = ProviderServicePackage;

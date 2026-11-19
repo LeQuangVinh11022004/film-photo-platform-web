@@ -1,7 +1,7 @@
 import { endpoints } from "@/services/endpoints";
 import { httpClient } from "@/services/httpClient";
 import type { PagedResponse } from "@/types";
-import type { ProviderBooking, ProviderBookingDecision } from "../types";
+import type { ProviderBooking, ProviderBookingAllocation, ProviderBookingDecision } from "../types";
 
 export const reservationEndpoint = endpoints.reservations;
 
@@ -19,6 +19,25 @@ export async function reviewProviderBooking(bookingId: string, decision: Provide
 	const response = await httpClient.patch<ProviderBooking>(
 		`${endpoints.provider.bookings}/${encodeURIComponent(bookingId)}/decision`,
 		{ decision },
+	);
+	return response.data;
+}
+
+export async function listProviderBookingAllocations(bookingId: string) {
+	const response = await httpClient.get<ProviderBookingAllocation[]>(
+		`${endpoints.provider.bookings}/${encodeURIComponent(bookingId)}/allocations`,
+	);
+	return response.data;
+}
+
+export async function reallocateProviderBookingSchedule(
+	bookingId: string,
+	scheduleId: string,
+	availabilityId: string,
+) {
+	const response = await httpClient.patch<ProviderBooking>(
+		`${endpoints.provider.bookings}/${encodeURIComponent(bookingId)}/allocations/${encodeURIComponent(scheduleId)}`,
+		{ availabilityId },
 	);
 	return response.data;
 }

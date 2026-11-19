@@ -12,3 +12,9 @@ export async function getAdminBookingById(bookingId: string) {
 	const response = await httpClient.get<AdminBookingDetail>(`${endpoints.admin.bookings}/${encodeURIComponent(bookingId)}`);
 	return response.data;
 }
+
+export async function markAdminBookingNoShow(bookingId: string, staffNote?: string | null) {
+	await httpClient.patch(`${endpoints.admin.bookings}/${encodeURIComponent(bookingId)}/no-show`, {
+		staffNote: staffNote ?? null,
+	});
+}

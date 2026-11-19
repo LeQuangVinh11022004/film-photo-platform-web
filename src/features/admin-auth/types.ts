@@ -3,6 +3,12 @@ export type AdminLoginRequest = {
 	password: string;
 };
 
+export type RegisterPhotographerRequest = {
+	fullName: string;
+	email: string;
+	password: string;
+};
+
 export type AdminRegisterProviderRequest = {
 	fullName: string;
 	email: string;

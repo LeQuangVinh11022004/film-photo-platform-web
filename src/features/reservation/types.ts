@@ -30,3 +30,16 @@ export type ProviderBooking = {
 	createdAt: string;
 	equipment: ProviderBookingEquipment[];
 };
+
+/** Matches backend ProviderBookingAllocationResponseDTO. */
+export type ProviderBookingAllocation = {
+	scheduleId: string;
+	availabilityId: string | null;
+	resourceType: string;
+	resourceId: string;
+	resourceName: string;
+	startAt: string;
+	endAt: string;
+	quantity: number;
+	status: string;
+};

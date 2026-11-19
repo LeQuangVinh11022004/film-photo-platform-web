@@ -4,8 +4,20 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { Pagination } from "@/shared/components/Pagination";
-import { getProviderBooking, listProviderBookings, reviewProviderBooking } from "@/features/reservation/api";
-import type { ProviderBooking, ProviderBookingDecision } from "@/features/reservation";
+import {
+  getProviderBooking,
+  listProviderBookingAllocations,
+  listProviderBookings,
+  reallocateProviderBookingSchedule,
+  reviewProviderBooking,
+} from "@/features/reservation/api";
+import type {
+  ProviderBooking,
+  ProviderBookingAllocation,
+  ProviderBookingDecision,
+} from "@/features/reservation";
+import { listMyProviderSpaceAvailability } from "@/features/provider-space/api";
+import type { ProviderSpaceAvailability } from "@/features/provider-space";
 import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 
 const pageSize = 20;
@@ -93,6 +105,11 @@ export default function ReservationsPage() {
   const [decisionError, setDecisionError] = useState("");
   const [savingDecision, setSavingDecision] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<ProviderBooking | null>(null);
+  const [allocations, setAllocations] = useState<ProviderBookingAllocation[]>([]);
+  const [spaceSlots, setSpaceSlots] = useState<ProviderSpaceAvailability[]>([]);
+  const [allocationsLoading, setAllocationsLoading] = useState(false);
+  const [reallocatingId, setReallocatingId] = useState<string | null>(null);
+  const [selectedSlotBySchedule, setSelectedSlotBySchedule] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -117,10 +134,59 @@ export default function ReservationsPage() {
 
   async function openReservation(bookingId: string) {
     setError("");
+    setDecisionError("");
+    setAllocations([]);
+    setSpaceSlots([]);
+    setSelectedSlotBySchedule({});
+    setAllocationsLoading(true);
     try {
-      setSelectedReservation(await getProviderBooking(bookingId));
+      const [booking, allocs] = await Promise.all([
+        getProviderBooking(bookingId),
+        listProviderBookingAllocations(bookingId),
+      ]);
+      setSelectedReservation(booking);
+      setAllocations(allocs);
+      if (booking.spaceId) {
+        try {
+          const slots = await listMyProviderSpaceAvailability(booking.spaceId);
+          setSpaceSlots(slots);
+        } catch {
+          // Optional space availability slots for reallocation dropdown
+        }
+      }
     } catch (requestError) {
       setError(errorMessage(requestError));
+    } finally {
+      setAllocationsLoading(false);
+    }
+  }
+
+  async function handleReallocate(scheduleId: string) {
+    if (!selectedReservation) return;
+    const availabilityId = selectedSlotBySchedule[scheduleId];
+    if (!availabilityId) return;
+    setReallocatingId(scheduleId);
+    setDecisionError("");
+    try {
+      const updatedBooking = await reallocateProviderBookingSchedule(
+        selectedReservation.bookingId,
+        scheduleId,
+        availabilityId,
+      );
+      setSelectedReservation(updatedBooking);
+      const [refreshedAllocs, refreshedSlots] = await Promise.all([
+        listProviderBookingAllocations(selectedReservation.bookingId),
+        selectedReservation.spaceId
+          ? listMyProviderSpaceAvailability(selectedReservation.spaceId)
+          : Promise.resolve([]),
+      ]);
+      setAllocations(refreshedAllocs);
+      setSpaceSlots(refreshedSlots);
+      setReloadKey((key) => key + 1);
+    } catch (requestError) {
+      setDecisionError(errorMessage(requestError));
+    } finally {
+      setReallocatingId(null);
     }
   }
 
@@ -129,7 +195,10 @@ export default function ReservationsPage() {
     setSavingDecision(true);
     setDecisionError("");
     try {
-      setSelectedReservation(await reviewProviderBooking(selectedReservation.bookingId, decision));
+      const updated = await reviewProviderBooking(selectedReservation.bookingId, decision);
+      setSelectedReservation(updated);
+      const refreshedAllocs = await listProviderBookingAllocations(selectedReservation.bookingId);
+      setAllocations(refreshedAllocs);
       setLoading(true);
       setReloadKey((key) => key + 1);
     } catch (requestError) {
@@ -387,6 +456,92 @@ export default function ReservationsPage() {
               ))}
             </dl>
             {selectedReservation.equipment.length > 0 && <div className="mt-4"><h3 className="text-sm font-semibold text-[#343630]">Equipment</h3><ul className="mt-2 space-y-1 text-sm text-[#686a64]">{selectedReservation.equipment.map((item) => <li key={item.equipmentId}>{item.name} × {item.quantity}</li>)}</ul></div>}
+
+            <div className="mt-5 border-t border-[#eeeeea] pt-4">
+              <h3 className="text-sm font-semibold text-[#343630]">
+                Resource Allocations ({allocations.length})
+              </h3>
+              {allocationsLoading ? (
+                <p className="mt-2 text-xs text-[#777973]">Loading allocations…</p>
+              ) : allocations.length === 0 ? (
+                <p className="mt-2 text-xs text-[#777973]">
+                  No resource schedule allocations recorded for this booking yet.
+                </p>
+              ) : (
+                <ul className="mt-2.5 space-y-2.5">
+                  {allocations.map((alloc) => {
+                    const availableSlots = spaceSlots.filter(
+                      (slot) =>
+                        slot.status.toUpperCase() === "AVAILABLE" &&
+                        slot.availabilityId !== alloc.availabilityId,
+                    );
+                    const isSpaceResource = ["STUDIO", "DARKROOM"].includes(
+                      alloc.resourceType.toUpperCase(),
+                    );
+                    return (
+                      <li
+                        key={alloc.scheduleId}
+                        className="rounded-md border border-[#e0e0da] bg-[#f8f8f5] p-3 text-xs">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <span className="rounded bg-[#e5f0e8] px-1.5 py-0.5 font-semibold text-[#39724b]">
+                              {alloc.resourceType}
+                            </span>{" "}
+                            <span className="font-semibold text-[#20221f]">
+                              {alloc.resourceName}
+                            </span>{" "}
+                            <span className="text-[#686a64]">× {alloc.quantity}</span>
+                          </div>
+                          <span className="font-semibold text-[#343630]">
+                            {alloc.status}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-[#686a64]">
+                          {new Date(alloc.startAt).toLocaleString()} –{" "}
+                          {new Date(alloc.endAt).toLocaleString()}
+                        </p>
+                        {isSpaceResource && availableSlots.length > 0 && (
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            <select
+                              value={selectedSlotBySchedule[alloc.scheduleId] ?? ""}
+                              onChange={(event) =>
+                                setSelectedSlotBySchedule((cur) => ({
+                                  ...cur,
+                                  [alloc.scheduleId]: event.target.value,
+                                }))
+                              }
+                              aria-label="Select availability slot to reallocate"
+                              className="h-8 flex-1 rounded border border-[#d8d8d1] bg-white px-2 text-xs text-[#343630]">
+                              <option value="">Select available slot to reallocate…</option>
+                              {availableSlots.map((slot) => (
+                                <option
+                                  key={slot.availabilityId}
+                                  value={slot.availabilityId}>
+                                  {slot.availableDate} · {displayTime(slot.startTime)}–
+                                  {displayTime(slot.endTime)}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              type="button"
+                              disabled={
+                                !selectedSlotBySchedule[alloc.scheduleId] ||
+                                reallocatingId === alloc.scheduleId
+                              }
+                              onClick={() => void handleReallocate(alloc.scheduleId)}
+                              className="h-8 rounded bg-[#39724b] px-3 text-xs font-semibold text-white hover:bg-[#2f603e] disabled:opacity-50">
+                              {reallocatingId === alloc.scheduleId
+                                ? "Reallocating…"
+                                : "Reallocate"}
+                            </button>
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
             {decisionError && <p role="alert" className="mt-4 rounded-md border border-[#e6c3bd] bg-[#fbefed] px-3 py-2 text-sm text-[#9c4339]">{decisionError}</p>}
             <div className="mt-6 flex flex-wrap justify-end gap-2 border-t border-[#eeeeea] pt-4">
               {selectedReservation.status.toUpperCase() === "PENDING" && <>
