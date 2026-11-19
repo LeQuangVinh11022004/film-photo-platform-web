@@ -39,14 +39,12 @@ function displayTime(value: string) {
     return value.slice(0, 5);
 }
 
-// Hàm hỗ trợ format amenities (hỗ trợ cả string[] lẫn string)
 function formatAmenities(amenities: ProviderSpaceDetails["amenities"]) {
     if (!amenities) return null;
     if (Array.isArray(amenities)) return amenities.join(", ");
     return amenities;
 }
 
-// Hàm hỗ trợ format operatingHours (hỗ trợ cả object lẫn string)
 function formatOperatingHours(hours: ProviderSpaceDetails["operatingHours"]) {
     if (!hours) return null;
     if (typeof hours === "object") {
@@ -186,6 +184,9 @@ export function ProviderSpaceDetailsDialog({
         }
     }
 
+    const formattedHourlyRate =
+        space.hourlyRate == null ? "Not set" : `${space.hourlyRate.toLocaleString("vi-VN")} VND/h`;
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#171815]/40 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
             <section role="dialog" aria-modal="true" aria-labelledby="space-detail-title" className="my-auto max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-lg border border-[#e0e0da] bg-white p-5 shadow-xl sm:p-6">
@@ -195,11 +196,21 @@ export function ProviderSpaceDetailsDialog({
                 </div>
 
                 <dl className="mt-4 grid gap-x-6 sm:grid-cols-2">
-                    {[["Type", space.type], ["Address", space.address], ["Capacity", space.capacity == null ? "Not set" : `${space.capacity} people`], ["Status", space.status]].map(([label, value]) => <div key={label} className="border-b border-[#eeeeea] py-3"><dt className="text-xs text-[#777973]">{label}</dt><dd className="mt-1 wrap-break-word text-sm font-medium text-[#343630]">{value}</dd></div>)}
+                    {[
+                        ["Type", space.type],
+                        ["Address", space.address],
+                        ["Capacity", space.capacity == null ? "Not set" : `${space.capacity} people`],
+                        ["Hourly rate", formattedHourlyRate],
+                        ["Status", space.status],
+                    ].map(([label, value]) => (
+                        <div key={label} className="border-b border-[#eeeeea] py-3">
+                            <dt className="text-xs text-[#777973]">{label}</dt>
+                            <dd className="mt-1 wrap-break-word text-sm font-medium text-[#343630]">{value}</dd>
+                        </div>
+                    ))}
                 </dl>
                 <div className="mt-4"><p className="text-sm font-semibold text-[#343630]">Description</p><p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-[#686a64]">{space.description || "No description"}</p></div>
-                
-                {/* Phần hiển thị chi tiết không gian (bao gồm các trường mới thêm) */}
+
                 {space.details && (
                     <dl className="mt-4 grid gap-x-6 sm:grid-cols-2">
                         <dt className="text-sm font-semibold text-[#343630] sm:col-span-2">Space details</dt>

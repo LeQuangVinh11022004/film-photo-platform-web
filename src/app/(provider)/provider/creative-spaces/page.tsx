@@ -49,6 +49,11 @@ function statusTone(status: string) {
     : "bg-[#f5e4e1] text-[#a34d42]";
 }
 
+function formatHourlyRate(hourlyRate: number | null | undefined, fallback = "—") {
+  if (hourlyRate == null) return fallback;
+  return `${hourlyRate.toLocaleString("vi-VN")} VND/h`;
+}
+
 function getSpaceCoverImage(
   images: ProviderSpaceImage[],
 ): ProviderSpaceImage | null {
@@ -67,6 +72,7 @@ function exportSpaces(rows: ProviderSpace[]) {
     "Description",
     "Address",
     "Capacity",
+    "Hourly Rate (VND/h)",
     "Status",
   ];
   const csv = [
@@ -78,6 +84,7 @@ function exportSpaces(rows: ProviderSpace[]) {
       space.description,
       space.address,
       space.capacity ?? "",
+      space.hourlyRate ?? "",
       space.status,
     ]),
   ]
@@ -156,15 +163,26 @@ export default function CreativeSpacesPage() {
   }, [currentPage, reloadKey, status]);
 
   const spaces = result?.items ?? [];
+  const trimmedQuery = query.trim().toLowerCase();
+  const hasActiveFilter = Boolean(status || trimmedQuery);
   const filteredSpaces = spaces.filter((space) =>
     `${space.name} ${space.address} ${space.type} ${space.spaceId}`
       .toLowerCase()
-      .includes(query.trim().toLowerCase()),
+      .includes(trimmedQuery),
   );
   const totalCapacity = spaces.reduce(
     (total, space) => total + (space.capacity ?? 0),
     0,
   );
+
+  function resetFilters() {
+    if (status) {
+      setLoading(true);
+      setStatus("");
+      setCurrentPage(1);
+    }
+    setQuery("");
+  }
 
   async function refreshSpaces() {
     const [spacesResult, activeResult] = await Promise.all([
@@ -304,7 +322,9 @@ export default function CreativeSpacesPage() {
           {
             label: "Total spaces",
             value: String(result?.totalItems ?? 0),
-            helper: "All spaces in your catalogue",
+            helper: status
+              ? `Matching ${status.toLowerCase()} filter`
+              : "All spaces in your catalogue",
           },
           {
             label: "Active spaces",
@@ -364,7 +384,7 @@ export default function CreativeSpacesPage() {
             Try again
           </button>
         </section>
-      ) : spaces.length === 0 ? (
+      ) : spaces.length === 0 && !hasActiveFilter ? (
         <section className="mt-4 overflow-hidden rounded-lg border border-[#e0e0da] bg-white">
           <div className="flex min-h-80 flex-col items-center justify-center px-6 py-12 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e9eee7] text-lg font-semibold text-[#45644a]">
@@ -472,13 +492,14 @@ export default function CreativeSpacesPage() {
 
           {viewMode === "table" ? (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-205 border-collapse text-left">
+              <table className="w-full min-w-220 border-collapse text-left">
                 <thead className="bg-[#f8f8f5] text-xs font-semibold uppercase text-[#777973]">
                   <tr>
                     <th className="px-5 py-3">Space</th>
                     <th className="px-4 py-3">Type</th>
                     <th className="px-4 py-3">Address</th>
                     <th className="px-4 py-3">Capacity</th>
+                    <th className="px-4 py-3">Hourly rate</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-5 py-3 text-right">Details</th>
                   </tr>
@@ -524,6 +545,9 @@ export default function CreativeSpacesPage() {
                             ? "—"
                             : `${space.capacity} people`}
                         </td>
+                        <td className="whitespace-nowrap px-4 py-3.5 text-sm text-[#686a64]">
+                          {formatHourlyRate(space.hourlyRate)}
+                        </td>
                         <td className="px-4 py-3.5">
                           <span
                             className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(space.status)}`}>
@@ -544,14 +568,34 @@ export default function CreativeSpacesPage() {
                   {filteredSpaces.length === 0 && (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="px-5 py-12 text-center text-sm text-[#777973]">
-                        No spaces match your search on this page.
+                        <p>No spaces match your filter or search on this page.</p>
+                        {hasActiveFilter && (
+                          <button
+                            type="button"
+                            onClick={resetFilters}
+                            className="mt-3 h-8 rounded-md border border-[#d8d8d1] bg-white px-3 text-xs font-semibold text-[#343630] transition-colors hover:bg-[#f5f5f1]">
+                            Reset filters
+                          </button>
+                        )}
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
+            </div>
+          ) : filteredSpaces.length === 0 ? (
+            <div className="bg-[#fafaf8] px-5 py-12 text-center text-sm text-[#777973]">
+              <p>No spaces match your filter or search on this page.</p>
+              {hasActiveFilter && (
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="mt-3 h-8 rounded-md border border-[#d8d8d1] bg-white px-3 text-xs font-semibold text-[#343630] transition-colors hover:bg-[#f5f5f1]">
+                  Reset filters
+                </button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 bg-[#fafaf8] p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -596,6 +640,12 @@ export default function CreativeSpacesPage() {
                           {space.capacity == null
                             ? "Not set"
                             : `${space.capacity} people`}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between border-t border-[#eeeeea] pt-2.5">
+                        <span className="text-sm text-[#686a64]">Hourly rate</span>
+                        <span className="text-sm font-semibold text-[#343630]">
+                          {formatHourlyRate(space.hourlyRate, "Not set")}
                         </span>
                       </div>
                       <button
