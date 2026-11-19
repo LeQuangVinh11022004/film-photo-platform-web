@@ -2,6 +2,7 @@ export const endpoints = {
   auth: {
     login: "/auth/login",
     register: "/auth/register",
+    registerPhotographer: "/auth/register/photographer",
     registerProvider: "/auth/register/provider",
     google: "/auth/google",
     forgotPassword: "/auth/forgot-password",
@@ -25,9 +26,12 @@ export const endpoints = {
   },
   provider: {
     account: "/provider/account",
+    dashboard: "/provider/dashboard",
     spaces: "/provider/spaces",
     equipment: "/provider/equipment",
     chemicals: "/provider/chemicals",
+    maintenance: "/provider/maintenance",
+    services: "/provider/services",
     servicePackages: "/provider/service-packages",
     bookings: "/provider/bookings",
   },

@@ -8,6 +8,8 @@ import { listMyProviderSpaces } from "@/features/provider-space/api";
 import { listMyProviderEquipment } from "@/features/equipment/api";
 import { listProviderBookings } from "@/features/reservation/api";
 import { listMyProviderServicePackages } from "@/features/service-package/api";
+import { getMyProviderDashboard } from "@/features/provider-dashboard/api";
+import type { ProviderDashboard } from "@/features/provider-dashboard/types";
 import {
 	ProviderMetricCard,
 	ProviderPerformanceChart,
@@ -94,6 +96,7 @@ export default function DashboardPage() {
 	const { messages } = useProviderLanguage();
 	const t = messages.dashboard;
 
+	const [dashboardSummary, setDashboardSummary] = useState<ProviderDashboard | null>(null);
 	const [liveTotals, setLiveTotals] = useState<{
 		totalSpaces: number;
 		activeSpaces: number;
@@ -110,30 +113,36 @@ export default function DashboardPage() {
 	useEffect(() => {
 		let cancelled = false;
 		Promise.allSettled([
+			getMyProviderDashboard(),
 			listMyProviderSpaces({ page: 1, pageSize: 50 }),
 			listMyProviderEquipment({ page: 1, pageSize: 50 }),
 			listProviderBookings({ page: 1, pageSize: 50 }),
 			listMyProviderServicePackages({ status: "ACTIVE", page: 1, pageSize: 1 }),
-		]).then(([spacesRes, eqRes, bookingsRes, pkgRes]) => {
+		]).then(([dashRes, spacesRes, eqRes, bookingsRes, pkgRes]) => {
 			if (cancelled) return;
+			const dash = dashRes.status === "fulfilled" ? dashRes.value : null;
 			const spaces = spacesRes.status === "fulfilled" ? spacesRes.value : null;
 			const eq = eqRes.status === "fulfilled" ? eqRes.value : null;
 			const bookings = bookingsRes.status === "fulfilled" ? bookingsRes.value : null;
 			const pkgs = pkgRes.status === "fulfilled" ? pkgRes.value : null;
 
-			const activeSpaces = spaces?.items.filter((s) => s.status.toUpperCase() === "ACTIVE").length ?? 0;
-			const activeEq = eq?.items.filter((e) => e.status.toUpperCase() === "ACTIVE").length ?? 0;
+			if (dash) {
+				setDashboardSummary(dash);
+			}
+
+			const activeSpaces = dash?.activeSpaces ?? (spaces?.items.filter((s) => s.status.toUpperCase() === "ACTIVE").length ?? 0);
+			const activeEq = dash?.activeEquipment ?? (eq?.items.filter((e) => e.status.toUpperCase() === "ACTIVE").length ?? 0);
 			const bookingItems = bookings?.items ?? [];
-			const revenue = bookingItems
+			const revenue = dash?.revenue ?? bookingItems
 				.filter((b) => b.status.toUpperCase() !== "CANCELLED")
 				.reduce((sum, b) => sum + b.totalAmount, 0);
 
 			setLiveTotals({
-				totalSpaces: spaces?.totalItems ?? 0,
+				totalSpaces: dash?.totalSpaces ?? (spaces?.totalItems ?? 0),
 				activeSpaces,
-				totalEquipment: eq?.totalItems ?? 0,
+				totalEquipment: dash?.totalEquipment ?? (eq?.totalItems ?? 0),
 				activeEquipment: activeEq,
-				totalBookings: bookings?.totalItems ?? 0,
+				totalBookings: bookings?.totalItems ?? ((dash?.pendingBookings ?? 0) + (dash?.confirmedBookings ?? 0)),
 				liveRevenue: revenue,
 				activePackages: pkgs?.totalItems ?? 0,
 			});
@@ -208,7 +217,7 @@ export default function DashboardPage() {
 					change={liveTotals ? `${liveTotals.activePackages} active pkgs` : "+12.4%"}
 					changeLabel={liveTotals ? "live bookings total" : t.metrics.vsPrevious}
 					delay={0}
-					href="/provider/transaction"
+					href="/provider/reservations"
 				/>
 
 				<ProviderMetricCard
@@ -237,6 +246,47 @@ export default function DashboardPage() {
 				/>
 			</section>
 
+			{dashboardSummary && (
+				<section
+					aria-label="Operational utilization and maintenance"
+					className="mt-3 grid gap-3 sm:grid-cols-3"
+				>
+					<div className="rounded-xl border border-[#e2e4dd] bg-white p-4">
+						<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]">
+							Space Occupancy Rate
+						</p>
+						<p className="mt-1.5 text-2xl font-bold text-[#20221f]">
+							{dashboardSummary.occupancyRate.toFixed(1)}%
+						</p>
+						<p className="mt-1 text-xs text-[#686a64]">
+							{dashboardSummary.confirmedBookings} confirmed · {dashboardSummary.pendingBookings} pending
+						</p>
+					</div>
+					<div className="rounded-xl border border-[#e2e4dd] bg-white p-4">
+						<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]">
+							Equipment Utilization Rate
+						</p>
+						<p className="mt-1.5 text-2xl font-bold text-[#20221f]">
+							{dashboardSummary.equipmentUtilizationRate.toFixed(1)}%
+						</p>
+						<p className="mt-1 text-xs text-[#686a64]">
+							{dashboardSummary.activeEquipment} / {dashboardSummary.totalEquipment} active units
+						</p>
+					</div>
+					<div className="rounded-xl border border-[#e2e4dd] bg-white p-4">
+						<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]">
+							Scheduled Maintenance
+						</p>
+						<p className="mt-1.5 text-2xl font-bold text-[#20221f]">
+							{dashboardSummary.scheduledMaintenance}
+						</p>
+						<p className="mt-1 text-xs text-[#686a64]">
+							Scheduled or in-progress maintenance jobs
+						</p>
+					</div>
+				</section>
+			)}
+
 			{/* Main analytics */}
 			<section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.8fr)]">
 				<ProviderPerformanceChart
@@ -261,6 +311,30 @@ export default function DashboardPage() {
 			{/* Quick links */}
 			<section className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
 				<Link
+					href="/provider/creative-spaces"
+					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
+				>
+					<p className="text-sm font-semibold text-[#20221f]">
+						{messages.nav.creativeSpaces}
+					</p>
+					<p className="mt-1 text-xs leading-5 text-[#777973]">
+						Manage studios, darkrooms, images, and availability slots.
+					</p>
+				</Link>
+
+				<Link
+					href="/provider/equipment"
+					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
+				>
+					<p className="text-sm font-semibold text-[#20221f]">
+						{messages.nav.equipment}
+					</p>
+					<p className="mt-1 text-xs leading-5 text-[#777973]">
+						Manage equipment, darkroom chemicals, and maintenance schedules.
+					</p>
+				</Link>
+
+				<Link
 					href="/provider/packages"
 					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
 				>
@@ -273,38 +347,14 @@ export default function DashboardPage() {
 				</Link>
 
 				<Link
-					href="/provider/rating-feedback"
+					href="/provider/reservations"
 					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
 				>
 					<p className="text-sm font-semibold text-[#20221f]">
-						{t.quickLinks.feedback}
+						{messages.nav.reservations}
 					</p>
 					<p className="mt-1 text-xs leading-5 text-[#777973]">
-						{t.quickLinks.feedbackDetail}
-					</p>
-				</Link>
-
-				<Link
-					href="/provider/pricing-policy"
-					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
-				>
-					<p className="text-sm font-semibold text-[#20221f]">
-						{t.quickLinks.pricing}
-					</p>
-					<p className="mt-1 text-xs leading-5 text-[#777973]">
-						{t.quickLinks.pricingDetail}
-					</p>
-				</Link>
-
-				<Link
-					href="/provider/transaction"
-					className="rounded-xl border border-[#e2e4dd] bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-[#cdd2c5] hover:shadow-md"
-				>
-					<p className="text-sm font-semibold text-[#20221f]">
-						{t.quickLinks.transactions}
-					</p>
-					<p className="mt-1 text-xs leading-5 text-[#777973]">
-						{t.quickLinks.transactionsDetail}
+						Review booking requests and manage resource slot allocations.
 					</p>
 				</Link>
 			</section>

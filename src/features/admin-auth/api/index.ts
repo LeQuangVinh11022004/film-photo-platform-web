@@ -1,10 +1,21 @@
 import { endpoints } from "@/services/endpoints";
 import { httpClient } from "@/services/httpClient";
 import { clearAuthToken } from "@/services/authToken";
-import type { AdminLoginRequest, AdminLoginResponse, AdminRegisterProviderRequest, AdminRegisterProviderResponse } from "../types";
+import type {
+	AdminLoginRequest,
+	AdminLoginResponse,
+	AdminRegisterProviderRequest,
+	AdminRegisterProviderResponse,
+	RegisterPhotographerRequest,
+} from "../types";
 
 export async function loginUser(input: AdminLoginRequest) {
 	const response = await httpClient.post<AdminLoginResponse>(endpoints.auth.login, input);
+	return response.data;
+}
+
+export async function registerPhotographer(input: RegisterPhotographerRequest) {
+	const response = await httpClient.post<AdminRegisterProviderResponse>(endpoints.auth.registerPhotographer, input);
 	return response.data;
 }
 

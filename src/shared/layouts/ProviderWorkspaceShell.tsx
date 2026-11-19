@@ -75,9 +75,6 @@ function ProviderToolbar({
     { label: messages.nav.equipment, href: "/provider/equipment" },
     { label: messages.nav.reservations, href: "/provider/reservations" },
     { label: messages.nav.packages, href: "/provider/packages" },
-    { label: messages.nav.transactions, href: "/provider/transaction" },
-    { label: messages.nav.ratingFeedback, href: "/provider/rating-feedback" },
-    { label: messages.nav.pricingPolicy, href: "/provider/pricing-policy" },
     { label: messages.nav.settings, href: "/provider/settings" },
   ];
 

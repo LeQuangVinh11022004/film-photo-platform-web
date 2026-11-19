@@ -526,6 +526,110 @@ Content-Type: application/json
 DELETE {{baseUrl}}/provider/service-packages/{{packageId}}
 Authorization: Bearer {{providerLogin.response.body.$.token}}
 
+### List provider service package items
+GET {{baseUrl}}/provider/service-packages/{{packageId}}/items
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Add item to provider service package
+POST {{baseUrl}}/provider/service-packages/{{packageId}}/items
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "componentType": "EQUIPMENT",
+  "resourceId": "{{equipmentId}}",
+  "quantity": 1,
+  "includedDurationMinutes": 120,
+  "includedChemicalQuantity": null,
+  "notes": "Included in package test"
+}
+
+### Delete item from provider service package
+DELETE {{baseUrl}}/provider/service-packages/{{packageId}}/items/{{packageItemId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Provider dashboard summary
+GET {{baseUrl}}/provider/dashboard
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### List provider maintenance logs
+GET {{baseUrl}}/provider/maintenance?page=1&pageSize=10
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Provider maintenance detail
+GET {{baseUrl}}/provider/maintenance/{{maintenanceId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Create provider maintenance log
+POST {{baseUrl}}/provider/maintenance
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "studioId": null,
+  "darkroomId": null,
+  "equipmentId": "{{equipmentId}}",
+  "maintenanceDate": "2026-12-01T10:00:00Z",
+  "description": "Routine sensor cleaning and calibration",
+  "repairNote": null,
+  "status": "SCHEDULED",
+  "cost": 150000
+}
+
+### Update provider maintenance log
+PUT {{baseUrl}}/provider/maintenance/{{maintenanceId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "maintenanceDate": "2026-12-01T10:00:00Z",
+  "completedAt": "2026-12-01T12:00:00Z",
+  "description": "Routine sensor cleaning and calibration completed",
+  "repairNote": "All shutter speeds verified",
+  "status": "COMPLETED",
+  "cost": 150000
+}
+
+### Delete provider maintenance log
+DELETE {{baseUrl}}/provider/maintenance/{{maintenanceId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### List provider standalone services
+GET {{baseUrl}}/provider/services?page=1&pageSize=10
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Provider standalone service detail
+GET {{baseUrl}}/provider/services/{{serviceId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Create provider standalone service
+POST {{baseUrl}}/provider/services
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "name": "API Test Film Developing & High-Res Scan",
+  "description": "C-41 / B&W development and 35mm high-res scan",
+  "price": 180000,
+  "status": "ACTIVE"
+}
+
+### Update provider standalone service
+PUT {{baseUrl}}/provider/services/{{serviceId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "name": "API Test Film Developing & High-Res Scan Updated",
+  "description": "Updated standalone service description",
+  "price": 200000,
+  "status": "ACTIVE"
+}
+
+### Delete provider standalone service
+DELETE {{baseUrl}}/provider/services/{{serviceId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
 ### List provider bookings
 GET {{baseUrl}}/provider/bookings?page=1&pageSize=10
 Authorization: Bearer {{providerLogin.response.body.$.token}}
@@ -541,6 +645,19 @@ Content-Type: application/json
 
 {
   "decision": "APPROVED"
+}
+
+### List provider booking resource allocations
+GET {{baseUrl}}/provider/bookings/{{bookingId}}/allocations
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Reallocate provider booking schedule slot
+PATCH {{baseUrl}}/provider/bookings/{{bookingId}}/allocations/{{scheduleId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "availabilityId": "{{availabilityId}}"
 }
 
 ### List photographer space availability
@@ -577,6 +694,14 @@ Authorization: Bearer {{photographerLogin.response.body.$.token}}
 ### Cancel photographer booking (changes booking status)
 PATCH {{baseUrl}}/photographer/bookings/{{bookingId}}/cancel
 Authorization: Bearer {{photographerLogin.response.body.$.token}}
+
+### AI photography guide
+POST {{baseUrl}}/ai/photography-guide
+Content-Type: application/json
+
+{
+  "prompt": "How to shoot Ilford HP5 Plus 400 indoors?"
+}
 
 ### Routes declared in the frontend but without an HTTP method/function wired:
 # These endpoint constants currently have no HTTP method/function wired:

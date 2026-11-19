@@ -30,12 +30,28 @@ type AccountDraft = Pick<Account, "name" | "email" | "role" | "status"> & { pass
 const fieldClassName = "h-10 rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#343630] outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
 const pageSize = 20;
 
+function toBackendRole(role: string): string {
+	const upper = role.trim().toUpperCase();
+	if (upper === "CUSTOMER") return "PHOTOGRAPHER";
+	if (upper === "MODERATOR") return "EXPERT";
+	return upper;
+}
+
+function toUiRole(backendRole: string): AccountRole {
+	const upper = backendRole.trim().toUpperCase();
+	if (upper === "PHOTOGRAPHER") return "Customer";
+	if (upper === "EXPERT") return "Moderator";
+	if (upper === "PROVIDER") return "Provider";
+	if (upper === "ADMIN") return "Admin";
+	return backendRole.toLowerCase().replace(/(^|_)([a-z])/g, (_, separator: string, letter: string) => `${separator ? " " : ""}${letter.toUpperCase()}`);
+}
+
 function mapAdminUser(user: AdminUser): Account {
 	return {
 		id: user.userId,
 		name: user.fullName,
 		email: user.email,
-		role: user.role.toLowerCase().replace(/(^|_)([a-z])/g, (_, separator: string, letter: string) => `${separator ? " " : ""}${letter.toUpperCase()}`),
+		role: toUiRole(user.role),
 		status: user.status.toUpperCase() === "ACTIVE" ? "Active" : "Inactive",
 		joined: new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(user.createdAt)),
 		activity: "noActivity",
@@ -98,7 +114,7 @@ export default function UsersPage() {
 
 	useEffect(() => {
 		let cancelled = false;
-		const roleFilter = role ? role.toUpperCase() : undefined;
+		const roleFilter = role ? toBackendRole(role) : undefined;
 		const statusFilter = status ? status.toUpperCase() : undefined;
 		Promise.allSettled([
 			listAdminUsers({ role: roleFilter, status: statusFilter, page, pageSize }),
@@ -131,7 +147,7 @@ export default function UsersPage() {
 	const visibleAccounts = filteredAccounts;
 
 	async function refreshAccounts() {
-		const result = await listAdminUsers({ role: role ? role.toUpperCase() : undefined, status: status ? status.toUpperCase() : undefined, page, pageSize });
+		const result = await listAdminUsers({ role: role ? toBackendRole(role) : undefined, status: status ? status.toUpperCase() : undefined, page, pageSize });
 		setAccountRows(result.items.map((user) => mapAdminUser(user)));
 		setTotalAccounts(result.totalItems);
 	}
@@ -169,7 +185,7 @@ export default function UsersPage() {
 			const payload = {
 				fullName: normalized.name,
 				email: normalized.email,
-				role: normalized.role.toUpperCase(),
+				role: toBackendRole(normalized.role),
 				status: normalized.status.toUpperCase() as "ACTIVE" | "INACTIVE",
 			};
 			if (editorMode === "create") {

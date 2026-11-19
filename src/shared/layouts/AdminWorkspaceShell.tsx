@@ -58,11 +58,7 @@ function AdminToolbar({ sidebarCollapsed, theme, onMenuClick, onToggleSidebar, o
     { label: messages.nav.users, href: "/users" },
     { label: messages.nav.providers, href: "/providers" },
     { label: messages.nav.spaces, href: "/spaces" },
-    { label: messages.nav.content, href: "/content" },
     { label: messages.nav.transactions, href: "/transactions" },
-    { label: messages.nav.disputes, href: "/disputes" },
-    { label: messages.nav.reports, href: "/reports" },
-    { label: messages.nav.errors, href: "/errors" },
     { label: messages.nav.settings, href: "/settings/profile" },
     { label: messages.settings.sections.platform, href: "/settings/platform" },
   ];

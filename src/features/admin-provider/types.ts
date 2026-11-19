@@ -15,6 +15,25 @@ export type AdminProvider = {
 /** Approval status values accepted by the backend (PATCH .../approval). */
 export type AdminProviderApprovalStatus = "APPROVED" | "REJECTED";
 
+/** Matches backend AdminProviderCreateRequestDTO. */
+export type AdminProviderCreateRequest = {
+	fullName: string;
+	email: string;
+	password: string;
+	businessName: string;
+	description?: string | null;
+	address: string;
+	phone?: string | null;
+};
+
+/** Matches backend AdminProviderUpdateRequestDTO. */
+export type AdminProviderUpdateRequest = {
+	businessName: string;
+	description?: string | null;
+	address: string;
+	phone?: string | null;
+};
+
 export type ListAdminProvidersParams = {
 	approvalStatus?: string;
 	page?: number;

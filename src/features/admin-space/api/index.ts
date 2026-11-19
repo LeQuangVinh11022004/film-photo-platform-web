@@ -23,6 +23,14 @@ export async function updateAdminSpace(spaceId: string, input: AdminSpaceRequest
 	return response.data;
 }
 
+export async function updateAdminSpaceStatus(spaceId: string, status: "ACTIVE" | "INACTIVE") {
+	const response = await httpClient.patch<AdminSpace>(
+		`${endpoints.admin.spaces}/${encodeURIComponent(spaceId)}/status`,
+		{ status },
+	);
+	return response.data;
+}
+
 export async function deleteAdminSpace(spaceId: string) {
 	await httpClient.delete(`${endpoints.admin.spaces}/${encodeURIComponent(spaceId)}`);
 }

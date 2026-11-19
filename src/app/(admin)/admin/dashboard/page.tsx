@@ -39,8 +39,8 @@ const activity = [
 ];
 
 const operationsQueue = [
-	{ id: "provider-review", title: "providerReview", detail: "providerReviewDetail", age: "19h", href: "/users", priority: "high" },
-	{ id: "open-disputes", title: "openDisputes", detail: "openDisputesDetail", age: "4h", href: "/disputes", priority: "urgent" },
+	{ id: "provider-review", title: "providerReview", detail: "providerReviewDetail", age: "19h", href: "/providers", priority: "high" },
+	{ id: "open-disputes", title: "openDisputes", detail: "openDisputesDetail", age: "4h", href: "/transactions", priority: "urgent" },
 	{ id: "pending-payments", title: "pendingPayments", detail: "pendingPaymentsDetail", age: "2h", href: "/transactions", priority: "normal" },
 ] as const;
 
@@ -113,8 +113,8 @@ export default function AdminDashboardPage() {
 		{ label: t.livePendingBookings, value: dashboard?.pendingBookings },
 	];
 	const dashboardNotifications: DashboardNotification[] = [
-		{ id: "dispute", title: t.alertDisputeTitle, detail: t.alertDisputeDetail, time: t.alertDisputeTime, href: "/disputes" },
-		{ id: "provider", title: t.alertProviderTitle, detail: t.alertProviderDetail, time: t.alertProviderTime, href: "/users" },
+		{ id: "dispute", title: t.alertDisputeTitle, detail: t.alertDisputeDetail, time: t.alertDisputeTime, href: "/transactions" },
+		{ id: "provider", title: t.alertProviderTitle, detail: t.alertProviderDetail, time: t.alertProviderTime, href: "/providers" },
 		{ id: "payment", title: t.alertPaymentTitle, detail: t.alertPaymentDetail, time: t.alertPaymentTime, href: "/transactions" },
 	];
 	const statusSegments = [
@@ -203,7 +203,7 @@ export default function AdminDashboardPage() {
 				<article className="rounded-lg border border-[#e0e0da] bg-white p-5 sm:p-6">
 					<div className="flex items-start justify-between gap-3">
 						<div><h2 className="text-base font-semibold text-[#20221f]">{t.statusTitle}</h2><p className="mt-1 text-sm text-[#777973]">{t.statusDescription}</p></div>
-						<Link href="/reports" className="text-xs font-semibold text-[#39724b] hover:underline">{messages.nav.reports}</Link>
+						<Link href="/transactions" className="text-xs font-semibold text-[#39724b] hover:underline">{messages.nav.transactions}</Link>
 					</div>
 					<div className="mt-6 flex flex-col items-center gap-6 sm:flex-row sm:justify-center xl:gap-4">
 						<div className="relative h-40 w-40 shrink-0">
@@ -256,7 +256,7 @@ export default function AdminDashboardPage() {
 				<article className="min-w-0 rounded-lg border border-[#e0e0da] bg-white">
 					<div className="flex items-center justify-between gap-3 border-b border-[#e8e8e2] px-5 py-4 sm:px-6">
 						<div><h2 className="text-base font-semibold text-[#20221f]">{t.recentTitle}</h2><p className="mt-1 text-sm text-[#777973]">{t.recentDescription}</p></div>
-						<Link href="/reports" className="text-sm font-semibold text-[#39724b] hover:underline">{t.viewAll}</Link>
+						<Link href="/transactions" className="text-sm font-semibold text-[#39724b] hover:underline">{t.viewAll}</Link>
 					</div>
 					<ul className="divide-y divide-[#eeeeea]">
 						{activity.map((item) => (
@@ -296,7 +296,7 @@ export default function AdminDashboardPage() {
 					</ol>
 					<div className="flex items-center justify-between gap-3 border-t border-[#e8e8e2] px-5 py-3 sm:px-6">
 						<span className="text-xs text-[#777973]">{messages.common.sampleData}</span>
-						<Link href="/reports" className="inline-flex items-center gap-1 text-xs font-semibold text-[#39724b] hover:underline">{t.openReports}<ArrowUpRight size={13} /></Link>
+						<Link href="/transactions" className="inline-flex items-center gap-1 text-xs font-semibold text-[#39724b] hover:underline">{messages.nav.transactions}<ArrowUpRight size={13} /></Link>
 					</div>
 				</article>
 			</section>

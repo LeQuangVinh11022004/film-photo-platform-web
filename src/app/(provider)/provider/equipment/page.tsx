@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import axios from "axios";
 import {
   AlertTriangle,
@@ -10,6 +10,8 @@ import {
   Pencil,
   Plus,
   Trash2,
+  Wrench,
+  X,
 } from "lucide-react";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { Pagination } from "@/shared/components/Pagination";
@@ -53,6 +55,18 @@ import type {
 } from "@/features/provider-chemical";
 import { listMyProviderSpaces } from "@/features/provider-space/api";
 import type { ProviderSpace } from "@/features/provider-space";
+import {
+  createMyProviderMaintenance,
+  deleteMyProviderMaintenance,
+  getMyProviderMaintenanceById,
+  listMyProviderMaintenance,
+  updateMyProviderMaintenance,
+} from "@/features/provider-maintenance/api";
+import type {
+  ProviderMaintenance,
+  ProviderMaintenanceResourceType,
+  ProviderMaintenanceStatus,
+} from "@/features/provider-maintenance";
 import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 import type { PagedResponse } from "@/types";
 
@@ -105,13 +119,32 @@ function formatPrice(value: number | null) {
   return `${value.toLocaleString("vi-VN")} VND`;
 }
 
+function maintenanceStatusTone(status: string) {
+  const normalized = status.toUpperCase();
+  if (normalized === "COMPLETED") return "bg-[#e5f0e8] text-[#39724b]";
+  if (normalized === "IN_PROGRESS" || normalized === "SCHEDULED")
+    return "bg-[#f8edd9] text-[#93651e]";
+  return "bg-[#f5e4e1] text-[#a34d42]";
+}
+
+function toLocalDateTimeInput(isoString: string | null | undefined) {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function EquipmentPage() {
   const { messages } = useProviderLanguage();
   const eq = messages.equipment;
-  const [activeTab, setActiveTab] = useState<"equipment" | "chemicals">(
-    "equipment",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "equipment" | "chemicals" | "maintenance"
+  >("equipment");
   const [spaces, setSpaces] = useState<ProviderSpace[]>([]);
+  const [allEquipmentForPicker, setAllEquipmentForPicker] = useState<
+    ProviderEquipment[]
+  >([]);
 
   // Equipment state
   const [equipmentResult, setEquipmentResult] =
@@ -187,6 +220,44 @@ export default function EquipmentPage() {
 
   const [savingAdjustment, setSavingAdjustment] = useState(false);
 
+  // Maintenance state
+  const [maintenanceResult, setMaintenanceResult] =
+    useState<PagedResponse<ProviderMaintenance> | null>(null);
+  const [maintenanceLoading, setMaintenanceLoading] = useState(true);
+  const [maintenanceError, setMaintenanceError] = useState("");
+  const [maintenancePage, setMaintenancePage] = useState(1);
+  const [maintenanceStatus, setMaintenanceStatus] = useState("");
+  const [maintenanceQuery, setMaintenanceQuery] = useState("");
+  const [maintenanceReloadKey, setMaintenanceReloadKey] = useState(0);
+  const [selectedMaintenance, setSelectedMaintenance] =
+    useState<ProviderMaintenance | null>(null);
+  const [maintenanceModalOpen, setMaintenanceModalOpen] = useState(false);
+  const [editingMaintenance, setEditingMaintenance] =
+    useState<ProviderMaintenance | null>(null);
+  const [savingMaintenance, setSavingMaintenance] = useState(false);
+  const [pendingDeleteMaintenance, setPendingDeleteMaintenance] =
+    useState<ProviderMaintenance | null>(null);
+  const [deletingMaintenance, setDeletingMaintenance] = useState(false);
+  const [maintenanceForm, setMaintenanceForm] = useState<{
+    resourceType: ProviderMaintenanceResourceType;
+    resourceId: string;
+    maintenanceDate: string;
+    completedAt: string;
+    description: string;
+    repairNote: string;
+    status: ProviderMaintenanceStatus;
+    cost: string;
+  }>({
+    resourceType: "EQUIPMENT",
+    resourceId: "",
+    maintenanceDate: "",
+    completedAt: "",
+    description: "",
+    repairNote: "",
+    status: "SCHEDULED",
+    cost: "",
+  });
+
   useEffect(() => {
     let cancelled = false;
     listMyProviderSpaces({ page: 1, pageSize: 100 })
@@ -196,10 +267,17 @@ export default function EquipmentPage() {
       .catch(() => {
         // Spaces list optional for display labels
       });
+    listMyProviderEquipment({ page: 1, pageSize: 100 })
+      .then((res) => {
+        if (!cancelled) setAllEquipmentForPicker(res.items);
+      })
+      .catch(() => {
+        // Optional picker list
+      });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [equipmentReloadKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -258,6 +336,33 @@ export default function EquipmentPage() {
     };
   }, [chemicalPage, chemicalDarkroomId, chemicalStatus, chemicalReloadKey]);
 
+  useEffect(() => {
+    let cancelled = false;
+    listMyProviderMaintenance({
+      status: maintenanceStatus || undefined,
+      page: maintenancePage,
+      pageSize,
+    })
+      .then((data) => {
+        if (!cancelled) {
+          setMaintenanceResult(data);
+          setMaintenanceError("");
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setMaintenanceError(errorMessage(err));
+      })
+      .finally(() => {
+        if (!cancelled) setMaintenanceLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [maintenancePage, maintenanceStatus, maintenanceReloadKey]);
+
+  const studios = spaces.filter(
+    (space) => space.type.toUpperCase() === "STUDIO",
+  );
   const darkrooms = spaces.filter(
     (space) => space.type.toUpperCase() === "DARKROOM",
   );
@@ -278,6 +383,12 @@ export default function EquipmentPage() {
   const lowStockCount = (chemicalResult?.items ?? []).filter(
     (item) => item.isLowStock,
   ).length;
+
+  const maintenanceItems = (maintenanceResult?.items ?? []).filter((item) =>
+    `${item.resourceName} ${item.resourceType} ${item.description} ${item.repairNote ?? ""} ${item.maintenanceId}`
+      .toLowerCase()
+      .includes(maintenanceQuery.trim().toLowerCase()),
+  );
 
   async function openEquipmentDetail(equipmentId: string) {
     setEquipmentError("");
@@ -507,6 +618,161 @@ export default function EquipmentPage() {
     }
   }
 
+  // Maintenance handlers
+  async function openMaintenanceDetail(maintenanceId: string) {
+    setMaintenanceError("");
+    try {
+      setSelectedMaintenance(await getMyProviderMaintenanceById(maintenanceId));
+    } catch (err) {
+      setMaintenanceError(errorMessage(err));
+    }
+  }
+
+  function getDefaultResourceForType(type: ProviderMaintenanceResourceType) {
+    if (type === "STUDIO") return studios[0]?.spaceId ?? "";
+    if (type === "DARKROOM") return darkrooms[0]?.spaceId ?? "";
+    return (
+      allEquipmentForPicker[0]?.equipmentId ??
+      equipmentResult?.items[0]?.equipmentId ??
+      ""
+    );
+  }
+
+  function startCreateMaintenance() {
+    setMaintenanceError("");
+    setEditingMaintenance(null);
+    const initialType: ProviderMaintenanceResourceType =
+      allEquipmentForPicker.length > 0
+        ? "EQUIPMENT"
+        : studios.length > 0
+          ? "STUDIO"
+          : "DARKROOM";
+    setMaintenanceForm({
+      resourceType: initialType,
+      resourceId: getDefaultResourceForType(initialType),
+      maintenanceDate: toLocalDateTimeInput(new Date().toISOString()),
+      completedAt: "",
+      description: "",
+      repairNote: "",
+      status: "SCHEDULED",
+      cost: "",
+    });
+    setMaintenanceModalOpen(true);
+  }
+
+  function startEditMaintenance(item: ProviderMaintenance) {
+    setMaintenanceError("");
+    setEditingMaintenance(item);
+    const normalizedType: ProviderMaintenanceResourceType =
+      item.resourceType.toUpperCase() === "STUDIO"
+        ? "STUDIO"
+        : item.resourceType.toUpperCase() === "DARKROOM"
+          ? "DARKROOM"
+          : "EQUIPMENT";
+    setMaintenanceForm({
+      resourceType: normalizedType,
+      resourceId: item.equipmentId ?? item.studioId ?? item.darkroomId ?? "",
+      maintenanceDate: toLocalDateTimeInput(item.maintenanceDate),
+      completedAt: toLocalDateTimeInput(item.completedAt),
+      description: item.description,
+      repairNote: item.repairNote ?? "",
+      status: (["SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"].includes(
+        item.status.toUpperCase(),
+      )
+        ? item.status.toUpperCase()
+        : "SCHEDULED") as ProviderMaintenanceStatus,
+      cost: item.cost != null ? String(item.cost) : "",
+    });
+    setMaintenanceModalOpen(true);
+  }
+
+  async function handleSaveMaintenance(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSavingMaintenance(true);
+    setMaintenanceError("");
+    try {
+      const parsedDate = maintenanceForm.maintenanceDate
+        ? new Date(maintenanceForm.maintenanceDate).toISOString()
+        : new Date().toISOString();
+      const parsedCost =
+        maintenanceForm.cost.trim() === ""
+          ? null
+          : Number(maintenanceForm.cost);
+
+      if (editingMaintenance) {
+        const updated = await updateMyProviderMaintenance(
+          editingMaintenance.maintenanceId,
+          {
+            maintenanceDate: parsedDate,
+            completedAt: maintenanceForm.completedAt
+              ? new Date(maintenanceForm.completedAt).toISOString()
+              : null,
+            description: maintenanceForm.description.trim(),
+            repairNote: maintenanceForm.repairNote.trim() || null,
+            status: maintenanceForm.status,
+            cost: parsedCost,
+          },
+        );
+        if (selectedMaintenance?.maintenanceId === updated.maintenanceId) {
+          setSelectedMaintenance(updated);
+        }
+      } else {
+        await createMyProviderMaintenance({
+          studioId:
+            maintenanceForm.resourceType === "STUDIO"
+              ? maintenanceForm.resourceId
+              : null,
+          darkroomId:
+            maintenanceForm.resourceType === "DARKROOM"
+              ? maintenanceForm.resourceId
+              : null,
+          equipmentId:
+            maintenanceForm.resourceType === "EQUIPMENT"
+              ? maintenanceForm.resourceId
+              : null,
+          maintenanceDate: parsedDate,
+          description: maintenanceForm.description.trim(),
+          repairNote: maintenanceForm.repairNote.trim() || null,
+          status: maintenanceForm.status,
+          cost: parsedCost,
+        });
+      }
+      setMaintenanceModalOpen(false);
+      setEditingMaintenance(null);
+      setMaintenanceReloadKey((k) => k + 1);
+      setEquipmentReloadKey((k) => k + 1);
+    } catch (err) {
+      setMaintenanceError(errorMessage(err));
+    } finally {
+      setSavingMaintenance(false);
+    }
+  }
+
+  async function confirmDeleteMaintenance() {
+    if (!pendingDeleteMaintenance) return;
+    setDeletingMaintenance(true);
+    setMaintenanceError("");
+    try {
+      await deleteMyProviderMaintenance(pendingDeleteMaintenance.maintenanceId);
+      if (
+        selectedMaintenance?.maintenanceId ===
+        pendingDeleteMaintenance.maintenanceId
+      ) {
+        setSelectedMaintenance(null);
+      }
+      setPendingDeleteMaintenance(null);
+      if ((maintenanceResult?.items.length ?? 0) <= 1 && maintenancePage > 1) {
+        setMaintenancePage((p) => p - 1);
+      } else {
+        setMaintenanceReloadKey((k) => k + 1);
+      }
+    } catch (err) {
+      setMaintenanceError(errorMessage(err));
+    } finally {
+      setDeletingMaintenance(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-375">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
@@ -549,6 +815,17 @@ export default function EquipmentPage() {
               {lowStockCount} low stock
             </span>
           )}
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("maintenance")}
+          className={`flex h-10 items-center gap-2 rounded-md border px-4 text-sm font-semibold transition-colors ${
+            activeTab === "maintenance"
+              ? "border-[#39724b] bg-[#e5f0e8] text-[#20221f]"
+              : "border-transparent text-[#686a64] hover:border-[#d8d8d1] hover:bg-white"
+          }`}>
+          <Wrench size={16} />
+          <span>Maintenance Schedule ({maintenanceResult?.totalItems ?? 0})</span>
         </button>
       </nav>
 
@@ -1044,6 +1321,229 @@ export default function EquipmentPage() {
         </>
       )}
 
+      {/* ==================== MAINTENANCE TAB ==================== */}
+      {activeTab === "maintenance" && (
+        <>
+          <section
+            aria-label="Maintenance summary"
+            className="grid gap-3 sm:grid-cols-3">
+            {[
+              {
+                label: "Total maintenance logs",
+                value: String(maintenanceResult?.totalItems ?? 0),
+                helper: "Across studios, darkrooms, and equipment",
+              },
+              {
+                label: "Active / Scheduled on page",
+                value: String(
+                  maintenanceItems.filter((i) =>
+                    ["SCHEDULED", "IN_PROGRESS"].includes(
+                      i.status.toUpperCase(),
+                    ),
+                  ).length,
+                ),
+                helper: "Scheduled or currently in progress",
+              },
+              {
+                label: "Completed on page",
+                value: String(
+                  maintenanceItems.filter(
+                    (i) => i.status.toUpperCase() === "COMPLETED",
+                  ).length,
+                ),
+                helper: "Finished maintenance records",
+              },
+            ].map((metric) => (
+              <article
+                key={metric.label}
+                className="rounded-lg border border-[#e0e0da] bg-white p-4">
+                <p className="text-sm text-[#686a64]">{metric.label}</p>
+                <p className="mt-2 text-2xl font-semibold text-[#20221f]">
+                  {metric.value}
+                </p>
+                <p className="mt-1 text-xs text-[#858680]">{metric.helper}</p>
+              </article>
+            ))}
+          </section>
+
+          {maintenanceError && !maintenanceModalOpen && !pendingDeleteMaintenance && (
+            <p
+              role="alert"
+              className="mt-4 rounded-md border border-[#e6c3bd] bg-[#fbefed] px-4 py-3 text-sm text-[#9c4339]">
+              {maintenanceError}
+            </p>
+          )}
+
+          <section className="mt-4 overflow-hidden rounded-lg border border-[#e0e0da] bg-white">
+            <div className="flex flex-col gap-3 border-b border-[#e8e8e2] p-4 sm:px-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-base font-semibold text-[#20221f]">
+                    Maintenance logs & schedules
+                  </h2>
+                  <p className="mt-1 text-sm text-[#777973]">
+                    Schedule and track maintenance for studios, darkrooms, and equipment.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={startCreateMaintenance}
+                  disabled={
+                    spaces.length === 0 && allEquipmentForPicker.length === 0
+                  }
+                  className="inline-flex h-9 w-fit items-center gap-2 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white hover:bg-[#2f603e] disabled:opacity-50">
+                  <Plus size={16} /> Schedule maintenance
+                </button>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                <input
+                  value={maintenanceQuery}
+                  onChange={(event) => setMaintenanceQuery(event.target.value)}
+                  placeholder="Search resource, description, repair note..."
+                  aria-label="Search maintenance logs"
+                  className={fieldClassName}
+                />
+                <select
+                  value={maintenanceStatus}
+                  onChange={(event) => {
+                    setMaintenanceLoading(true);
+                    setMaintenanceStatus(event.target.value);
+                    setMaintenancePage(1);
+                  }}
+                  aria-label="Filter maintenance status"
+                  className={fieldClassName}>
+                  <option value="">All statuses</option>
+                  <option value="SCHEDULED">SCHEDULED</option>
+                  <option value="IN_PROGRESS">IN_PROGRESS</option>
+                  <option value="COMPLETED">COMPLETED</option>
+                  <option value="CANCELLED">CANCELLED</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-220 border-collapse text-left">
+                <thead className="bg-[#f8f8f5] text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]">
+                  <tr>
+                    <th className="px-5 py-3">Resource</th>
+                    <th className="px-4 py-3">Type</th>
+                    <th className="px-4 py-3">Maintenance Date</th>
+                    <th className="px-4 py-3">Description</th>
+                    <th className="px-4 py-3">Cost</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-5 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#eeeeea]">
+                  {maintenanceLoading ? (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="px-5 py-12 text-center text-sm text-[#777973]">
+                        Loading maintenance logs…
+                      </td>
+                    </tr>
+                  ) : (
+                    maintenanceItems.map((item) => (
+                      <tr
+                        key={item.maintenanceId}
+                        className="transition-colors hover:bg-[#fcfcfa]">
+                        <td className="px-5 py-3.5">
+                          <p className="text-sm font-semibold text-[#292b27]">
+                            {item.resourceName}
+                          </p>
+                          <p className="mt-0.5 text-xs text-[#777973]">
+                            {item.maintenanceId.slice(0, 8)}
+                          </p>
+                        </td>
+                        <td className="px-4 py-3.5 text-sm text-[#686a64]">
+                          {item.resourceType}
+                        </td>
+                        <td className="px-4 py-3.5 text-sm text-[#686a64]">
+                          <p>
+                            {new Date(item.maintenanceDate).toLocaleString()}
+                          </p>
+                          {item.completedAt && (
+                            <p className="text-xs text-[#39724b]">
+                              Done: {new Date(item.completedAt).toLocaleDateString()}
+                            </p>
+                          )}
+                        </td>
+                        <td className="max-w-xs px-4 py-3.5 text-sm text-[#686a64]">
+                          <p className="truncate">{item.description}</p>
+                          {item.repairNote && (
+                            <p className="truncate text-xs text-[#858680]">
+                              Note: {item.repairNote}
+                            </p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5 text-sm text-[#686a64]">
+                          {formatPrice(item.cost)}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span
+                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${maintenanceStatusTone(item.status)}`}>
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-right">
+                          <div className="flex justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                void openMaintenanceDetail(item.maintenanceId)
+                              }
+                              className="rounded-md px-2 py-1 text-xs font-semibold text-[#39724b] hover:bg-[#e5f0e8]">
+                              View
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => startEditMaintenance(item)}
+                              aria-label={`Edit maintenance for ${item.resourceName}`}
+                              className="flex h-8 w-8 items-center justify-center rounded-md text-[#555750] hover:bg-[#f0f0ec]">
+                              <Pencil size={15} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPendingDeleteMaintenance(item)}
+                              aria-label={`Delete maintenance for ${item.resourceName}`}
+                              className="flex h-8 w-8 items-center justify-center rounded-md text-[#a34d42] hover:bg-[#fbefed]">
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                  {!maintenanceLoading && maintenanceItems.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="px-5 py-12 text-center text-sm text-[#777973]">
+                        No maintenance logs found for these filters.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="border-t border-[#e8e8e2] px-5 py-4">
+              <Pagination
+                currentPage={maintenancePage}
+                totalItems={maintenanceResult?.totalItems ?? 0}
+                itemsPerPage={pageSize}
+                onPageChange={(nextPage) => {
+                  setMaintenanceLoading(true);
+                  setMaintenancePage(nextPage);
+                }}
+              />
+            </div>
+          </section>
+        </>
+      )}
+
       {/* Equipment Detail Modal */}
       {selectedEquipment && (
         <EquipmentDetailsModal
@@ -1153,6 +1653,303 @@ export default function EquipmentPage() {
             }
           }}
           onConfirm={() => void confirmDeleteChemical()}
+        />
+      )}
+
+      {/* Maintenance Detail Modal */}
+      {selectedMaintenance && !maintenanceModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#171815]/40 p-4"
+          onClick={() => setSelectedMaintenance(null)}>
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="maintenance-detail-title"
+            className="w-full max-w-lg rounded-lg border border-[#e0e0da] bg-white p-6 shadow-xl"
+            onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#777973]">
+                  {selectedMaintenance.maintenanceId}
+                </p>
+                <h2
+                  id="maintenance-detail-title"
+                  className="mt-1 text-xl font-semibold text-[#20221f]">
+                  {selectedMaintenance.resourceName}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedMaintenance(null)}
+                aria-label="Close maintenance details"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-[#777973] hover:bg-[#f0f0ec]">
+                <X size={18} />
+              </button>
+            </div>
+            <dl className="mt-5 divide-y divide-[#eeeeea] text-sm">
+              {[
+                ["Resource Type", selectedMaintenance.resourceType],
+                ["Status", selectedMaintenance.status],
+                [
+                  "Scheduled Date",
+                  new Date(selectedMaintenance.maintenanceDate).toLocaleString(),
+                ],
+                [
+                  "Completed At",
+                  selectedMaintenance.completedAt
+                    ? new Date(selectedMaintenance.completedAt).toLocaleString()
+                    : "—",
+                ],
+                ["Cost", formatPrice(selectedMaintenance.cost)],
+                ["Description", selectedMaintenance.description],
+                ["Repair Note", selectedMaintenance.repairNote || "—"],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between gap-4 py-2.5">
+                  <dt className="text-[#777973]">{label}</dt>
+                  <dd className="text-right font-medium text-[#343630]">
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => startEditMaintenance(selectedMaintenance)}
+                className="inline-flex h-9 items-center gap-2 rounded-md bg-[#39724b] px-3 text-sm font-semibold text-white hover:bg-[#2f603e]">
+                <Pencil size={15} /> Edit
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* Maintenance Create/Edit Modal */}
+      {maintenanceModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#171815]/40 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget)
+              setMaintenanceModalOpen(false);
+          }}>
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="maintenance-form-title"
+            className="my-auto w-full max-w-xl rounded-lg border border-[#e0e0da] bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#e8e8e2] px-5 py-4">
+              <h2
+                id="maintenance-form-title"
+                className="text-lg font-semibold text-[#20221f]">
+                {editingMaintenance
+                  ? "Edit maintenance log"
+                  : "Schedule maintenance"}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setMaintenanceModalOpen(false)}
+                aria-label="Close form"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-[#686a64] hover:bg-[#f0f0ec]">
+                <X size={18} />
+              </button>
+            </div>
+            <form
+              onSubmit={handleSaveMaintenance}
+              className="grid gap-4 p-5 sm:grid-cols-2">
+              {!editingMaintenance && (
+                <>
+                  <label className="grid gap-1.5 text-sm font-medium text-[#454741]">
+                    Target Type
+                    <select
+                      value={maintenanceForm.resourceType}
+                      onChange={(event) => {
+                        const nextType = event.target
+                          .value as ProviderMaintenanceResourceType;
+                        setMaintenanceForm((cur) => ({
+                          ...cur,
+                          resourceType: nextType,
+                          resourceId: getDefaultResourceForType(nextType),
+                        }));
+                      }}
+                      className={fieldClassName}>
+                      <option value="EQUIPMENT">Equipment</option>
+                      <option value="STUDIO">Studio</option>
+                      <option value="DARKROOM">Darkroom</option>
+                    </select>
+                  </label>
+                  <label className="grid gap-1.5 text-sm font-medium text-[#454741]">
+                    Target Resource
+                    <select
+                      required
+                      value={maintenanceForm.resourceId}
+                      onChange={(event) =>
+                        setMaintenanceForm((cur) => ({
+                          ...cur,
+                          resourceId: event.target.value,
+                        }))
+                      }
+                      className={fieldClassName}>
+                      <option value="" disabled>
+                        Select resource
+                      </option>
+                      {maintenanceForm.resourceType === "STUDIO" &&
+                        studios.map((s) => (
+                          <option key={s.spaceId} value={s.spaceId}>
+                            {s.name}
+                          </option>
+                        ))}
+                      {maintenanceForm.resourceType === "DARKROOM" &&
+                        darkrooms.map((d) => (
+                          <option key={d.spaceId} value={d.spaceId}>
+                            {d.name}
+                          </option>
+                        ))}
+                      {maintenanceForm.resourceType === "EQUIPMENT" &&
+                        allEquipmentForPicker.map((e) => (
+                          <option key={e.equipmentId} value={e.equipmentId}>
+                            {e.name}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                </>
+              )}
+              <label className="grid gap-1.5 text-sm font-medium text-[#454741]">
+                Maintenance Date
+                <input
+                  required
+                  type="datetime-local"
+                  value={maintenanceForm.maintenanceDate}
+                  onChange={(event) =>
+                    setMaintenanceForm((cur) => ({
+                      ...cur,
+                      maintenanceDate: event.target.value,
+                    }))
+                  }
+                  className={fieldClassName}
+                />
+              </label>
+              <label className="grid gap-1.5 text-sm font-medium text-[#454741]">
+                Status
+                <select
+                  value={maintenanceForm.status}
+                  onChange={(event) =>
+                    setMaintenanceForm((cur) => ({
+                      ...cur,
+                      status: event.target.value as ProviderMaintenanceStatus,
+                    }))
+                  }
+                  className={fieldClassName}>
+                  <option value="SCHEDULED">SCHEDULED</option>
+                  <option value="IN_PROGRESS">IN_PROGRESS</option>
+                  <option value="COMPLETED">COMPLETED</option>
+                  <option value="CANCELLED">CANCELLED</option>
+                </select>
+              </label>
+              {editingMaintenance && (
+                <label className="grid gap-1.5 text-sm font-medium text-[#454741]">
+                  Completed At (optional)
+                  <input
+                    type="datetime-local"
+                    value={maintenanceForm.completedAt}
+                    onChange={(event) =>
+                      setMaintenanceForm((cur) => ({
+                        ...cur,
+                        completedAt: event.target.value,
+                      }))
+                    }
+                    className={fieldClassName}
+                  />
+                </label>
+              )}
+              <label className="grid gap-1.5 text-sm font-medium text-[#454741]">
+                Cost (VND, optional)
+                <input
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={maintenanceForm.cost}
+                  onChange={(event) =>
+                    setMaintenanceForm((cur) => ({
+                      ...cur,
+                      cost: event.target.value,
+                    }))
+                  }
+                  className={fieldClassName}
+                />
+              </label>
+              <label className="grid gap-1.5 text-sm font-medium text-[#454741] sm:col-span-2">
+                Description
+                <textarea
+                  required
+                  rows={2}
+                  maxLength={1000}
+                  value={maintenanceForm.description}
+                  onChange={(event) =>
+                    setMaintenanceForm((cur) => ({
+                      ...cur,
+                      description: event.target.value,
+                    }))
+                  }
+                  className="rounded-md border border-[#d8d8d1] bg-white px-3 py-2 text-sm outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15"
+                />
+              </label>
+              <label className="grid gap-1.5 text-sm font-medium text-[#454741] sm:col-span-2">
+                Repair Note (optional)
+                <textarea
+                  rows={2}
+                  maxLength={1000}
+                  value={maintenanceForm.repairNote}
+                  onChange={(event) =>
+                    setMaintenanceForm((cur) => ({
+                      ...cur,
+                      repairNote: event.target.value,
+                    }))
+                  }
+                  className="rounded-md border border-[#d8d8d1] bg-white px-3 py-2 text-sm outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15"
+                />
+              </label>
+              {maintenanceError && (
+                <p role="alert" className="text-sm text-[#a34d42] sm:col-span-2">
+                  {maintenanceError}
+                </p>
+              )}
+              <div className="flex justify-end gap-2 border-t border-[#eeeeea] pt-4 sm:col-span-2">
+                <button
+                  type="button"
+                  onClick={() => setMaintenanceModalOpen(false)}
+                  className="h-10 rounded-md border border-[#d8d8d1] px-4 text-sm font-semibold text-[#454741] hover:bg-[#f7f7f3]">
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingMaintenance}
+                  className="h-10 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white hover:bg-[#2f603e] disabled:opacity-60">
+                  {savingMaintenance
+                    ? "Saving…"
+                    : editingMaintenance
+                      ? "Save changes"
+                      : "Schedule maintenance"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {pendingDeleteMaintenance && (
+        <ConfirmDeleteDialog
+          title="Delete this maintenance record?"
+          description={`Maintenance log for “${pendingDeleteMaintenance.resourceName}” will be permanently deleted.`}
+          confirming={deletingMaintenance}
+          error={maintenanceError || undefined}
+          onCancel={() => {
+            if (!deletingMaintenance) {
+              setPendingDeleteMaintenance(null);
+              setMaintenanceError("");
+            }
+          }}
+          onConfirm={() => void confirmDeleteMaintenance()}
         />
       )}
     </div>
