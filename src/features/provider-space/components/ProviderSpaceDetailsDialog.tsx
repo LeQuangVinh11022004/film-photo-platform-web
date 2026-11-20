@@ -39,6 +39,19 @@ function displayTime(value: string) {
     return value.slice(0, 5);
 }
 
+function calculateSlotPrice(startTime: string, endTime: string, hourlyRate?: number | null): number | null {
+    if (hourlyRate == null || !startTime || !endTime) return null;
+
+    const [startHour, startMinute] = startTime.split(":").map(Number);
+    const [endHour, endMinute] = endTime.split(":").map(Number);
+    if ([startHour, startMinute, endHour, endMinute].some(Number.isNaN)) return null;
+
+    const durationMinutes = endHour * 60 + endMinute - (startHour * 60 + startMinute);
+    if (durationMinutes <= 0) return null;
+
+    return Math.round((durationMinutes / 60) * hourlyRate);
+}
+
 function formatAmenities(amenities: ProviderSpaceDetails["amenities"]) {
     if (!amenities) return null;
     if (Array.isArray(amenities)) return amenities.join(", ");
@@ -74,7 +87,10 @@ export function ProviderSpaceDetailsDialog({
     const [availability, setAvailability] = useState<ProviderSpaceAvailability[]>([]);
     const [availabilityLoading, setAvailabilityLoading] = useState(true);
     const [availabilityError, setAvailabilityError] = useState("");
-    const [form, setForm] = useState<ProviderSpaceAvailabilityRequest>(blankAvailability);
+    const [form, setForm] = useState<ProviderSpaceAvailabilityRequest>(() => ({
+        ...blankAvailability,
+        price: calculateSlotPrice(blankAvailability.startTime, blankAvailability.endTime, space.hourlyRate),
+    }));
     const [editingAvailabilityId, setEditingAvailabilityId] = useState<string | null>(null);
     const [savingAvailability, setSavingAvailability] = useState(false);
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -93,6 +109,25 @@ export function ProviderSpaceDetailsDialog({
             .finally(() => { if (!cancelled) setAvailabilityLoading(false); });
         return () => { cancelled = true; };
     }, [space.spaceId]);
+
+    useEffect(() => {
+        if (editingAvailabilityId) return;
+        setForm((current) => ({
+            ...current,
+            price: calculateSlotPrice(current.startTime, current.endTime, space.hourlyRate),
+        }));
+    }, [space.hourlyRate, editingAvailabilityId]);
+
+    function updateTimeRange(field: "startTime" | "endTime", value: string) {
+        setForm((current) => {
+            const next = { ...current, [field]: value };
+            const autoPrice = calculateSlotPrice(next.startTime, next.endTime, space.hourlyRate);
+            return {
+                ...next,
+                price: autoPrice ?? current.price,
+            };
+        });
+    }
 
     async function reloadAvailability() {
         const items = await listMyProviderSpaceAvailability(space.spaceId);
@@ -161,7 +196,10 @@ export function ProviderSpaceDetailsDialog({
     }
 
     function resetAvailabilityForm() {
-        setForm(blankAvailability);
+        setForm({
+            ...blankAvailability,
+            price: calculateSlotPrice(blankAvailability.startTime, blankAvailability.endTime, space.hourlyRate),
+        });
         setEditingAvailabilityId(null);
     }
 
@@ -249,8 +287,8 @@ export function ProviderSpaceDetailsDialog({
                     {availabilityLoading ? <p className="py-6 text-center text-sm text-[#777973]">Loading availability…</p> : <div className="mt-3 overflow-x-auto"><table className="w-full min-w-140 text-left"><thead className="bg-[#f8f8f5] text-xs font-semibold uppercase text-[#777973]"><tr><th className="px-3 py-2">Date</th><th className="px-3 py-2">Time</th><th className="px-3 py-2">Status</th><th className="px-3 py-2">Price</th><th className="px-3 py-2 text-right">Actions</th></tr></thead><tbody className="divide-y divide-[#eeeeea]">{availability.map((item) => <tr key={item.availabilityId}><td className="px-3 py-2.5 text-sm text-[#454741]">{item.availableDate}</td><td className="whitespace-nowrap px-3 py-2.5 text-sm text-[#454741]">{displayTime(item.startTime)}–{displayTime(item.endTime)}</td><td className="px-3 py-2.5 text-sm text-[#454741]">{item.status}</td><td className="whitespace-nowrap px-3 py-2.5 text-sm text-[#454741]">{item.price == null ? "—" : `${item.price.toLocaleString("vi-VN")} VND`}</td><td className="px-3 py-2.5"><div className="flex justify-end gap-1"><button type="button" onClick={() => editAvailability(item)} aria-label="Edit availability" title="Edit availability" className="flex h-8 w-8 items-center justify-center rounded-md text-[#555750] hover:bg-[#f0f0ec]"><Pencil size={15} /></button><button type="button" onClick={() => requestDeleteAvailability(item)} aria-label="Delete availability" title="Delete availability" className="flex h-8 w-8 items-center justify-center rounded-md text-[#a34d42] hover:bg-[#fbefed]"><Trash2 size={15} /></button></div></td></tr>)}{availability.length === 0 && <tr><td colSpan={5} className="px-3 py-7 text-center text-sm text-[#777973]">No availability defined.</td></tr>}</tbody></table></div>}
                     <form onSubmit={handleSaveAvailability} className="mt-4 grid gap-3.5 rounded-md border border-[#e0e0da] bg-[#fafaf8] p-4 sm:grid-cols-2 lg:grid-cols-6">
                         <label className="min-w-0 grid gap-1.5 text-xs font-medium text-[#555750] lg:col-span-2">Date<input type="date" required value={form.availableDate} onChange={(event) => setForm((current) => ({ ...current, availableDate: event.target.value }))} className={fieldClassName} /></label>
-                        <label className="min-w-0 grid gap-1.5 text-xs font-medium text-[#555750] lg:col-span-2">Start<input type="time" required value={form.startTime} onChange={(event) => setForm((current) => ({ ...current, startTime: event.target.value }))} className={fieldClassName} /></label>
-                        <label className="min-w-0 grid gap-1.5 text-xs font-medium text-[#555750] lg:col-span-2">End<input type="time" required value={form.endTime} onChange={(event) => setForm((current) => ({ ...current, endTime: event.target.value }))} className={fieldClassName} /></label>
+                        <label className="min-w-0 grid gap-1.5 text-xs font-medium text-[#555750] lg:col-span-2">Start<input type="time" required value={form.startTime} onChange={(event) => updateTimeRange("startTime", event.target.value)} className={fieldClassName} /></label>
+                        <label className="min-w-0 grid gap-1.5 text-xs font-medium text-[#555750] lg:col-span-2">End<input type="time" required value={form.endTime} onChange={(event) => updateTimeRange("endTime", event.target.value)} className={fieldClassName} /></label>
                         <label className="min-w-0 grid gap-1.5 text-xs font-medium text-[#555750] lg:col-span-3">Status<select value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value as ProviderSpaceAvailabilityRequest["status"] }))} className={fieldClassName}><option value="AVAILABLE">Available</option><option value="UNAVAILABLE">Unavailable</option></select></label>
                         <label className="min-w-0 grid gap-1.5 text-xs font-medium text-[#555750] lg:col-span-3">Price (VND)<input type="number" min="0" step="0.01" placeholder="e.g. 500000" value={form.price ?? ""} onChange={(event) => setForm((current) => ({ ...current, price: event.target.value === "" ? null : Number(event.target.value) }))} className={fieldClassName} /></label>
                         <div className="flex items-end justify-end gap-2 sm:col-span-2 lg:col-span-6"><button type="submit" disabled={savingAvailability} className="h-9 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white hover:bg-[#2f603e] disabled:opacity-60">{savingAvailability ? "Saving…" : editingAvailabilityId ? "Update slot" : "Add availability"}</button>{editingAvailabilityId && <button type="button" onClick={resetAvailabilityForm} className="h-9 rounded-md border border-[#d8d8d1] px-3 text-sm font-medium text-[#555750] hover:bg-white">Cancel edit</button>}</div>
