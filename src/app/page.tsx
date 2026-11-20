@@ -107,9 +107,9 @@ export default function Home() {
             <Link href="/login" className="hidden rounded-full border border-[#d9d4c7] px-4 py-2 text-sm font-medium text-[#1b1b18] transition hover:bg-[#f4f1ea] sm:inline-flex">
               Sign in
             </Link>
-            <Link href="/register" className="inline-flex rounded-full bg-[#171715] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#2d2c29]">
+            {/* <Link href="/register" className="inline-flex rounded-full bg-[#171715] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#2d2c29]">
               Create account
-            </Link>
+            </Link> */}
           </div>
         </div>
       </header>
