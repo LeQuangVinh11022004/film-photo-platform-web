@@ -15,6 +15,11 @@ body {
   font-family: var(--font-geist-sans), sans-serif;
 }
 
+.login-password-input::-ms-reveal,
+.login-password-input::-ms-clear {
+  display: none;
+}
+
 :is(.admin-workspace[data-admin-theme="dark"], .provider-workspace[data-provider-theme="dark"]) {
   color-scheme: dark;
   --admin-shell: #111714;
