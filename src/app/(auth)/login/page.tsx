@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import axios from "axios";
+import { Eye, EyeOff } from "lucide-react";
 import { AuthPageLayout } from "@/shared/components/AuthPageLayout";
 import { GoogleAuthButton } from "@/shared/components/GoogleAuthButton";
 import { loginUser } from "@/features/admin-auth/api";
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const setSession = useAuthStore((state) => state.setSession);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -68,28 +70,6 @@ export default function LoginPage() {
       title="Film Photo Workspace"
       description="Sign in to manage your creative spaces."
       backgroundImage="/images/auth/login-background.jpg"
-      footer={
-        <div className="space-y-2 text-center">
-          <p>
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/register"
-              className="font-semibold text-[#171715] underline decoration-[#d6a83f] underline-offset-4 hover:text-[#8c6a20]"
-            >
-              Create an account
-            </Link>
-          </p>
-          <p className="text-sm text-[#70706b]">
-            Are you a service provider?{" "}
-            <Link
-              href="/register-provider"
-              className="font-semibold text-[#171715] underline decoration-[#d6a83f] underline-offset-4 hover:text-[#8c6a20]"
-            >
-              Register as provider
-            </Link>
-          </p>
-        </div>
-      }
     >
       <form className="space-y-6" onSubmit={handleSubmit}>
         <label
@@ -117,16 +97,27 @@ export default function LoginPage() {
               Password
             </label>
           </div>
-          <input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Enter your password"
-            className="mt-2.5 h-15 w-full rounded-[10px] border border-white/35 bg-white/65 px-4 text-base font-normal text-[#171715] outline-none transition backdrop-blur-sm focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#70706b]"
-          />
+          <div className="relative mt-2.5">
+            <input
+              id="password"
+              type={isPasswordVisible ? "text" : "password"}
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Enter your password"
+              className="login-password-input h-15 w-full rounded-[10px] border border-white/35 bg-white/65 px-4 pr-12 text-base font-normal text-[#171715] outline-none transition backdrop-blur-sm focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#70706b]"
+            />
+            <button
+              type="button"
+              aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+              aria-pressed={isPasswordVisible}
+              onClick={() => setIsPasswordVisible((visible) => !visible)}
+              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-[#696965] transition-colors hover:bg-black/5 hover:text-[#171715] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b58a2b]"
+            >
+              {isPasswordVisible ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+            </button>
+          </div>
           <Link
             href="/forgot-password"
             className="text-sm text-[#696965] transition-colors hover:text-[#8c6a20]

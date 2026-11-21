@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 type AuthPageLayoutProps = {
   title: string;
   description: string;
-  footer: ReactNode;
+  footer?: ReactNode;
   children: ReactNode;
   backgroundImage?: string;
 };
@@ -42,9 +42,11 @@ export function AuthPageLayout({
           <p className="mt-2 text-[16px] leading-6 text-[#777773]">{description}</p>
         </header>
         <div className="mt-10">{children}</div>
-        <div className="mt-8 border-t border-[#e6e6e3] pt-6 text-center text-sm text-[#696965]">
-          {footer}
-        </div>
+        {footer ? (
+          <div className="mt-8 border-t border-[#e6e6e3] pt-6 text-center text-sm text-[#696965]">
+            {footer}
+          </div>
+        ) : null}
         <Link href="/" className="mt-5 block text-center text-sm font-medium text-[#696965] transition-colors hover:text-[#151514]">
           Back to website
         </Link>
