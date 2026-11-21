@@ -269,13 +269,13 @@ function buildBulkAvailabilitySlots(
     };
 }
 
-function formatAmenities(amenities: ProviderSpaceDetails["amenities"]) {
+function formatAmenities(amenities?: ProviderSpaceDetails["amenities"]) {
     if (!amenities) return null;
     if (Array.isArray(amenities)) return amenities.join(", ");
     return amenities;
 }
 
-function formatOperatingHours(hours: ProviderSpaceDetails["operatingHours"]) {
+function formatOperatingHours(hours?: ProviderSpaceDetails["operatingHours"]) {
     if (!hours) return null;
     if (typeof hours === "object") {
         return Object.entries(hours)
@@ -367,21 +367,24 @@ export function ProviderSpaceDetailsDialog({
         };
     }, [space.spaceId]);
 
-    useEffect(() => {
-        if (editingAvailabilityId) return;
-        setForm((current) => ({
-            ...current,
-            price: calculateSlotPrice(current.startTime, current.endTime, space.hourlyRate),
-        }));
-    }, [space.hourlyRate, editingAvailabilityId]);
-
-    useEffect(() => {
+    const [prevSyncKey, setPrevSyncKey] = useState(
+        `${space.hourlyRate ?? ""}|${operatingHint.startTime ?? ""}|${operatingHint.endTime ?? ""}`,
+    );
+    const currentSyncKey = `${space.hourlyRate ?? ""}|${operatingHint.startTime ?? ""}|${operatingHint.endTime ?? ""}`;
+    if (prevSyncKey !== currentSyncKey) {
+        setPrevSyncKey(currentSyncKey);
+        if (!editingAvailabilityId) {
+            setForm((current) => ({
+                ...current,
+                price: calculateSlotPrice(current.startTime, current.endTime, space.hourlyRate),
+            }));
+        }
         setBulkConfig((current) => ({
             ...current,
             startTime: operatingHint.startTime ?? current.startTime,
             endTime: operatingHint.endTime ?? current.endTime,
         }));
-    }, [operatingHint.startTime, operatingHint.endTime]);
+    }
 
     const existingSlotKeys = useMemo(() => {
         const keys = new Set<string>();
