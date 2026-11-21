@@ -6,61 +6,61 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.x-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
-Web portal for **FA26SE091 — Platform Connecting the Film Photography Community with Darkroom and Studio Services**. This capstone project aims to connect film photographers with darkrooms, photography studios, equipment, and related creative services.
+Web portal for **FA26SE091 — Platform Connecting the Film Photography Community with Darkroom and Studio Services**. This capstone project connects film photographers with darkrooms, photography studios, analog equipment, darkroom chemicals, and related creative services.
 
-> This repository contains the web frontend. The project proposal also describes mobile, backend, and AI components; those are not all implemented in this repository.
+> This repository contains the **Next.js web portal** for **Service Providers** and **Platform Administrators** (plus public landing and account registration). Photographer mobile workflows are delivered via the companion Android app ([film-photo-platform-mobile](https://github.com/LeQuangVinh11022004/film-photo-platform-mobile/releases)).
 
 ## Project information
 
 | | |
 | --- | --- |
-| Project code | `FA26SE091` |
+| Project code | `FA26SE091` (`GFA26SE169_FA26SE091`) |
 | English title | Platform Connecting the Film Photography Community with Darkroom and Studio Services |
 | Vietnamese title | Nền tảng kết nối cộng đồng nhiếp ảnh phim với các dịch vụ phòng tối và phòng chụp |
 | Project period | September 2026 – March 2027 |
 | Product in this repository | Next.js web portal for service providers and platform administrators |
-| Backend integration | Separate capstone API; local development proxy defaults to `http://localhost:5038` |
+| Backend integration | Capstone ASP.NET Core Web API (`https://localhost:7104` locally / Azure App Service in production) |
+| Mobile app releases | [GitHub Releases — film-photo-platform-mobile](https://github.com/LeQuangVinh11022004/film-photo-platform-mobile/releases) |
 
 ### Problem and goals
 
-Film photographers often find darkrooms, studios, equipment, and service information through disconnected channels. Availability checks, pricing, and reservations may be handled manually, while providers manage spaces, equipment, and bookings using separate tools.
+Film photographers often find darkrooms, studios, equipment, and service information through disconnected channels. Availability checks, pricing, and reservations are frequently handled manually, while providers manage spaces, equipment, chemicals, maintenance, and bookings using separate tools.
 
-The proposed platform brings photographers and providers together, makes creative resources easier to discover and reserve, and gives providers tools to manage their services and operations.
+The platform brings photographers and providers together, makes creative resources easier to discover and reserve, and gives providers and administrators a unified workspace to manage operations.
 
-### Roles and proposed capabilities
+## Web portal routes & capabilities
 
-The capstone proposal describes these roles and product capabilities:
+Route-group names in parentheses (`(auth)`, `(provider)`, `(admin)`, `(errors)`) are for Next.js layout organization only and are **not** part of the public URL. Protected routes are guarded on the client by `RoleGuard` and `httpClient` auth interceptors.
 
-- **Photographer:** discover and compare creative spaces, check availability, reserve resources, manage bookings, and participate in the photography community.
-- **Service provider:** manage a business profile, spaces, equipment, service packages, pricing, availability, and reservations.
-- **Photography expert:** share educational content, reviews, darkroom techniques, and workshops.
-- **Administrator:** manage users and providers, oversee platform content and transactions, handle disputes, and review reports.
-- **AI assistant and services:** provide photography-related assistance and support proposed recommendations and resource planning.
+| Area | Route | Key API-Backed Capabilities |
+| --- | --- | --- |
+| **Home** | `/` | Landing page + dynamic QR code & direct download button fetching the latest Android `.apk` release from GitHub Releases |
+| **Authentication** | `/login` | Sign in for Admin and Provider accounts (`POST /api/auth/login`) |
+| | `/register` | Photographer account registration (`POST /api/auth/register/photographer`) |
+| | `/register-provider` | Provider business registration (`POST /api/auth/register/provider`) |
+| | `/forgot-password`, `/reset-password` | Password recovery flows |
+| **Provider Workspace** | `/provider/dashboard` | Live revenue, space occupancy rate, equipment utilization rate, scheduled maintenance count, and booking analytics (`GET /api/provider/dashboard`) |
+| | `/provider/creative-spaces` | Studio & darkroom CRUD, device image uploads, and single/bulk availability slot management (`/api/provider/spaces`, `/images`, `/availability`) |
+| | `/provider/equipment` | **3 tabs:**<br>1. **Equipment:** CRUD studio/darkroom gear (`/api/provider/equipment`)<br>2. **Darkroom Chemicals:** CRUD consumables, low-stock alerts, and stock movement adjustments (`/api/provider/chemicals`, `/stock-adjustments`)<br>3. **Maintenance Schedule:** CRUD maintenance logs for studios, darkrooms, and equipment (`/api/provider/maintenance`) |
+| | `/provider/packages` | **2 tabs:**<br>1. **Service Packages:** CRUD packages and attach/remove package items across `STUDIO`, `DARKROOM`, `EQUIPMENT`, `CHEMICAL`, and `SERVICE` (`/api/provider/service-packages`, `/{id}/items`)<br>2. **Standalone Services:** CRUD add-on services (`/api/provider/services`) |
+| | `/provider/reservations` | Reservation queue, booking approval/rejection (`PATCH /decision`), resource schedule allocations, and slot reallocation (`/api/provider/bookings`, `/{id}/allocations`) |
+| | `/provider/settings` | Provider business profile management (`GET / PUT /api/provider/account`), theme & language settings |
+| **Administration** | `/admin/dashboard` | Platform-wide live metrics and operational summary (`GET /api/admin/dashboard`) |
+| | `/users` | User management CRUD and status toggle across `PHOTOGRAPHER`, `PROVIDER`, `EXPERT`, and `ADMIN` (`/api/admin/users`) |
+| | `/providers` | Provider account CRUD, profile inspection, and approval workflow (`APPROVED` / `REJECTED`) (`/api/admin/providers`) |
+| | `/spaces` | Creative space oversight CRUD and quick `ACTIVE` / `INACTIVE` status toggle (`/api/admin/spaces`) |
+| | `/transactions` | Platform booking & payment inspection and `No-Show` resolution (`PATCH /api/admin/bookings/{id}/no-show`) |
+| | `/settings`, `/settings/[section]` | Admin workspace preferences (`profile`, `account`, `appearance`, `notifications`, `display`, `platform`) |
+| **Error Pages** | `/errors/401`, `/errors/403`, `/errors/404` | Dedicated `401 Unauthorized`, `403 Forbidden`, and `404 Not Found` status pages |
 
-The broader proposal also covers payments, reviews, maintenance and resource lifecycle management, business analytics, workshops, community content, and AI-assisted image and booking features. These are project goals, not a claim that every capability is currently available in this web repository.
+## Technology stack
 
-## Current web portal
-
-The frontend currently provides route groups for authentication, provider workflows, and administration. Route-group names in parentheses are Next.js organization only and are **not** part of the public URL.
-
-| Area | Routes |
-| --- | --- |
-| Home | `/` |
-| Authentication | `/login`, `/register`, `/register-provider`, `/forgot-password`, `/reset-password` |
-| Provider workspace | `/provider/dashboard`, `/provider/creative-spaces`, `/provider/equipment`, `/provider/packages`, `/provider/pricing-policy`, `/provider/rating-feedback`, `/provider/reservations`, `/provider/transaction`, `/provider/settings` |
-| Administration | `/admin/dashboard`, `/content`, `/disputes`, `/providers`, `/reports`, `/settings`, `/settings/[section]`, `/spaces`, `/transactions`, `/users` |
-| Error pages | `/errors`, `/errors/401`, `/errors/403`, `/errors/404` |
-
-API-backed operations that have a backend OpenAPI contract are tracked in `api-contract/openapi.json`. Some screens and proposal capabilities may still use sample UI or await backend integration.
-
-## Technology
-
-- **Framework:** Next.js App Router 16
-- **UI:** React 19, Tailwind CSS 4, Lucide React
+- **Framework:** Next.js 16.3.8 (App Router, Turbopack)
+- **UI:** React 19.2.8, Tailwind CSS 4, Lucide React
 - **Language:** TypeScript 5
-- **HTTP and state:** Axios, Zustand
-- **Charts and QR codes:** Recharts, `qrcode.react`
-- **API contract checks:** Node.js scripts and GitHub Actions
+- **HTTP & State:** Axios, Zustand
+- **Charts & QR Codes:** Recharts, `qrcode.react`
+- **API Contract & E2E Verification:** Node.js verification scripts, OpenAPI 3.0 snapshot, and GitHub Actions CI
 
 ## Project structure
 
@@ -68,37 +68,54 @@ API-backed operations that have a backend OpenAPI contract are tracked in `api-c
 .
 ├── .github/
 │   └── workflows/
-│       └── api-contract.yml       # API contract CI on pushes and pull requests
+│       └── api-contract.yml         # API contract CI on pushes and pull requests
 ├── api-contract/
-│   ├── openapi.json               # Checked-in backend OpenAPI snapshot
-│   └── README.md                  # Contract update instructions
-├── public/                        # Static assets and downloadable files
-├── scripts/                       # API contract check/update scripts
+│   ├── openapi.json                 # Checked-in backend OpenAPI snapshot (82 operations)
+│   └── README.md                    # Contract update instructions
+├── public/                          # Static assets and branding images
+├── scripts/
+│   ├── check-api-contract.mjs       # Verifies frontend calls & api-tests.http against openapi.json
+│   ├── update-api-contract.mjs      # Syncs openapi.json from a running backend Swagger endpoint
+│   └── generate-api-test-log.mjs    # Automated 83-step live API E2E test runner & log generator
 ├── src/
 │   ├── app/
-│   │   ├── (admin)/               # Admin routes and layout
-│   │   ├── (auth)/                # Login, registration, password pages
-│   │   ├── (errors)/              # Error pages
-│   │   └── (provider)/            # Provider routes and layout
-│   ├── features/                  # Feature types, API clients, and UI
-│   ├── services/                  # API config, endpoints, HTTP client
-│   ├── shared/                    # Shared components, layouts, i18n, utilities
-│   ├── store/                     # Shared client state
-│   └── types/                     # Shared TypeScript types
-├── api-tests.http                 # Manually runnable REST Client requests
-├── next.config.ts                 # Local API and upload proxy
+│   │   ├── (admin)/                 # Admin workspace routes (/admin/dashboard, /users, /providers, /spaces, /transactions, /settings)
+│   │   ├── (auth)/                  # Authentication routes (/login, /register, /register-provider, /forgot-password, /reset-password)
+│   │   ├── (errors)/                # Error status pages (/errors/401, /errors/403, /errors/404)
+│   │   └── (provider)/              # Provider workspace routes (/provider/dashboard, /creative-spaces, /equipment, /packages, /reservations, /settings)
+│   ├── features/                    # Domain modules (types, API clients, and feature components)
+│   │   ├── admin-auth/
+│   │   ├── admin-booking/
+│   │   ├── admin-dashboard/
+│   │   ├── admin-notification/
+│   │   ├── admin-provider/
+│   │   ├── admin-space/
+│   │   ├── admin-user/
+│   │   ├── creative-space/
+│   │   ├── equipment/
+│   │   ├── provider-account/
+│   │   ├── provider-chemical/
+│   │   ├── provider-dashboard/
+│   │   ├── provider-maintenance/
+│   │   ├── provider-service/
+│   │   ├── provider-space/
+│   │   ├── reservation/
+│   │   └── service-package/
+│   ├── services/                    # API base URL resolver, endpoint constants, Axios client, auth token helpers
+│   ├── shared/                      # Shared UI components, workspace shells, RoleGuard, i18n (EN/VI), utilities
+│   ├── store/                       # Zustand auth & session store
+│   └── types/                       # Shared TypeScript pagination & common types
+├── api-test.log                     # Auto-generated execution log from npm run test:api-log
+├── api-tests.http                   # Manually runnable REST Client requests covering all 82 backend operations
+├── next.config.ts                   # API and upload rewrite proxy configuration
 └── package.json
 ```
-
-### Feature modules
-
-`src/features` is organized by product domain, including admin authentication, dashboard, bookings, providers, users, spaces, content and notifications; provider account and spaces; reservations; creative spaces; equipment; and service packages. Feature API clients use the shared HTTP client and endpoint definitions where implemented.
 
 ## Requirements
 
 - Node.js **22 LTS (22.13 or later) or 24 LTS**
-- npm (the repository includes `package-lock.json`)
-- Backend API for authenticated and API-backed workflows
+- npm (uses `package-lock.json`)
+- Capstone Backend API (`GFA26SE169_FA26SE091_API`) for authenticated workflows
 
 ## Installation and local development
 
@@ -110,52 +127,58 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The development server proxies `/api/*` and `/uploads/*` to the backend. The default proxy target is `http://localhost:5038`. Start the backend separately for API-backed pages; override the target in `.env.local` if it runs elsewhere:
+### Environment configuration (`.env.local`)
 
-```dotenv
-API_PROXY_TARGET=http://localhost:5038
-NEXT_PUBLIC_API_URL=
-```
+The Next.js app supports either **proxying requests** through `/api/*` and `/uploads/*` via `next.config.ts` or calling `NEXT_PUBLIC_API_URL` directly:
 
-Leave `NEXT_PUBLIC_API_URL` empty for local development to use the same-origin proxy. If you set it to a direct backend URL, restart the Next.js server after changing the environment file. Do not commit `.env.local`, credentials, or tokens.
+- **Local Development (with local backend running on `https://localhost:7104`):**
+  ```dotenv
+  NEXT_PUBLIC_APK_DOWNLOAD_URL=https://github.com/LeQuangVinh11022004/film-photo-platform-mobile/releases/latest/download/app-release.apk
+  NEXT_PUBLIC_API_URL=https://localhost:7104/api
+  API_PROXY_TARGET=https://localhost:7104
+  ```
+- **Production / Deployed Backend (Azure App Service):**
+  ```dotenv
+  NEXT_PUBLIC_APK_DOWNLOAD_URL=https://github.com/LeQuangVinh11022004/film-photo-platform-mobile/releases/latest/download/app-release.apk
+  NEXT_PUBLIC_API_URL=https://filmbooking-api-h7bghwcydwb8eecn.japaneast-01.azurewebsites.net/api
+  API_PROXY_TARGET=https://filmbooking-api-h7bghwcydwb8eecn.japaneast-01.azurewebsites.net
+  ```
+  *(Note: `src/services/config.ts` automatically normalizes `NEXT_PUBLIC_API_URL` so it always ends with `/api`, and `next.config.ts` automatically strips any accidental trailing `/api` from `API_PROXY_TARGET` and defaults to the Azure backend when `NODE_ENV === "production"`).*
 
 ## Common commands
 
 | Command | Description |
 | --- | --- |
-| `npm run dev` | Start the development server |
-| `npm run build` | Create a production build |
+| `npm run dev` | Start the local Next.js development server |
+| `npm run build` | Create an optimized production build |
 | `npm run start` | Serve the production build |
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | Run the TypeScript compiler without emitting files |
-| `npm run test:api-contract` | Check frontend API calls against the request list and OpenAPI snapshot |
-| `npm run update:api-contract` | Fetch the current backend OpenAPI document into the snapshot |
+| `npm run lint` | Run ESLint across the project |
+| `npm run typecheck` | Run the TypeScript compiler (`tsc --noEmit`) |
+| `npm run test:api-contract` | Validate all frontend API calls and `api-tests.http` entries against `api-contract/openapi.json` |
+| `npm run test:api-log` | Run the 83-step automated live API integration test suite and generate `api-test.log` |
+| `npm run update:api-contract` | Fetch the latest backend OpenAPI document into `api-contract/openapi.json` |
 
-## API testing and CI
+## API testing, logging, and CI
 
-The API contract check runs locally with `npm run test:api-contract` and automatically in GitHub Actions on every push and pull request. It checks API methods and routes against the checked-in OpenAPI snapshot; it does not send requests to a running backend.
+### 1. Static API contract check (`npm run test:api-contract`)
+Runs locally and in GitHub Actions on every push and pull request. It verifies that all 76 frontend `httpClient` calls and all 82 backend operations in `api-contract/openapi.json` are aligned with `api-tests.http`.
 
 When the backend API changes:
-
-1. Start the backend locally (default OpenAPI URL: `http://localhost:5038/swagger/v1/swagger.json`).
+1. Start the backend locally (`http://localhost:5038/swagger/v1/swagger.json`).
 2. Run `npm run update:api-contract`.
-3. Review the changes to `api-contract/openapi.json`, update frontend API requests as needed, and run `npm run test:api-contract`.
-4. Commit the reviewed contract and related code changes together.
+3. Update frontend API calls and `api-tests.http`, then verify with `npm run test:api-contract`.
 
-To fetch the OpenAPI document from another address, set `API_OPENAPI_URL` for the update command. For example, in PowerShell:
+### 2. Automated live API test suite & log generator (`npm run test:api-log`)
+With the local backend running on `https://localhost:7104`, run:
 
 ```powershell
-$env:API_OPENAPI_URL = "http://localhost:5038/swagger/v1/swagger.json"
-npm run update:api-contract
+npm run test:api-log
 ```
 
-For individual manual requests, open `api-tests.http` with the VS Code REST Client extension, set its placeholder credentials and IDs, then use **Send Request**. Mutating requests can create, update, or delete backend data, so use a test backend and test accounts.
+This executes 83 end-to-end API requests across **Auth**, **Admin**, and **Provider** (including full CRUD cycles, stock adjustments, maintenance schedules, standalone services, package items, booking allocations, and automatic cleanup of temporary test records) and writes a timestamped execution report to [`api-test.log`](./api-test.log).
 
-## Backend integration notes
-
-- The frontend expects a separate backend API. `API_PROXY_TARGET` controls where the local Next.js proxy sends API and upload requests.
-- Provider space image uploads use `POST /provider/spaces/{spaceId}/images/upload` with `multipart/form-data`. In local development, `/uploads/*` is proxied to the backend.
-- Google OAuth credentials, password reset tokens, email delivery, and other secrets belong on the backend, not in frontend source or public environment variables.
+### 3. Manual REST Client requests (`api-tests.http`)
+Open [`api-tests.http`](./api-tests.http) with the VS Code **REST Client** extension to run individual requests interactively against the backend.
 
 ## Documentation
 
@@ -164,4 +187,3 @@ For individual manual requests, open `api-tests.http` with the VS Code REST Clie
 - [Code of Conduct](./CODE_OF_CONDUCT.md)
 - [Security policy](./SECURITY.md)
 - [License (MIT)](./LICENSE)
-- [Next.js documentation](https://nextjs.org/docs)
