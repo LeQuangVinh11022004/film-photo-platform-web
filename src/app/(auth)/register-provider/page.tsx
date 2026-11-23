@@ -5,7 +5,6 @@ import { useState, type FormEvent } from "react";
 import axios from "axios";
 import { CheckCircle2 } from "lucide-react";
 import { AuthPageLayout } from "@/shared/components/AuthPageLayout";
-import { GoogleAuthButton } from "@/shared/components/GoogleAuthButton";
 import { registerProvider } from "@/features/admin-auth";
 
 type FieldKey =
@@ -30,6 +29,7 @@ export default function RegisterProviderPage() {
     description: "",
   });
 
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [generalError, setGeneralError] = useState("");
@@ -52,14 +52,61 @@ export default function RegisterProviderPage() {
   function getFieldClassName(field: FieldKey, isTextarea = false) {
     const hasError = !!fieldErrors[field];
     const base = isTextarea
-      ? "mt-2 w-full resize-none rounded-[10px] px-4 py-3 text-base font-normal outline-none transition backdrop-blur-sm placeholder:text-[#70706b]"
-      : "mt-2 h-14 w-full rounded-[10px] px-4 text-base font-normal outline-none transition backdrop-blur-sm placeholder:text-[#70706b]";
+      ? "mt-2 w-full resize-none rounded-xl px-4 py-3 text-sm font-normal outline-none transition backdrop-blur-sm placeholder:text-[#70706b]"
+      : "mt-2 h-12 w-full rounded-xl px-4 text-sm font-normal outline-none transition backdrop-blur-sm placeholder:text-[#70706b]";
 
     if (hasError) {
       return `${base} border-2 border-red-500 bg-red-50/50 text-[#171715] focus:border-red-600 focus:ring-2 focus:ring-red-200/50`;
     }
 
-    return `${base} border border-white/35 bg-white/65 text-[#171715] focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20`;
+    return `${base} border border-white/50 bg-white/70 text-[#171715] focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20`;
+  }
+
+  function validateStep1(): boolean {
+    const stepErrors: Partial<Record<FieldKey, string>> = {};
+
+    if (!formData.fullName.trim()) {
+      stepErrors.fullName = "Please enter your full name.";
+    }
+
+    if (!formData.email.trim()) {
+      stepErrors.email = "Please enter your email address.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      stepErrors.email = "Please enter a valid email address.";
+    }
+
+    if (!formData.password) {
+      stepErrors.password = "Please enter a password.";
+    } else if (formData.password.length < 8) {
+      stepErrors.password = "Password must be at least 8 characters long.";
+    }
+
+    if (!formData.confirmPassword) {
+      stepErrors.confirmPassword = "Please confirm your password.";
+    } else if (formData.password !== formData.confirmPassword) {
+      stepErrors.confirmPassword = "Passwords do not match.";
+    }
+
+    if (Object.keys(stepErrors).length > 0) {
+      setFieldErrors(stepErrors);
+      setGeneralError("Please complete all account fields before continuing.");
+      return false;
+    }
+
+    setFieldErrors({});
+    setGeneralError("");
+    return true;
+  }
+
+  function handleNextStep() {
+    if (validateStep1()) {
+      setCurrentStep(2);
+    }
+  }
+
+  function handlePrevStep() {
+    setGeneralError("");
+    setCurrentStep(1);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -67,29 +114,14 @@ export default function RegisterProviderPage() {
     if (submitting) return;
 
     setGeneralError("");
+
+    // Validate step 1 in case of unexpected state
+    if (!validateStep1()) {
+      setCurrentStep(1);
+      return;
+    }
+
     const clientErrors: Partial<Record<FieldKey, string>> = {};
-
-    if (!formData.fullName.trim()) {
-      clientErrors.fullName = "Please enter your full name.";
-    }
-
-    if (!formData.email.trim()) {
-      clientErrors.email = "Please enter your email address.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      clientErrors.email = "Please enter a valid email address.";
-    }
-
-    if (!formData.password) {
-      clientErrors.password = "Please enter a password.";
-    } else if (formData.password.length < 8) {
-      clientErrors.password = "Password must be at least 8 characters long.";
-    }
-
-    if (!formData.confirmPassword) {
-      clientErrors.confirmPassword = "Please confirm your password.";
-    } else if (formData.password !== formData.confirmPassword) {
-      clientErrors.confirmPassword = "Passwords do not match.";
-    }
 
     if (!formData.businessName.trim()) {
       clientErrors.businessName = "Please enter your business name.";
@@ -109,7 +141,7 @@ export default function RegisterProviderPage() {
 
     if (Object.keys(clientErrors).length > 0) {
       setFieldErrors(clientErrors);
-      setGeneralError("Please fix the highlighted fields below.");
+      setGeneralError("Please complete the highlighted business fields below.");
       return;
     }
 
@@ -169,6 +201,9 @@ export default function RegisterProviderPage() {
 
           if (Object.keys(serverErrors).length > 0) {
             setFieldErrors(serverErrors);
+            if (serverErrors.email || serverErrors.password || serverErrors.fullName) {
+              setCurrentStep(1);
+            }
           }
 
           setGeneralError(
@@ -180,7 +215,10 @@ export default function RegisterProviderPage() {
           );
         } else if (typeof data === "string" && data.trim()) {
           const lower = data.toLowerCase();
-          if (lower.includes("email")) serverErrors.email = data;
+          if (lower.includes("email")) {
+            serverErrors.email = data;
+            setCurrentStep(1);
+          }
           if (Object.keys(serverErrors).length > 0) setFieldErrors(serverErrors);
           setGeneralError(data);
         } else {
@@ -204,6 +242,7 @@ export default function RegisterProviderPage() {
         title="Register as Provider"
         description="Set up your workspace to list creative spaces, equipment, and packages."
         backgroundImage="/images/auth/register-background.jpg"
+        maxWidthClass="max-w-3xl"
         footer={
           <div className="space-y-2 text-center">
             <p>
@@ -215,192 +254,277 @@ export default function RegisterProviderPage() {
                 Sign in
               </Link>
             </p>
-            <p className="text-sm text-[#70706b]">
-              Looking to book creative spaces?{" "}
-              <Link
-                href="/register"
-                className="font-semibold text-[#171715] underline decoration-[#d6a83f] underline-offset-4 hover:text-[#8c6a20]"
-              >
-                Sign up as customer
-              </Link>
-            </p>
           </div>
         }
       >
-        <form className="space-y-4" onSubmit={handleSubmit} noValidate>
-          <label htmlFor="name" className="block text-sm font-semibold text-[#3b3b38]">
-            Full name
-            <input
-              id="name"
-              type="text"
-              autoComplete="name"
-              required
-              value={formData.fullName}
-              onChange={(e) => handleFieldChange("fullName", e.target.value)}
-              placeholder="Enter your full name"
-              className={getFieldClassName("fullName")}
-            />
-            {fieldErrors.fullName ? (
-              <p role="alert" className="mt-1 text-xs font-medium text-red-600">
-                {fieldErrors.fullName}
-              </p>
-            ) : null}
-          </label>
-
-          <label htmlFor="email" className="block text-sm font-semibold text-[#3b3b38]">
-            Email Address
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={formData.email}
-              onChange={(e) => handleFieldChange("email", e.target.value)}
-              placeholder="Enter your business email"
-              className={getFieldClassName("email")}
-            />
-            {fieldErrors.email ? (
-              <p role="alert" className="mt-1 text-xs font-medium text-red-600">
-                {fieldErrors.email}
-              </p>
-            ) : null}
-          </label>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label htmlFor="password" className="block text-sm font-semibold text-[#3b3b38]">
-              Password
-              <input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                minLength={8}
-                required
-                value={formData.password}
-                onChange={(e) => handleFieldChange("password", e.target.value)}
-                placeholder="Min 8 characters"
-                className={getFieldClassName("password")}
-              />
-              {fieldErrors.password ? (
-                <p role="alert" className="mt-1 text-xs font-medium text-red-600">
-                  {fieldErrors.password}
-                </p>
-              ) : null}
-            </label>
-
-            <label htmlFor="confirm-password" className="block text-sm font-semibold text-[#3b3b38]">
-              Confirm password
-              <input
-                id="confirm-password"
-                type="password"
-                autoComplete="new-password"
-                minLength={8}
-                required
-                value={formData.confirmPassword}
-                onChange={(e) => handleFieldChange("confirmPassword", e.target.value)}
-                placeholder="Re-enter password"
-                className={getFieldClassName("confirmPassword")}
-              />
-              {fieldErrors.confirmPassword ? (
-                <p role="alert" className="mt-1 text-xs font-medium text-red-600">
-                  {fieldErrors.confirmPassword}
-                </p>
-              ) : null}
-            </label>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label htmlFor="business-name" className="block text-sm font-semibold text-[#3b3b38]">
-              Business Name
-              <input
-                id="business-name"
-                type="text"
-                required
-                value={formData.businessName}
-                onChange={(e) => handleFieldChange("businessName", e.target.value)}
-                placeholder="Your brand or studio name"
-                className={getFieldClassName("businessName")}
-              />
-              {fieldErrors.businessName ? (
-                <p role="alert" className="mt-1 text-xs font-medium text-red-600">
-                  {fieldErrors.businessName}
-                </p>
-              ) : null}
-            </label>
-
-            <label htmlFor="phone" className="block text-sm font-semibold text-[#3b3b38]">
-              Phone number
-              <input
-                id="phone"
-                type="tel"
-                autoComplete="tel"
-                required
-                value={formData.phone}
-                onChange={(e) => handleFieldChange("phone", e.target.value)}
-                placeholder="e.g. 0901234567"
-                className={getFieldClassName("phone")}
-              />
-              {fieldErrors.phone ? (
-                <p role="alert" className="mt-1 text-xs font-medium text-red-600">
-                  {fieldErrors.phone}
-                </p>
-              ) : null}
-            </label>
-          </div>
-
-          <label htmlFor="location" className="block text-sm font-semibold text-[#3b3b38]">
-            Location / Address
-            <input
-              id="location"
-              type="text"
-              required
-              value={formData.address}
-              onChange={(e) => handleFieldChange("address", e.target.value)}
-              placeholder="Studio / Business address"
-              className={getFieldClassName("address")}
-            />
-            {fieldErrors.address ? (
-              <p role="alert" className="mt-1 text-xs font-medium text-red-600">
-                {fieldErrors.address}
-              </p>
-            ) : null}
-          </label>
-
-          <label htmlFor="description" className="block text-sm font-semibold text-[#3b3b38]">
-            Description of your business
-            <textarea
-              id="description"
-              rows={3}
-              required
-              value={formData.description}
-              onChange={(e) => handleFieldChange("description", e.target.value)}
-              placeholder="Briefly describe your services, spaces, or equipment..."
-              className={getFieldClassName("description", true)}
-            />
-            {fieldErrors.description ? (
-              <p role="alert" className="mt-1 text-xs font-medium text-red-600">
-                {fieldErrors.description}
-              </p>
-            ) : null}
-          </label>
-
-          {generalError ? (
-            <p
-              role="alert"
-              className="rounded-[10px] border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+        {/* Step Wizard Indicator */}
+        <div className="mb-8">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <button
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className={`flex items-center gap-3 rounded-xl border p-3 sm:p-4 text-left transition-all ${
+                currentStep === 1
+                  ? "border-[#171715] bg-white/90 shadow-sm"
+                  : "border-white/40 bg-white/40 hover:bg-white/60"
+              }`}
             >
-              {generalError}
-            </p>
-          ) : null}
+              <div
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                  currentStep === 1
+                    ? "bg-[#171715] text-white"
+                    : "bg-[#e8e2d4] text-[#171715]"
+                }`}
+              >
+                1
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#8a6a21]">Step 1</p>
+                <p className="truncate text-xs sm:text-sm font-semibold text-[#171715]">Account Credentials</p>
+              </div>
+            </button>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="h-15 w-full rounded-[10px] bg-[#111110]/85 px-5 text-base font-semibold text-white transition-colors hover:bg-[#33332f]/90 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#b58a2b] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submitting ? "Submitting registration..." : "Register as Provider"}
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (validateStep1()) setCurrentStep(2);
+              }}
+              className={`flex items-center gap-3 rounded-xl border p-3 sm:p-4 text-left transition-all ${
+                currentStep === 2
+                  ? "border-[#171715] bg-white/90 shadow-sm"
+                  : "border-white/40 bg-white/40 hover:bg-white/60"
+              }`}
+            >
+              <div
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${
+                  currentStep === 2
+                    ? "bg-[#171715] text-white"
+                    : "bg-[#e8e2d4] text-[#70706b]"
+                }`}
+              >
+                2
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#8a6a21]">Step 2</p>
+                <p className="truncate text-xs sm:text-sm font-semibold text-[#171715]">Business Profile</p>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} noValidate>
+          {/* STEP 1: Account Credentials */}
+          {currentStep === 1 && (
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <label htmlFor="name" className="block text-xs font-semibold uppercase tracking-[0.05em] text-[#3b3b38]">
+                  Full name
+                  <input
+                    id="name"
+                    type="text"
+                    autoComplete="name"
+                    required
+                    value={formData.fullName}
+                    onChange={(e) => handleFieldChange("fullName", e.target.value)}
+                    placeholder="Enter your full name"
+                    className={getFieldClassName("fullName")}
+                  />
+                  {fieldErrors.fullName ? (
+                    <p role="alert" className="mt-1 text-xs font-medium text-red-600">
+                      {fieldErrors.fullName}
+                    </p>
+                  ) : null}
+                </label>
+
+                <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-[0.05em] text-[#3b3b38]">
+                  Email Address
+                  <input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => handleFieldChange("email", e.target.value)}
+                    placeholder="Enter your business email"
+                    className={getFieldClassName("email")}
+                  />
+                  {fieldErrors.email ? (
+                    <p role="alert" className="mt-1 text-xs font-medium text-red-600">
+                      {fieldErrors.email}
+                    </p>
+                  ) : null}
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-[0.05em] text-[#3b3b38]">
+                  Password
+                  <input
+                    id="password"
+                    type="password"
+                    autoComplete="new-password"
+                    minLength={8}
+                    required
+                    value={formData.password}
+                    onChange={(e) => handleFieldChange("password", e.target.value)}
+                    placeholder="Min 8 characters"
+                    className={getFieldClassName("password")}
+                  />
+                  {fieldErrors.password ? (
+                    <p role="alert" className="mt-1 text-xs font-medium text-red-600">
+                      {fieldErrors.password}
+                    </p>
+                  ) : null}
+                </label>
+
+                <label htmlFor="confirm-password" className="block text-xs font-semibold uppercase tracking-[0.05em] text-[#3b3b38]">
+                  Confirm password
+                  <input
+                    id="confirm-password"
+                    type="password"
+                    autoComplete="new-password"
+                    minLength={8}
+                    required
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleFieldChange("confirmPassword", e.target.value)}
+                    placeholder="Re-enter password"
+                    className={getFieldClassName("confirmPassword")}
+                  />
+                  {fieldErrors.confirmPassword ? (
+                    <p role="alert" className="mt-1 text-xs font-medium text-red-600">
+                      {fieldErrors.confirmPassword}
+                    </p>
+                  ) : null}
+                </label>
+              </div>
+
+              {generalError ? (
+                <p
+                  role="alert"
+                  className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+                >
+                  {generalError}
+                </p>
+              ) : null}
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleNextStep}
+                  className="flex h-12 w-full items-center justify-center rounded-xl bg-[#171715] px-6 text-sm font-semibold tracking-[0.02em] text-white transition-all hover:bg-[#33332f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#171715]"
+                >
+                  Continue to Business Profile →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: Studio & Business Profile */}
+          {currentStep === 2 && (
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <label htmlFor="business-name" className="block text-xs font-semibold uppercase tracking-[0.05em] text-[#3b3b38]">
+                  Business Name
+                  <input
+                    id="business-name"
+                    type="text"
+                    required
+                    value={formData.businessName}
+                    onChange={(e) => handleFieldChange("businessName", e.target.value)}
+                    placeholder="Your brand or studio name"
+                    className={getFieldClassName("businessName")}
+                  />
+                  {fieldErrors.businessName ? (
+                    <p role="alert" className="mt-1 text-xs font-medium text-red-600">
+                      {fieldErrors.businessName}
+                    </p>
+                  ) : null}
+                </label>
+
+                <label htmlFor="phone" className="block text-xs font-semibold uppercase tracking-[0.05em] text-[#3b3b38]">
+                  Phone number
+                  <input
+                    id="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    required
+                    value={formData.phone}
+                    onChange={(e) => handleFieldChange("phone", e.target.value)}
+                    placeholder="e.g. 0901234567"
+                    className={getFieldClassName("phone")}
+                  />
+                  {fieldErrors.phone ? (
+                    <p role="alert" className="mt-1 text-xs font-medium text-red-600">
+                      {fieldErrors.phone}
+                    </p>
+                  ) : null}
+                </label>
+              </div>
+
+              <label htmlFor="location" className="block text-xs font-semibold uppercase tracking-[0.05em] text-[#3b3b38]">
+                Studio Location / Address
+                <input
+                  id="location"
+                  type="text"
+                  required
+                  value={formData.address}
+                  onChange={(e) => handleFieldChange("address", e.target.value)}
+                  placeholder="Studio / Business address"
+                  className={getFieldClassName("address")}
+                />
+                {fieldErrors.address ? (
+                  <p role="alert" className="mt-1 text-xs font-medium text-red-600">
+                    {fieldErrors.address}
+                  </p>
+                ) : null}
+              </label>
+
+              <label htmlFor="description" className="block text-xs font-semibold uppercase tracking-[0.05em] text-[#3b3b38]">
+                Description of your business
+                <textarea
+                  id="description"
+                  rows={3}
+                  required
+                  value={formData.description}
+                  onChange={(e) => handleFieldChange("description", e.target.value)}
+                  placeholder="Briefly describe your services, spaces, or equipment..."
+                  className={getFieldClassName("description", true)}
+                />
+                {fieldErrors.description ? (
+                  <p role="alert" className="mt-1 text-xs font-medium text-red-600">
+                    {fieldErrors.description}
+                  </p>
+                ) : null}
+              </label>
+
+              {generalError ? (
+                <p
+                  role="alert"
+                  className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+                >
+                  {generalError}
+                </p>
+              ) : null}
+
+              <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={handlePrevStep}
+                  className="flex h-12 items-center justify-center rounded-xl border border-[#d8d2c8] bg-white/80 px-6 text-sm font-semibold text-[#555] transition hover:bg-white hover:text-[#171715] sm:w-1/3"
+                >
+                  ← Back
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex h-12 flex-1 items-center justify-center rounded-xl bg-[#171715] px-6 text-sm font-semibold tracking-[0.02em] text-white transition-all hover:bg-[#33332f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#171715] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {submitting ? "Submitting registration..." : "Complete & Register as Provider"}
+                </button>
+              </div>
+            </div>
+          )}
         </form>
-        <GoogleAuthButton />
       </AuthPageLayout>
 
       {/* Success Approval Modal */}
