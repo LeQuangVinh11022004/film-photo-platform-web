@@ -8,6 +8,7 @@ type AuthPageLayoutProps = {
   footer?: ReactNode;
   children: ReactNode;
   backgroundImage?: string;
+  maxWidthClass?: string;
 };
 
 export function AuthPageLayout({
@@ -16,6 +17,7 @@ export function AuthPageLayout({
   footer,
   children,
   backgroundImage,
+  maxWidthClass = "max-w-140",
 }: AuthPageLayoutProps) {
   const mainStyle = backgroundImage
     ? {
@@ -28,11 +30,11 @@ export function AuthPageLayout({
 
   return (
     <main
-      className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#f7f7f5] px-5 py-10 sm:px-8"
+      className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#f7f7f5] px-4 py-8 sm:px-8 sm:py-12"
       style={mainStyle}
     >
       <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
-      <section className="relative z-10 w-full max-w-140 rounded-[18px] border border-white/35 bg-white/70 px-6 py-10 shadow-[0_18px_40px_rgba(12,12,10,0.18)] backdrop-blur-[4px] sm:px-12 sm:py-14">
+      <section className={`relative z-10 w-full ${maxWidthClass} rounded-[18px] border border-white/35 bg-white/70 px-6 py-8 shadow-[0_18px_40px_rgba(12,12,10,0.18)] backdrop-blur-[4px] sm:px-10 sm:py-10`}>
         <Link href="/" className="mx-auto mb-8 flex w-fit items-center gap-3 text-sm font-bold tracking-[0.02em] text-[#171715]">
           <Image src="/images/auth/logo.jpg" alt="" width={500} height={500} className="h-14 w-14 rounded-md object-contain" />
           <span>FILM PHOTO</span>

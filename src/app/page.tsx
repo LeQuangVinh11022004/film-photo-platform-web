@@ -427,6 +427,125 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Become a Provider Section */}
+      <section id="for-providers" className="mx-auto max-w-7xl px-5 pb-20 sm:px-8 lg:px-10">
+        <div className="overflow-hidden rounded-[30px] border border-[#e5d7b4] bg-gradient-to-b from-[#faf6ec] to-[#f4ede0] p-8 shadow-[0_20px_50px_rgba(23,23,21,0.06)] sm:p-10 lg:p-12">
+          <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#d6a83f]/40 bg-[#fffaf0] px-3.5 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#8a6a21]">
+                Partner With Us
+              </div>
+              <h2 className="mt-4 text-3xl font-semibold tracking-[-0.05em] text-[#171715] sm:text-4xl lg:text-[42px] lg:leading-[1.15]">
+                List your creative space & gear. <br className="hidden sm:inline" />
+                Grow your business with Film Photo.
+              </h2>
+              <p className="mt-4 max-w-xl text-base leading-7 text-[#595752] sm:text-lg">
+                Turn unused studio hours, darkrooms, and camera equipment into steady recurring revenue.
+                Connect with verified directors, photographers, and creative agencies while keeping full control of your calendar.
+              </p>
+
+              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-[#e8dfcb] bg-white/80 p-4 backdrop-blur-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f0e7d5] text-lg">🏛️</span>
+                    <h3 className="font-semibold text-[#171715]">Spaces & Studios</h3>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-[#666560]">
+                    Showcase lighting, cycloramas, natural daylight, and shoot specs with high-res photos.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-[#e8dfcb] bg-white/80 p-4 backdrop-blur-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f0e7d5] text-lg">📷</span>
+                    <h3 className="font-semibold text-[#171715]">Gear & Darkroom</h3>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-[#666560]">
+                    Rent out cameras, lighting kits, vintage lenses, and chemicals when not in active use.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-[#e8dfcb] bg-white/80 p-4 backdrop-blur-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f0e7d5] text-lg">⚡</span>
+                    <h3 className="font-semibold text-[#171715]">Zero Upfront Cost</h3>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-[#666560]">
+                    Listing is 100% free. You only pay a transparent fee when a confirmed booking completes.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-[#e8dfcb] bg-white/80 p-4 backdrop-blur-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f0e7d5] text-lg">🛡️</span>
+                    <h3 className="font-semibold text-[#171715]">Guaranteed Payouts</h3>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-[#666560]">
+                    Protected payments, security deposit workflows, and on-time direct bank transfers.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col justify-between rounded-[24px] border border-[#171715]/10 bg-[#171715] p-6 text-white shadow-xl sm:p-8">
+              <div>
+                <span className="inline-block rounded-full bg-[#d6a83f]/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#d6a83f]">
+                  Provider Portal
+                </span>
+                <h3 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                  Start hosting in 3 steps
+                </h3>
+                <p className="mt-2 text-sm text-[#b3b0a6]">
+                  Get your provider account verified and list your first space or gear in under 10 minutes.
+                </p>
+
+                <ol className="mt-6 space-y-4 text-sm">
+                  <li className="flex items-start gap-3">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d6a83f] text-xs font-bold text-[#171715]">
+                      1
+                    </span>
+                    <span className="text-[#e3dfd3]">
+                      <strong className="text-white">Submit Registration:</strong> Fill your business name, contact info, and studio details.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d6a83f] text-xs font-bold text-[#171715]">
+                      2
+                    </span>
+                    <span className="text-[#e3dfd3]">
+                      <strong className="text-white">Quick Review:</strong> Our admin team verifies and activates your provider workspace.
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#d6a83f] text-xs font-bold text-[#171715]">
+                      3
+                    </span>
+                    <span className="text-[#e3dfd3]">
+                      <strong className="text-white">Receive Bookings:</strong> Set your schedule and start earning from creative shoots.
+                    </span>
+                  </li>
+                </ol>
+              </div>
+
+              <div className="mt-8 border-t border-white/10 pt-6">
+                <Link
+                  href="/register-provider"
+                  className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#d6a83f] px-6 text-sm font-bold tracking-[0.02em] text-[#171715] transition-transform duration-200 hover:scale-[1.02] hover:bg-[#e0b753] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d6a83f]"
+                >
+                  Register as Provider →
+                </Link>
+                <div className="mt-3 text-center text-xs text-[#9c9990]">
+                  Already have a provider account?{" "}
+                  <Link href="/login" className="font-semibold text-white underline decoration-[#d6a83f] underline-offset-2 hover:text-[#d6a83f]">
+                    Sign in to Portal
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <footer className="border-t border-[#e7e1d3] bg-[#f7f7f2]">
         <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 text-sm text-[#5e5b54] sm:px-8 lg:grid-cols-[1.3fr_0.8fr_0.8fr] lg:px-10">
           <div>
@@ -445,11 +564,12 @@ export default function Home() {
               <li><Link href="#features" className="transition hover:text-[#171715]">Features</Link></li>
               <li><Link href="#categories" className="transition hover:text-[#171715]">Categories</Link></li>
               <li><Link href="#reviews" className="transition hover:text-[#171715]">Reviews</Link></li>
+              <li><Link href="#for-providers" className="transition hover:text-[#171715]">For Providers</Link></li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-[#171715]">Support</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-[#171715]">Support & Partners</h3>
             <ul className="mt-4 space-y-3 text-[#5b5a56]">
               <li><Link href="/login" className="transition hover:text-[#171715]">Login</Link></li>
               <li><Link href="/forgot-password" className="transition hover:text-[#171715]">Forgot password</Link></li>
