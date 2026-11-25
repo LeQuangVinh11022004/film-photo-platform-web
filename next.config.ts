@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
 const defaultProxyTarget =
-  process.env.NODE_ENV === "production"
-    ? "https://filmbooking-api-h7bghwcydwb8eecn.japaneast-01.azurewebsites.net"
-    : "https://localhost:7104";
+  "https://filmbooking-api-h7bghwcydwb8eecn.japaneast-01.azurewebsites.net";
 
 // Strip trailing slashes and any accidental trailing "/api" so rewrites never become "/api/api/*"
 const apiProxyTarget = (process.env.API_PROXY_TARGET?.trim() || defaultProxyTarget)

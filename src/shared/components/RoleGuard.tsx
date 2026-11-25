@@ -10,6 +10,7 @@ export function RoleGuard({ role, children }: { role: "provider" | "moderator" |
   const storeToken = useAuthStore((state) => state.token);
   const currentRole = useAuthStore((state) => state.user?.role);
   const authErrorCode = useAuthStore((state) => state.authErrorCode);
+  const isLoggingOut = useAuthStore((state) => state.isLoggingOut);
   const clearSession = useAuthStore((state) => state.clearSession);
 
   useEffect(() => {
@@ -21,6 +22,14 @@ export function RoleGuard({ role, children }: { role: "provider" | "moderator" |
     return useAuthStore.persist.onFinishHydration(finishHydration);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (useAuthStore.getState().isLoggingOut) {
+        useAuthStore.getState().finishLogout();
+      }
+    };
+  }, []);
+
   const activeToken = hydrated ? (getAuthToken() ?? storeToken) : null;
 
   useEffect(() => {
@@ -29,10 +38,10 @@ export function RoleGuard({ role, children }: { role: "provider" | "moderator" |
     }
   }, [hydrated, storeToken, clearSession]);
 
-  if (!hydrated) {
+  if (!hydrated || isLoggingOut) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#f3f4f6] px-6 py-12 text-sm text-slate-500">
-        Checking session…
+        {isLoggingOut ? "Signing out…" : "Checking session…"}
       </main>
     );
   }

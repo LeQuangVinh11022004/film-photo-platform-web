@@ -517,6 +517,9 @@ export default function CreativeSpacesPage() {
                               <img
                                 src={providerSpaceImageUrl(coverImage.imageUrl)}
                                 alt={space.name}
+                                onError={(e) => {
+                                  e.currentTarget.src = "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80";
+                                }}
                                 className="h-9 w-9 shrink-0 rounded-sm object-cover"
                               />
                             ) : (
@@ -611,6 +614,9 @@ export default function CreativeSpacesPage() {
                           src={providerSpaceImageUrl(coverImage.imageUrl)}
                           alt={space.name}
                           loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.src = "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80";
+                          }}
                           className="h-full w-full object-cover"
                         />
                       ) : (

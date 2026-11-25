@@ -50,9 +50,14 @@ export function ProviderUpcomingReservations({
 			</div>
 
 			<div className="divide-y divide-[#eeeeea]">
-				{data.map((reservation) => (
+				{data.length === 0 && (
+					<p className="px-5 py-8 text-center text-sm text-[#777973] sm:px-6">
+						{u.description}
+					</p>
+				)}
+				{data.map((reservation, index) => (
 					<div
-						key={reservation.id}
+						key={`${reservation.id}-${index}`}
 						className="flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-[#fafbf8] sm:flex-row sm:items-center sm:px-6"
 					>
 						<div className="min-w-0 flex-1">

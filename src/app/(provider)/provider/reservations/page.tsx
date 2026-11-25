@@ -234,9 +234,6 @@ export default function ReservationsPage() {
           />
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:pt-2">
-          <span className="rounded-full border border-[#d8d8d1] bg-white px-3 py-1.5 text-xs font-medium text-[#70716b]">
-            Live API
-          </span>
           <button
             type="button"
             onClick={() => exportReservations(filteredReservations)}

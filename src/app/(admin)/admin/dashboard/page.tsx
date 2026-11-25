@@ -149,7 +149,6 @@ export default function AdminDashboardPage() {
 					<p className="mt-2 text-sm text-[#6b6d67]">{t.description}</p>
 				</div>
 				<div className="flex flex-wrap items-center gap-3">
-					<span className="rounded-full border border-[#cfe1d4] bg-[#edf5ef] px-3 py-1.5 text-xs font-medium text-[#39724b]">{dashboard ? t.liveStats : messages.common.loading}</span>
 					<AdminNotificationCenter notifications={dashboardNotifications} />
 					<div className="inline-flex rounded-lg border border-[#d8d8d1] bg-white p-1" role="group" aria-label={t.periodLabel}>
 						{(["7d", "30d", "90d"] as Period[]).map((item) => (
@@ -173,7 +172,6 @@ export default function AdminDashboardPage() {
 					<article key={metric.label} style={{ animationDelay: `${metricIndex * 90}ms` }} className="admin-metric rounded-lg border border-[#e0e0da] bg-white p-5">
 						<p className="text-sm font-medium text-[#686a64]">{metric.label}</p>
 						<p className="mt-3 text-[28px] font-semibold leading-none text-[#20221f]">{metric.value?.toLocaleString(locale === "vi" ? "vi-VN" : "en-US") ?? "—"}</p>
-						<p className="mt-4 text-xs leading-5 text-[#777973]">{t.liveStatsNote}</p>
 					</article>
 				))}
 			</section>
@@ -272,7 +270,7 @@ export default function AdminDashboardPage() {
 				<article className="rounded-lg border border-[#e0e0da] bg-white p-5 sm:p-6">
 					<div><h2 className="text-base font-semibold text-[#20221f]">{t.serviceMixTitle}</h2><p className="mt-1 text-sm text-[#777973]">{t.serviceMixDescription}</p></div>
 					<ProportionTiles items={serviceMix.map((service) => ({ label: t.serviceMix[service.key], share: service.share, value: formatChartCurrency(Math.round(totalRevenue * service.share / 100), locale), color: service.color }))} key={period} />
-					<p className="mt-5 border-t border-[#e8e8e2] pt-4 text-xs text-[#777973]">{messages.common.sampleData} · {messages.common.periods[periodKey]}</p>
+					<p className="mt-5 border-t border-[#e8e8e2] pt-4 text-xs text-[#777973]">{messages.common.periods[periodKey]}</p>
 				</article>
 
 				<article className="overflow-hidden rounded-lg border border-[#e0e0da] bg-white">
@@ -294,8 +292,7 @@ export default function AdminDashboardPage() {
 							</div>
 						</li>)}
 					</ol>
-					<div className="flex items-center justify-between gap-3 border-t border-[#e8e8e2] px-5 py-3 sm:px-6">
-						<span className="text-xs text-[#777973]">{messages.common.sampleData}</span>
+					<div className="flex items-center justify-end gap-3 border-t border-[#e8e8e2] px-5 py-3 sm:px-6">
 						<Link href="/transactions" className="inline-flex items-center gap-1 text-xs font-semibold text-[#39724b] hover:underline">{messages.nav.transactions}<ArrowUpRight size={13} /></Link>
 					</div>
 				</article>

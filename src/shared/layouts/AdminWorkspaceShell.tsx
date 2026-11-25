@@ -2,11 +2,10 @@
 
 import { createContext, useContext, useState, useSyncExternalStore, type FormEvent, type MouseEvent, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChevronDown, Layers3, LogOut, Menu, Monitor, Moon, Palette, PanelLeftClose, PanelLeftOpen, Search, Shield, Sun, UserRound } from "lucide-react";
+import { ChevronDown, LogOut, Menu, Moon, Palette, PanelLeftClose, PanelLeftOpen, Search, Shield, Sun, UserRound } from "lucide-react";
 import { Sidebar } from "@/shared/components/Sidebar";
 import { AdminLoadingState } from "@/shared/components/AdminLoadingState";
 import { AdminToastHost } from "@/shared/components/AdminToastHost";
-import { showAdminToast } from "@/features/admin-notification/toast";
 import { AdminLanguageProvider, useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
 import { AdminProfileProvider, useAdminProfile } from "@/shared/providers/AdminProfileProvider";
 import type { AdminLocale } from "@/shared/i18n/adminMessages";
@@ -52,7 +51,7 @@ function AdminToolbar({ sidebarCollapsed, theme, onMenuClick, onToggleSidebar, o
   const { displayName } = useAdminProfile();
   const [query, setQuery] = useState("");
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-  const clearSession = useAuthStore((state) => state.clearSession);
+  const startLogout = useAuthStore((state) => state.startLogout);
   const pages = [
     { label: messages.nav.dashboard, href: "/admin/dashboard" },
     { label: messages.nav.users, href: "/users" },
@@ -60,15 +59,11 @@ function AdminToolbar({ sidebarCollapsed, theme, onMenuClick, onToggleSidebar, o
     { label: messages.nav.spaces, href: "/spaces" },
     { label: messages.nav.transactions, href: "/transactions" },
     { label: messages.nav.settings, href: "/settings/profile" },
-    { label: messages.settings.sections.platform, href: "/settings/platform" },
   ];
   const settingsItems = [
     { key: "profile", label: messages.settings.sections.profile, icon: UserRound },
     { key: "account", label: messages.settings.sections.account, icon: Shield },
     { key: "appearance", label: messages.settings.sections.appearance, icon: Palette },
-    { key: "notifications", label: messages.settings.sections.notifications, icon: Bell },
-    { key: "display", label: messages.settings.sections.display, icon: Monitor },
-    { key: "platform", label: messages.settings.sections.platform, icon: Layers3 },
   ];
   const avatarInitials = displayName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
   const matchingPages = pages.filter((page) => page.label.toLowerCase().includes(query.trim().toLowerCase()));
@@ -86,11 +81,8 @@ function AdminToolbar({ sidebarCollapsed, theme, onMenuClick, onToggleSidebar, o
 
   function logout() {
     setAccountMenuOpen(false);
-    showAdminToast({ title: messages.toast.signedOut, message: messages.toast.signedOutDetail, tone: "info" });
-    window.setTimeout(() => {
-      clearSession();
-      router.replace("/login");
-    }, 900);
+    startLogout();
+    router.replace("/login");
   }
 
   return (

@@ -54,21 +54,21 @@ export function ProviderPerformanceChart({
 
   return (
     <article className="rounded-xl border border-[#e2e4dd] bg-white p-5 sm:p-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
           <h2 className="text-base font-semibold text-[#20221f]">
             {p.title}
           </h2>
 
-          <p className="mt-1 text-sm text-[#777973]">
+          <p className="mt-0.5 truncate text-xs text-[#777973] sm:text-sm">
             {isRevenue ? p.revenueDesc : p.reservationsDesc}
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {/* Metric switch */}
           <div
-            className="inline-flex rounded-lg border border-[#dfe1da] bg-[#f8f9f5] p-1"
+            className="inline-flex shrink-0 rounded-lg border border-[#dfe1da] bg-[#f8f9f5] p-1"
             role="group"
             aria-label="Chart metric">
             {(["reservations", "revenue"] as ChartMetric[]).map((item) => (
@@ -77,7 +77,7 @@ export function ProviderPerformanceChart({
                 type="button"
                 aria-pressed={metric === item}
                 onClick={() => setMetric(item)}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${
+                className={`w-24 text-center rounded-md py-1.5 text-xs font-semibold transition-colors duration-150 ${
                   metric === item
                     ? "bg-[#20221f] text-white shadow-sm"
                     : "text-[#70736c] hover:bg-white hover:text-[#20221f]"
@@ -89,7 +89,7 @@ export function ProviderPerformanceChart({
 
           {/* Period switch */}
           <div
-            className="inline-flex rounded-lg border border-[#dfe1da] bg-[#f8f9f5] p-1"
+            className="inline-flex shrink-0 rounded-lg border border-[#dfe1da] bg-[#f8f9f5] p-1"
             role="group"
             aria-label="Performance period">
             {(["7d", "30d", "90d"] as ProviderPeriod[]).map((item) => (
@@ -98,7 +98,7 @@ export function ProviderPerformanceChart({
                 type="button"
                 aria-pressed={period === item}
                 onClick={() => onPeriodChange(item)}
-                className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-200 ${
+                className={`w-16 text-center rounded-md py-1.5 text-xs font-semibold transition-colors duration-150 ${
                   period === item
                     ? "bg-[#20221f] text-white shadow-sm"
                     : "text-[#70736c] hover:bg-white hover:text-[#20221f]"
@@ -113,12 +113,11 @@ export function ProviderPerformanceChart({
       <div className="mt-6 h-70 w-full min-w-0 sm:h-80">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            key={`${period}-${metric}`}
             data={currentData}
             margin={{
               top: 10,
               right: 4,
-              left: isRevenue ? 0 : -8,
+              left: 0,
               bottom: 0,
             }}>
             <CartesianGrid
@@ -141,6 +140,7 @@ export function ProviderPerformanceChart({
             <YAxis
               axisLine={false}
               tickLine={false}
+              width={52}
               tick={{
                 fontSize: 11,
                 fill: "#858880",
@@ -192,10 +192,6 @@ export function ProviderPerformanceChart({
             {isRevenue ? p.revenue : p.reservations}
           </span>
         </div>
-
-        <span className="text-[11px] text-[#858880]">
-          {messages.common.sampleData}
-        </span>
       </div>
     </article>
   );

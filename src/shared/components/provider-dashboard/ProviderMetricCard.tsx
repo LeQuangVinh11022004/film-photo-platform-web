@@ -16,7 +16,7 @@ export function ProviderMetricCard({
 	label,
 	value,
 	change,
-	changeLabel = "vs previous period",
+	changeLabel,
 	href,
 	delay = 0,
 }: ProviderMetricCardProps) {

@@ -40,6 +40,9 @@ httpClient.interceptors.response.use(
       const isAuthRequest = requestUrl.includes("/auth/");
 
       if (typeof window !== "undefined" && !isAuthRequest) {
+        if (useAuthStore.getState().isLoggingOut) {
+          return Promise.reject(error);
+        }
         if (status === 401) {
           clearAuthToken();
           useAuthStore.getState().clearSession();
