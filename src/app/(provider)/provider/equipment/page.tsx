@@ -18,6 +18,7 @@ import { Pagination } from "@/shared/components/Pagination";
 import { ConfirmDeleteDialog } from "@/shared/components/ConfirmDeleteDialog";
 import { EquipmentModal } from "@/features/equipment/components/EquipmentModal";
 import { EquipmentDetailsModal } from "@/features/equipment/components/EquipmentDetailsModal";
+import { EquipmentAvailabilityModal } from "@/features/equipment/components/EquipmentAvailabilityModal";
 import { ChemicalDetailsModal } from "@/features/equipment/components/ChemicalDetailsModal";
 import {
   ChemicalModal,
@@ -170,6 +171,8 @@ export default function EquipmentPage() {
   const [pendingDeleteEquipment, setPendingDeleteEquipment] =
     useState<ProviderEquipment | null>(null);
   const [deletingEquipment, setDeletingEquipment] = useState(false);
+  const [managingAvailabilityEquipment, setManagingAvailabilityEquipment] =
+    useState<ProviderEquipment | null>(null);
 
   // Chemicals state
   const [chemicalResult, setChemicalResult] =
@@ -1036,6 +1039,14 @@ export default function EquipmentPage() {
                             </button>
                             <button
                               type="button"
+                              onClick={() => setManagingAvailabilityEquipment(item)}
+                              title="Manage availability"
+                              aria-label={`Manage availability for ${item.name}`}
+                              className="rounded-md px-2 py-1 text-xs font-semibold text-[#39724b] hover:bg-[#e5f0e8]">
+                              Availability
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => startEditEquipment(item)}
                               aria-label={`Edit ${item.name}`}
                               className="flex h-8 w-8 items-center justify-center rounded-md text-[#555750] hover:bg-[#f0f0ec]">
@@ -1558,6 +1569,24 @@ export default function EquipmentPage() {
             setSelectedEquipment(null);
             startEditEquipment(item);
           }}
+          onManageAvailability={(item) => {
+            setSelectedEquipment(null);
+            setManagingAvailabilityEquipment(item);
+          }}
+        />
+      )}
+
+      {/* Equipment Availability Modal */}
+      {managingAvailabilityEquipment && (
+        <EquipmentAvailabilityModal
+          equipment={managingAvailabilityEquipment}
+          spaceName={
+            managingAvailabilityEquipment
+              ? spaceNameById.get(managingAvailabilityEquipment.spaceId)
+              : undefined
+          }
+          isOpen={Boolean(managingAvailabilityEquipment)}
+          onClose={() => setManagingAvailabilityEquipment(null)}
         />
       )}
 

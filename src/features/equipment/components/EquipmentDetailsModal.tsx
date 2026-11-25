@@ -8,6 +8,7 @@ type Props = {
   spaceName?: string;
   onClose: () => void;
   onEdit: (equipment: ProviderEquipment) => void;
+  onManageAvailability?: (equipment: ProviderEquipment) => void;
 };
 
 function formatPrice(value: number | null) {
@@ -20,6 +21,7 @@ export function EquipmentDetailsModal({
   spaceName,
   onClose,
   onEdit,
+  onManageAvailability,
 }: Props) {
   if (!equipment) return null;
 
@@ -77,6 +79,15 @@ export function EquipmentDetailsModal({
         </dl>
 
         <div className="mt-5 flex justify-end gap-2 border-t border-[#eeeeea] pt-4">
+          {onManageAvailability && (
+            <button
+              type="button"
+              onClick={() => onManageAvailability(equipment)}
+              className="h-9 rounded-md border border-[#39724b] px-4 text-sm font-semibold text-[#39724b] hover:bg-[#e5f0e8]"
+            >
+              Availability
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onEdit(equipment)}

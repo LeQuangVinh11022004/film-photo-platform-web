@@ -60,3 +60,29 @@ export type ListProviderEquipmentParams = {
 };
 
 export type Equipment = ProviderEquipment;
+
+export type ProviderEquipmentAvailabilityStatus = "AVAILABLE" | "UNAVAILABLE" | string;
+
+export type ProviderEquipmentAvailability = {
+	availabilityId: string;
+	equipmentId: string;
+	availableDate: string;
+	startTime: string;
+	endTime: string;
+	status: ProviderEquipmentAvailabilityStatus;
+	price: number;
+};
+
+export type ProviderEquipmentAvailabilityRequest = {
+	availableDate: string;
+	startTime: string;
+	endTime: string;
+	status: string;
+	price: number;
+};
+
+export type ListProviderEquipmentAvailabilityParams = {
+	fromDate?: string;
+	toDate?: string;
+};
+
