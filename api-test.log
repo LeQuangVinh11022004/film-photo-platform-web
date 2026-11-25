@@ -1,10 +1,10 @@
 ================================================================================
                  AUTOMATED API INTEGRATION TEST EXECUTION LOG                   
 ================================================================================
-Base URL      : https://localhost:7104/api
-Run Started   : 2026-11-21T01:35:31.431Z
-Run Completed : 2026-11-21T01:36:28.681Z
-Total Calls   : 83 (Passed: 83, Failed: 0)
+Base URL      : https://filmbooking-api-h7bghwcydwb8eecn.japaneast-01.azurewebsites.net/api
+Run Started   : 2026-11-25T09:47:42.242Z
+Run Completed : 2026-11-25T09:48:11.440Z
+Total Calls   : 87 (Passed: 87, Failed: 0)
 Overall Result: PASS (100%)
 ================================================================================
 
@@ -14,31 +14,31 @@ SECTION: 1. AUTH ENDPOINTS
 --------------------------------------------------------------------------------
 [#01] [PASS] POST /auth/login
   Description : Login as Admin demo account
-  Timestamp   : 2026-11-21T01:35:31.432Z
-  HTTP Status : 200 (Expected: 200) | Duration: 3152 ms
+  Timestamp   : 2026-11-25T09:47:42.243Z
+  HTTP Status : 200 (Expected: 200) | Duration: 1544 ms
   Request     : {"email":"admin.demo@filmbooking.local","password":"***"}
-  Response    : {"success":true,"message":"Login successful","token":"eyJhbGciOiJIUzI1NiIsInR5...[REDACTED]","expiresAtUtc":"2026-11-21T05:35:34.5521473Z","user":{"userId":"10000000-0000-0000-0000-000000000001","fullName":"Demo Admin","email":"admin.demo@filmbooking.local","role":"ADMIN","status":"ACTIVE","createdAt":"2026-11-20T20:27:05.179415Z"}}
+  Response    : {"success":true,"message":"Login successful","token":"eyJhbGciOiJIUzI1NiIsInR5...[REDACTED]","expiresAtUtc":"2026-11-25T13:47:44.3346019Z","user":{"userId":"10000000-0000-0000-0000-000000000001","fullName":"Demo Admin","email":"admin.demo@filmbooking.local","role":"ADMIN","status":"ACTIVE","createdAt":"2026-11-20T20:27:05.179415Z"}}
 
 [#02] [PASS] POST /auth/login
   Description : Login as Provider demo account
-  Timestamp   : 2026-11-21T01:35:34.585Z
-  HTTP Status : 200 (Expected: 200) | Duration: 305 ms
+  Timestamp   : 2026-11-25T09:47:43.787Z
+  HTTP Status : 200 (Expected: 200) | Duration: 1331 ms
   Request     : {"email":"provider.demo@filmbooking.local","password":"***"}
-  Response    : {"success":true,"message":"Login successful","token":"eyJhbGciOiJIUzI1NiIsInR5...[REDACTED]","expiresAtUtc":"2026-11-21T05:35:34.8885165Z","user":{"userId":"10000000-0000-0000-0000-000000000002","fullName":"Demo Studio Owner","email":"provider.demo@filmbooking.local","role":"PROVIDER","status":"ACTIVE","createdAt":"2026-11-20T20:27:05.179415Z"}}
+  Response    : {"success":true,"message":"Login successful","token":"eyJhbGciOiJIUzI1NiIsInR5...[REDACTED]","expiresAtUtc":"2026-11-25T13:47:45.7043728Z","user":{"userId":"10000000-0000-0000-0000-000000000002","fullName":"Demo Studio Owner","email":"provider.demo@filmbooking.local","role":"PROVIDER","status":"ACTIVE","createdAt":"2026-11-20T20:27:05.179415Z"}}
 
 [#03] [PASS] POST /auth/register/photographer
   Description : Register new Photographer account
-  Timestamp   : 2026-11-21T01:35:34.890Z
-  HTTP Status : 201 (Expected: 201) | Duration: 955 ms
-  Request     : {"fullName":"API Test Photographer","email":"test.photog.1795224931432@filmbooking.local","password":"***"}
-  Response    : {"userId":"ad78a8f0-3b69-4655-9b52-eb0e9368b314","fullName":"API Test Photographer","email":"test.photog.1795224931432@filmbooking.local","role":"PHOTOGRAPHER","status":"ACTIVE","providerApprovalStatus":null,"createdAt":"2026-11-21T01:35:35.3185475Z"}
+  Timestamp   : 2026-11-25T09:47:45.118Z
+  HTTP Status : 201 (Expected: 201) | Duration: 811 ms
+  Request     : {"fullName":"API Test Photographer","email":"test.photog.1795600062243@filmbooking.local","password":"***"}
+  Response    : {"userId":"546b6e77-9c6b-4247-b8ee-ad350e2c611c","fullName":"API Test Photographer","email":"test.photog.1795600062243@filmbooking.local","role":"PHOTOGRAPHER","status":"ACTIVE","providerApprovalStatus":null,"createdAt":"2026-11-25T09:47:46.4885653Z"}
 
 [#04] [PASS] POST /auth/register/provider
   Description : Register new Provider account (Pending approval)
-  Timestamp   : 2026-11-21T01:35:35.845Z
-  HTTP Status : 201 (Expected: 201) | Duration: 764 ms
-  Request     : {"fullName":"API Test Reg Provider","email":"test.regprov.1795224931432@filmbooking.local","password":"***","businessName":"API Test Reg Studio 1795224931432","description":"Temporary registered provider","address":"123 Nguyen Hue, HCMC","phone":"0901112233"}
-  Response    : {"userId":"d555b203-ba0c-40b1-9c67-ff26fc3c3264","fullName":"API Test Reg Provider","email":"test.regprov.1795224931432@filmbooking.local","role":"PROVIDER","status":"ACTIVE","providerApprovalStatus":"PENDING","createdAt":"2026-11-21T01:35:36.1744367Z"}
+  Timestamp   : 2026-11-25T09:47:45.929Z
+  HTTP Status : 201 (Expected: 201) | Duration: 622 ms
+  Request     : {"fullName":"API Test Reg Provider","email":"test.regprov.1795600062243@filmbooking.local","password":"***","businessName":"API Test Reg Studio 1795600062243","description":"Temporary registered provider","address":"123 Nguyen Hue, HCMC","phone":"0901112233"}
+  Response    : {"userId":"fd11092b-87e6-4b1a-976d-3ed641cfde61","fullName":"API Test Reg Provider","email":"test.regprov.1795600062243@filmbooking.local","role":"PROVIDER","status":"ACTIVE","providerApprovalStatus":"PENDING","createdAt":"2026-11-25T09:47:47.1959482Z"}
 
 
 --------------------------------------------------------------------------------
@@ -46,163 +46,163 @@ SECTION: 2. ADMIN ENDPOINTS
 --------------------------------------------------------------------------------
 [#05] [PASS] GET /admin/dashboard
   Description : Get Admin dashboard statistics
-  Timestamp   : 2026-11-21T01:35:36.610Z
-  HTTP Status : 200 (Expected: 200) | Duration: 1375 ms
-  Response    : {"totalUsers":10,"activeUsers":10,"totalPhotographers":6,"pendingProviders":1,"totalBookings":3,"pendingBookings":0,"totalSpaces":6,"activeSpaces":6,"pendingPayments":0}
+  Timestamp   : 2026-11-25T09:47:46.551Z
+  HTTP Status : 200 (Expected: 200) | Duration: 709 ms
+  Response    : {"totalUsers":21,"activeUsers":21,"totalPhotographers":15,"pendingProviders":2,"totalBookings":10,"pendingBookings":0,"totalSpaces":8,"activeSpaces":8,"pendingPayments":0}
 
 [#06] [PASS] GET /admin/users?page=1&pageSize=10
   Description : List Admin users (paginated)
-  Timestamp   : 2026-11-21T01:35:37.985Z
-  HTTP Status : 200 (Expected: 200) | Duration: 370 ms
-  Response    : {"items":[{"userId":"d555b203-ba0c-40b1-9c67-ff26fc3c3264","fullName":"API Test Reg Provider","email":"test.regprov.1795224931432@filmbooking.local","role":"PROVIDER","status":"ACTIVE","createdAt":"2026-11-21T01:35:36.174436Z"},{"userId":"ad78a8f0-3b69-4655-9b52-eb0e9368b314","fullName":"API Test Photographer","email":"test.photog.1795224931432@filmbooking.local","role":"PHOTOGRAPHER","status":"ACTIVE","createdAt":"2026-11-21T01:35:35.318547Z"},{"userId":"367795c8-874b-4aa6-9177-07cce8b49d92","fullName":"API Tester","email":"apitest_20261121_083355@example.com","role":"PHOTOGRAPHER","status":"... [truncated]
+  Timestamp   : 2026-11-25T09:47:47.260Z
+  HTTP Status : 200 (Expected: 200) | Duration: 204 ms
+  Response    : {"items":[{"userId":"fd11092b-87e6-4b1a-976d-3ed641cfde61","fullName":"API Test Reg Provider","email":"test.regprov.1795600062243@filmbooking.local","role":"PROVIDER","status":"ACTIVE","createdAt":"2026-11-25T09:47:47.195948Z"},{"userId":"546b6e77-9c6b-4247-b8ee-ad350e2c611c","fullName":"API Test Photographer","email":"test.photog.1795600062243@filmbooking.local","role":"PHOTOGRAPHER","status":"ACTIVE","createdAt":"2026-11-25T09:47:46.488565Z"},{"userId":"2d99ecb7-bc5d-4002-aa75-a1c44e82b65a","fullName":"CuongNM Tester","email":"cnmtestemail@gmail.com","role":"PROVIDER","status":"ACTIVE","crea... [truncated]
 
 [#07] [PASS] POST /admin/users
   Description : Create user via Admin API
-  Timestamp   : 2026-11-21T01:35:38.355Z
-  HTTP Status : 201 (Expected: 201) | Duration: 596 ms
-  Request     : {"fullName":"Temp Admin Created User","email":"test.adminuser.1795224931432@filmbooking.local","password":"***","role":"PHOTOGRAPHER","status":"ACTIVE"}
-  Response    : {"userId":"83749495-62fa-4093-aca1-e6b74d552536","fullName":"Temp Admin Created User","email":"test.adminuser.1795224931432@filmbooking.local","role":"PHOTOGRAPHER","status":"ACTIVE","createdAt":"2026-11-21T01:35:38.8028619Z"}
+  Timestamp   : 2026-11-25T09:47:47.464Z
+  HTTP Status : 201 (Expected: 201) | Duration: 1024 ms
+  Request     : {"fullName":"Temp Admin Created User","email":"test.adminuser.1795600062243@filmbooking.local","password":"***","role":"PHOTOGRAPHER","status":"ACTIVE"}
+  Response    : {"userId":"9ef1e8d0-c0c0-43bc-8968-2b42eae3c96f","fullName":"Temp Admin Created User","email":"test.adminuser.1795600062243@filmbooking.local","role":"PHOTOGRAPHER","status":"ACTIVE","createdAt":"2026-11-25T09:47:49.0048417Z"}
 
-[#08] [PASS] GET /admin/users/83749495-62fa-4093-aca1-e6b74d552536
+[#08] [PASS] GET /admin/users/9ef1e8d0-c0c0-43bc-8968-2b42eae3c96f
   Description : Get Admin user details by ID
-  Timestamp   : 2026-11-21T01:35:38.951Z
-  HTTP Status : 200 (Expected: 200) | Duration: 223 ms
-  Response    : {"userId":"83749495-62fa-4093-aca1-e6b74d552536","fullName":"Temp Admin Created User","email":"test.adminuser.1795224931432@filmbooking.local","role":"PHOTOGRAPHER","status":"ACTIVE","createdAt":"2026-11-21T01:35:38.802861Z"}
+  Timestamp   : 2026-11-25T09:47:48.488Z
+  HTTP Status : 200 (Expected: 200) | Duration: 205 ms
+  Response    : {"userId":"9ef1e8d0-c0c0-43bc-8968-2b42eae3c96f","fullName":"Temp Admin Created User","email":"test.adminuser.1795600062243@filmbooking.local","role":"PHOTOGRAPHER","status":"ACTIVE","createdAt":"2026-11-25T09:47:49.004841Z"}
 
-[#09] [PASS] PUT /admin/users/83749495-62fa-4093-aca1-e6b74d552536
+[#09] [PASS] PUT /admin/users/9ef1e8d0-c0c0-43bc-8968-2b42eae3c96f
   Description : Update Admin user profile & role
-  Timestamp   : 2026-11-21T01:35:39.174Z
-  HTTP Status : 200 (Expected: 200) | Duration: 571 ms
-  Request     : {"fullName":"Temp Admin User Updated","email":"test.adminuser.1795224931432@filmbooking.local","role":"PHOTOGRAPHER","status":"ACTIVE"}
-  Response    : {"userId":"83749495-62fa-4093-aca1-e6b74d552536","fullName":"Temp Admin User Updated","email":"test.adminuser.1795224931432@filmbooking.local","role":"PHOTOGRAPHER","status":"ACTIVE","createdAt":"2026-11-21T01:35:38.802861Z"}
+  Timestamp   : 2026-11-25T09:47:48.693Z
+  HTTP Status : 200 (Expected: 200) | Duration: 314 ms
+  Request     : {"fullName":"Temp Admin User Updated","email":"test.adminuser.1795600062243@filmbooking.local","role":"PHOTOGRAPHER","status":"ACTIVE"}
+  Response    : {"userId":"9ef1e8d0-c0c0-43bc-8968-2b42eae3c96f","fullName":"Temp Admin User Updated","email":"test.adminuser.1795600062243@filmbooking.local","role":"PHOTOGRAPHER","status":"ACTIVE","createdAt":"2026-11-25T09:47:49.004841Z"}
 
-[#10] [PASS] PATCH /admin/users/83749495-62fa-4093-aca1-e6b74d552536/status
+[#10] [PASS] PATCH /admin/users/9ef1e8d0-c0c0-43bc-8968-2b42eae3c96f/status
   Description : Toggle Admin user status (ACTIVE -> INACTIVE)
-  Timestamp   : 2026-11-21T01:35:39.745Z
-  HTTP Status : 200 (Expected: 200) | Duration: 440 ms
+  Timestamp   : 2026-11-25T09:47:49.008Z
+  HTTP Status : 200 (Expected: 200) | Duration: 199 ms
   Request     : {"status":"INACTIVE"}
-  Response    : {"userId":"83749495-62fa-4093-aca1-e6b74d552536","fullName":"Temp Admin User Updated","email":"test.adminuser.1795224931432@filmbooking.local","role":"PHOTOGRAPHER","status":"INACTIVE","createdAt":"2026-11-21T01:35:38.802861Z"}
+  Response    : {"userId":"9ef1e8d0-c0c0-43bc-8968-2b42eae3c96f","fullName":"Temp Admin User Updated","email":"test.adminuser.1795600062243@filmbooking.local","role":"PHOTOGRAPHER","status":"INACTIVE","createdAt":"2026-11-25T09:47:49.004841Z"}
 
-[#11] [PASS] DELETE /admin/users/83749495-62fa-4093-aca1-e6b74d552536
+[#11] [PASS] DELETE /admin/users/9ef1e8d0-c0c0-43bc-8968-2b42eae3c96f
   Description : Delete Admin user by ID
-  Timestamp   : 2026-11-21T01:35:40.185Z
-  HTTP Status : 204 (Expected: 204) | Duration: 2546 ms
+  Timestamp   : 2026-11-25T09:47:49.207Z
+  HTTP Status : 204 (Expected: 204) | Duration: 612 ms
   Response    : (empty)
 
 [#12] [PASS] GET /admin/providers?page=1&pageSize=100
   Description : List all Admin providers
-  Timestamp   : 2026-11-21T01:35:42.731Z
-  HTTP Status : 200 (Expected: 200) | Duration: 340 ms
-  Response    : {"items":[{"providerId":"d555b203-ba0c-40b1-9c67-ff26fc3c3264","businessName":"API Test Reg Studio 1795224931432","description":"Temporary registered provider","address":"123 Nguyen Hue, HCMC","phone":"0901112233","email":"test.regprov.1795224931432@filmbooking.local","accountStatus":"ACTIVE","approvalStatus":"PENDING","createdAt":"2026-11-21T01:35:36.174436Z","updatedAt":null},{"providerId":"10000000-0000-0000-0000-000000000002","businessName":"Analog House Studio","description":"Demo studio and darkroom provider.","address":"12 Nguyen Hue, District 1, Ho Chi Minh City","phone":"+84900000002"... [truncated]
+  Timestamp   : 2026-11-25T09:47:49.819Z
+  HTTP Status : 200 (Expected: 200) | Duration: 206 ms
+  Response    : {"items":[{"providerId":"fd11092b-87e6-4b1a-976d-3ed641cfde61","businessName":"API Test Reg Studio 1795600062243","description":"Temporary registered provider","address":"123 Nguyen Hue, HCMC","phone":"0901112233","email":"test.regprov.1795600062243@filmbooking.local","accountStatus":"ACTIVE","approvalStatus":"PENDING","createdAt":"2026-11-25T09:47:47.195948Z","updatedAt":null},{"providerId":"2d99ecb7-bc5d-4002-aa75-a1c44e82b65a","businessName":"CNM Test Studio Co.","description":"Test Studio Company","address":"123 Vo Chi Thanh, Ba Dinh, Ha Noi","phone":"0909123456","email":"cnmtestemail@gmai... [truncated]
 
-[#13] [PASS] DELETE /admin/providers/d555b203-ba0c-40b1-9c67-ff26fc3c3264
-  Description : Cleanup temporary provider (test.regprov.1795224931432@filmbooking.local)
-  Timestamp   : 2026-11-21T01:35:43.071Z
-  HTTP Status : 204 (Expected: 204/404) | Duration: 2521 ms
+[#13] [PASS] DELETE /admin/providers/fd11092b-87e6-4b1a-976d-3ed641cfde61
+  Description : Cleanup temporary provider (test.regprov.1795600062243@filmbooking.local)
+  Timestamp   : 2026-11-25T09:47:50.025Z
+  HTTP Status : 204 (Expected: 204/404) | Duration: 613 ms
   Response    : (empty)
 
 [#14] [PASS] GET /admin/users?page=1&pageSize=100
   Description : List Admin users for cleanup
-  Timestamp   : 2026-11-21T01:35:45.592Z
-  HTTP Status : 200 (Expected: 200) | Duration: 330 ms
-  Response    : {"items":[{"userId":"ad78a8f0-3b69-4655-9b52-eb0e9368b314","fullName":"API Test Photographer","email":"test.photog.1795224931432@filmbooking.local","role":"PHOTOGRAPHER","status":"ACTIVE","createdAt":"2026-11-21T01:35:35.318547Z"},{"userId":"367795c8-874b-4aa6-9177-07cce8b49d92","fullName":"API Tester","email":"apitest_20261121_083355@example.com","role":"PHOTOGRAPHER","status":"ACTIVE","createdAt":"2026-11-21T01:33:57.814254Z"},{"userId":"bf1ff597-eaaf-4db0-890c-f71fa1dcddd6","fullName":"x","email":"test_photographer_api@gmail.com","role":"PHOTOGRAPHER","status":"ACTIVE","createdAt":"2026-11-... [truncated]
+  Timestamp   : 2026-11-25T09:47:50.638Z
+  HTTP Status : 200 (Expected: 200) | Duration: 206 ms
+  Response    : {"items":[{"userId":"546b6e77-9c6b-4247-b8ee-ad350e2c611c","fullName":"API Test Photographer","email":"test.photog.1795600062243@filmbooking.local","role":"PHOTOGRAPHER","status":"ACTIVE","createdAt":"2026-11-25T09:47:46.488565Z"},{"userId":"2d99ecb7-bc5d-4002-aa75-a1c44e82b65a","fullName":"CuongNM Tester","email":"cnmtestemail@gmail.com","role":"PROVIDER","status":"ACTIVE","createdAt":"2026-11-25T08:01:56.193521Z"},{"userId":"ff4847fe-d976-453c-8bef-04361711e024","fullName":"API Tester","email":"apitest_20261125_080502@example.com","role":"PHOTOGRAPHER","status":"ACTIVE","createdAt":"2026-11-... [truncated]
 
-[#15] [PASS] DELETE /admin/users/ad78a8f0-3b69-4655-9b52-eb0e9368b314
-  Description : Cleanup temporary user (test.photog.1795224931432@filmbooking.local)
-  Timestamp   : 2026-11-21T01:35:45.922Z
-  HTTP Status : 204 (Expected: 204/404) | Duration: 2454 ms
+[#15] [PASS] DELETE /admin/users/546b6e77-9c6b-4247-b8ee-ad350e2c611c
+  Description : Cleanup temporary user (test.photog.1795600062243@filmbooking.local)
+  Timestamp   : 2026-11-25T09:47:50.844Z
+  HTTP Status : 204 (Expected: 204/404) | Duration: 300 ms
   Response    : (empty)
 
 [#16] [PASS] POST /admin/providers
   Description : Create Provider via Admin API
-  Timestamp   : 2026-11-21T01:35:48.376Z
-  HTTP Status : 201 (Expected: 201) | Duration: 977 ms
-  Request     : {"fullName":"Temp Admin Provider Owner","email":"test.adminprov.1795224931432@filmbooking.local","password":"***","businessName":"Temp Admin Provider 1795224931432","description":"Created by Admin API test","address":"456 Le Loi, HCMC","phone":"0909998877"}
-  Response    : {"providerId":"6c238872-e4cf-4b99-b9f0-059412ccfb6d","businessName":"Temp Admin Provider 1795224931432","description":"Created by Admin API test","address":"456 Le Loi, HCMC","phone":"0909998877","email":"test.adminprov.1795224931432@filmbooking.local","accountStatus":"ACTIVE","approvalStatus":"PENDING","createdAt":"2026-11-21T01:35:48.820121Z","updatedAt":null}
+  Timestamp   : 2026-11-25T09:47:51.144Z
+  HTTP Status : 201 (Expected: 201) | Duration: 826 ms
+  Request     : {"fullName":"Temp Admin Provider Owner","email":"test.adminprov.1795600062243@filmbooking.local","password":"***","businessName":"Temp Admin Provider 1795600062243","description":"Created by Admin API test","address":"456 Le Loi, HCMC","phone":"0909998877"}
+  Response    : {"providerId":"50c7bec5-60df-4dd7-91c9-36fcc6c2cba8","businessName":"Temp Admin Provider 1795600062243","description":"Created by Admin API test","address":"456 Le Loi, HCMC","phone":"0909998877","email":"test.adminprov.1795600062243@filmbooking.local","accountStatus":"ACTIVE","approvalStatus":"PENDING","createdAt":"2026-11-25T09:47:52.507304Z","updatedAt":null}
 
-[#17] [PASS] GET /admin/providers/6c238872-e4cf-4b99-b9f0-059412ccfb6d
+[#17] [PASS] GET /admin/providers/50c7bec5-60df-4dd7-91c9-36fcc6c2cba8
   Description : Get Admin provider details by ID
-  Timestamp   : 2026-11-21T01:35:49.353Z
-  HTTP Status : 200 (Expected: 200) | Duration: 219 ms
-  Response    : {"providerId":"6c238872-e4cf-4b99-b9f0-059412ccfb6d","businessName":"Temp Admin Provider 1795224931432","description":"Created by Admin API test","address":"456 Le Loi, HCMC","phone":"0909998877","email":"test.adminprov.1795224931432@filmbooking.local","accountStatus":"ACTIVE","approvalStatus":"PENDING","createdAt":"2026-11-21T01:35:48.820121Z","updatedAt":null}
+  Timestamp   : 2026-11-25T09:47:51.970Z
+  HTTP Status : 200 (Expected: 200) | Duration: 205 ms
+  Response    : {"providerId":"50c7bec5-60df-4dd7-91c9-36fcc6c2cba8","businessName":"Temp Admin Provider 1795600062243","description":"Created by Admin API test","address":"456 Le Loi, HCMC","phone":"0909998877","email":"test.adminprov.1795600062243@filmbooking.local","accountStatus":"ACTIVE","approvalStatus":"PENDING","createdAt":"2026-11-25T09:47:52.507304Z","updatedAt":null}
 
-[#18] [PASS] PUT /admin/providers/6c238872-e4cf-4b99-b9f0-059412ccfb6d
+[#18] [PASS] PUT /admin/providers/50c7bec5-60df-4dd7-91c9-36fcc6c2cba8
   Description : Update Admin provider business profile
-  Timestamp   : 2026-11-21T01:35:49.572Z
-  HTTP Status : 200 (Expected: 200) | Duration: 434 ms
-  Request     : {"businessName":"Temp Admin Provider Updated 1795224931432","description":"Updated by Admin API test","address":"789 Dong Khoi, HCMC","phone":"0909998877"}
-  Response    : {"providerId":"6c238872-e4cf-4b99-b9f0-059412ccfb6d","businessName":"Temp Admin Provider Updated 1795224931432","description":"Updated by Admin API test","address":"789 Dong Khoi, HCMC","phone":"0909998877","email":"test.adminprov.1795224931432@filmbooking.local","accountStatus":"ACTIVE","approvalStatus":"PENDING","createdAt":"2026-11-21T01:35:48.820121Z","updatedAt":"2026-11-21T01:35:49.7906541Z"}
+  Timestamp   : 2026-11-25T09:47:52.175Z
+  HTTP Status : 200 (Expected: 200) | Duration: 205 ms
+  Request     : {"businessName":"Temp Admin Provider Updated 1795600062243","description":"Updated by Admin API test","address":"789 Dong Khoi, HCMC","phone":"0909998877"}
+  Response    : {"providerId":"50c7bec5-60df-4dd7-91c9-36fcc6c2cba8","businessName":"Temp Admin Provider Updated 1795600062243","description":"Updated by Admin API test","address":"789 Dong Khoi, HCMC","phone":"0909998877","email":"test.adminprov.1795600062243@filmbooking.local","accountStatus":"ACTIVE","approvalStatus":"PENDING","createdAt":"2026-11-25T09:47:52.507304Z","updatedAt":"2026-11-25T09:47:53.0069532Z"}
 
-[#19] [PASS] PATCH /admin/providers/6c238872-e4cf-4b99-b9f0-059412ccfb6d/approval
+[#19] [PASS] PATCH /admin/providers/50c7bec5-60df-4dd7-91c9-36fcc6c2cba8/approval
   Description : Approve provider account via Admin API
-  Timestamp   : 2026-11-21T01:35:50.006Z
-  HTTP Status : 200 (Expected: 200) | Duration: 434 ms
+  Timestamp   : 2026-11-25T09:47:52.380Z
+  HTTP Status : 200 (Expected: 200) | Duration: 204 ms
   Request     : {"approvalStatus":"APPROVED"}
-  Response    : {"providerId":"6c238872-e4cf-4b99-b9f0-059412ccfb6d","businessName":"Temp Admin Provider Updated 1795224931432","description":"Updated by Admin API test","address":"789 Dong Khoi, HCMC","phone":"0909998877","email":"test.adminprov.1795224931432@filmbooking.local","accountStatus":"ACTIVE","approvalStatus":"APPROVED","createdAt":"2026-11-21T01:35:48.820121Z","updatedAt":"2026-11-21T01:35:50.4387178Z"}
+  Response    : {"providerId":"50c7bec5-60df-4dd7-91c9-36fcc6c2cba8","businessName":"Temp Admin Provider Updated 1795600062243","description":"Updated by Admin API test","address":"789 Dong Khoi, HCMC","phone":"0909998877","email":"test.adminprov.1795600062243@filmbooking.local","accountStatus":"ACTIVE","approvalStatus":"APPROVED","createdAt":"2026-11-25T09:47:52.507304Z","updatedAt":"2026-11-25T09:47:53.2307347Z"}
 
 [#20] [PASS] GET /admin/spaces?page=1&pageSize=10
   Description : List Admin creative spaces
-  Timestamp   : 2026-11-21T01:35:50.440Z
-  HTTP Status : 200 (Expected: 200) | Duration: 394 ms
-  Response    : {"items":[{"spaceId":"20000000-0000-0000-0000-000000000001","providerId":"10000000-0000-0000-0000-000000000002","providerBusinessName":"Analog House Studio","name":"Studio Daylight","type":"STUDIO","description":"Bright portrait studio with a north-facing window.","address":"12 Nguyen Hue, District 1, Ho Chi Minh City","capacity":8,"hourlyRate":250000,"conditionStatus":"GOOD","statusNote":"No issues reported; ready for booking.","status":"ACTIVE","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-20T20:45:43.26243Z"},{"spaceId":"20000000-0000-0000-0000-000000000002","providerId":"1... [truncated]
+  Timestamp   : 2026-11-25T09:47:52.584Z
+  HTTP Status : 200 (Expected: 200) | Duration: 389 ms
+  Response    : {"items":[{"spaceId":"5f6c6835-1e4d-4a40-87a1-6f2260b0c9de","providerId":"827770c2-626b-4887-a362-f2e7b52ebff6","providerBusinessName":"CuongNguyen Test Studio","name":"CuongNM Test Studio 2","type":"STUDIO","description":"A spacious, industrial-loft photography studio featuring an arched black-and-white barrel ceiling, a seamless white infinity cyclorama corner on the right, heavy-duty rolling C-stands with an octagonal softbox and ring light, a dedicated makeup and hair styling bar with barstools and mirrors, and a private enclosed dressing room with full-length mirrors and curtains.","addre... [truncated]
 
 [#21] [PASS] POST /admin/spaces
   Description : Create creative space via Admin API
-  Timestamp   : 2026-11-21T01:35:50.834Z
-  HTTP Status : 201 (Expected: 201) | Duration: 560 ms
-  Request     : {"providerId":"6c238872-e4cf-4b99-b9f0-059412ccfb6d","name":"Temp Admin Space 1795224931432","type":"STUDIO","description":"Created by Admin Space API test","address":"789 Dong Khoi, HCMC","capacity":10,"status":"INACTIVE"}
-  Response    : {"spaceId":"8d3e1dc1-df34-4b97-bef4-394375551101","providerId":"6c238872-e4cf-4b99-b9f0-059412ccfb6d","providerBusinessName":"Temp Admin Provider Updated 1795224931432","name":"Temp Admin Space 1795224931432","type":"STUDIO","description":"Created by Admin Space API test","address":"789 Dong Khoi, HCMC","capacity":10,"hourlyRate":0,"conditionStatus":"GOOD","statusNote":null,"status":"INACTIVE","createdAt":"2026-11-21T01:35:51.065805Z","updatedAt":null}
+  Timestamp   : 2026-11-25T09:47:52.974Z
+  HTTP Status : 201 (Expected: 201) | Duration: 362 ms
+  Request     : {"providerId":"50c7bec5-60df-4dd7-91c9-36fcc6c2cba8","name":"Temp Admin Space 1795600062243","type":"STUDIO","description":"Created by Admin Space API test","address":"789 Dong Khoi, HCMC","capacity":10,"status":"INACTIVE"}
+  Response    : {"spaceId":"3e4f6817-a7df-464f-8f84-ca386ddc07c1","providerId":"50c7bec5-60df-4dd7-91c9-36fcc6c2cba8","providerBusinessName":"Temp Admin Provider Updated 1795600062243","name":"Temp Admin Space 1795600062243","type":"STUDIO","description":"Created by Admin Space API test","address":"789 Dong Khoi, HCMC","capacity":10,"hourlyRate":0,"conditionStatus":"GOOD","statusNote":null,"status":"INACTIVE","createdAt":"2026-11-25T09:47:53.820612Z","updatedAt":null}
 
-[#22] [PASS] GET /admin/spaces/8d3e1dc1-df34-4b97-bef4-394375551101
+[#22] [PASS] GET /admin/spaces/3e4f6817-a7df-464f-8f84-ca386ddc07c1
   Description : Get Admin creative space details by ID
-  Timestamp   : 2026-11-21T01:35:51.394Z
-  HTTP Status : 200 (Expected: 200) | Duration: 227 ms
-  Response    : {"providerApprovalStatus":"APPROVED","details":{"lengthM":null,"widthM":null,"heightM":null,"artisticStyle":null,"lightingConditions":null,"ventilationDetails":null,"acousticDetails":null,"usagePolicies":null},"images":[],"availabilities":[],"spaceId":"8d3e1dc1-df34-4b97-bef4-394375551101","providerId":"6c238872-e4cf-4b99-b9f0-059412ccfb6d","providerBusinessName":"Temp Admin Provider Updated 1795224931432","name":"Temp Admin Space 1795224931432","type":"STUDIO","description":"Created by Admin Space API test","address":"789 Dong Khoi, HCMC","capacity":10,"hourlyRate":0,"conditionStatus":"","sta... [truncated]
+  Timestamp   : 2026-11-25T09:47:53.336Z
+  HTTP Status : 200 (Expected: 200) | Duration: 158 ms
+  Response    : {"providerApprovalStatus":"APPROVED","details":{"lengthM":null,"widthM":null,"heightM":null,"artisticStyle":null,"supportedProcesses":null,"lightingConditions":null,"ventilationDetails":null,"acousticDetails":null,"usagePolicies":null,"amenities":null,"operatingHours":null},"images":[],"availabilities":[],"spaceId":"3e4f6817-a7df-464f-8f84-ca386ddc07c1","providerId":"50c7bec5-60df-4dd7-91c9-36fcc6c2cba8","providerBusinessName":"Temp Admin Provider Updated 1795600062243","name":"Temp Admin Space 1795600062243","type":"STUDIO","description":"Created by Admin Space API test","address":"789 Dong K... [truncated]
 
-[#23] [PASS] PUT /admin/spaces/8d3e1dc1-df34-4b97-bef4-394375551101
+[#23] [PASS] PUT /admin/spaces/3e4f6817-a7df-464f-8f84-ca386ddc07c1
   Description : Update Admin creative space
-  Timestamp   : 2026-11-21T01:35:51.621Z
-  HTTP Status : 200 (Expected: 200) | Duration: 678 ms
-  Request     : {"providerId":"6c238872-e4cf-4b99-b9f0-059412ccfb6d","name":"Temp Admin Space Updated 1795224931432","type":"STUDIO","description":"Updated by Admin Space API test","address":"789 Dong Khoi, HCMC","capacity":12,"status":"INACTIVE"}
-  Response    : {"spaceId":"8d3e1dc1-df34-4b97-bef4-394375551101","providerId":"6c238872-e4cf-4b99-b9f0-059412ccfb6d","providerBusinessName":"Temp Admin Provider Updated 1795224931432","name":"Temp Admin Space Updated 1795224931432","type":"STUDIO","description":"Updated by Admin Space API test","address":"789 Dong Khoi, HCMC","capacity":12,"hourlyRate":0,"conditionStatus":"GOOD","statusNote":null,"status":"INACTIVE","createdAt":"2026-11-21T01:35:51.065805Z","updatedAt":"2026-11-21T01:35:51.95235Z"}
+  Timestamp   : 2026-11-25T09:47:53.494Z
+  HTTP Status : 200 (Expected: 200) | Duration: 345 ms
+  Request     : {"providerId":"50c7bec5-60df-4dd7-91c9-36fcc6c2cba8","name":"Temp Admin Space Updated 1795600062243","type":"STUDIO","description":"Updated by Admin Space API test","address":"789 Dong Khoi, HCMC","capacity":12,"status":"INACTIVE"}
+  Response    : {"spaceId":"3e4f6817-a7df-464f-8f84-ca386ddc07c1","providerId":"50c7bec5-60df-4dd7-91c9-36fcc6c2cba8","providerBusinessName":"Temp Admin Provider Updated 1795600062243","name":"Temp Admin Space Updated 1795600062243","type":"STUDIO","description":"Updated by Admin Space API test","address":"789 Dong Khoi, HCMC","capacity":12,"hourlyRate":0,"conditionStatus":"GOOD","statusNote":null,"status":"INACTIVE","createdAt":"2026-11-25T09:47:53.820612Z","updatedAt":"2026-11-25T09:47:54.44336Z"}
 
-[#24] [PASS] PATCH /admin/spaces/8d3e1dc1-df34-4b97-bef4-394375551101/status
+[#24] [PASS] PATCH /admin/spaces/3e4f6817-a7df-464f-8f84-ca386ddc07c1/status
   Description : Update Admin creative space status (PATCH status)
-  Timestamp   : 2026-11-21T01:35:52.299Z
-  HTTP Status : 200 (Expected: 200) | Duration: 663 ms
+  Timestamp   : 2026-11-25T09:47:53.839Z
+  HTTP Status : 200 (Expected: 200) | Duration: 190 ms
   Request     : {"status":"ACTIVE"}
-  Response    : {"spaceId":"8d3e1dc1-df34-4b97-bef4-394375551101","providerId":"6c238872-e4cf-4b99-b9f0-059412ccfb6d","providerBusinessName":"Temp Admin Provider Updated 1795224931432","name":"Temp Admin Space Updated 1795224931432","type":"STUDIO","description":"Updated by Admin Space API test","address":"789 Dong Khoi, HCMC","capacity":12,"hourlyRate":0,"conditionStatus":"GOOD","statusNote":null,"status":"ACTIVE","createdAt":"2026-11-21T01:35:51.065805Z","updatedAt":"2026-11-21T01:35:52.630136Z"}
+  Response    : {"spaceId":"3e4f6817-a7df-464f-8f84-ca386ddc07c1","providerId":"50c7bec5-60df-4dd7-91c9-36fcc6c2cba8","providerBusinessName":"Temp Admin Provider Updated 1795600062243","name":"Temp Admin Space Updated 1795600062243","type":"STUDIO","description":"Updated by Admin Space API test","address":"789 Dong Khoi, HCMC","capacity":12,"hourlyRate":0,"conditionStatus":"GOOD","statusNote":null,"status":"ACTIVE","createdAt":"2026-11-25T09:47:53.820612Z","updatedAt":"2026-11-25T09:47:54.684633Z"}
 
-[#25] [PASS] DELETE /admin/spaces/8d3e1dc1-df34-4b97-bef4-394375551101
+[#25] [PASS] DELETE /admin/spaces/3e4f6817-a7df-464f-8f84-ca386ddc07c1
   Description : Delete Admin creative space
-  Timestamp   : 2026-11-21T01:35:52.962Z
-  HTTP Status : 204 (Expected: 204) | Duration: 1425 ms
+  Timestamp   : 2026-11-25T09:47:54.029Z
+  HTTP Status : 204 (Expected: 204) | Duration: 404 ms
   Response    : (empty)
 
-[#26] [PASS] DELETE /admin/providers/6c238872-e4cf-4b99-b9f0-059412ccfb6d
+[#26] [PASS] DELETE /admin/providers/50c7bec5-60df-4dd7-91c9-36fcc6c2cba8
   Description : Delete Admin provider
-  Timestamp   : 2026-11-21T01:35:54.387Z
-  HTTP Status : 204 (Expected: 204) | Duration: 2457 ms
+  Timestamp   : 2026-11-25T09:47:54.433Z
+  HTTP Status : 204 (Expected: 204) | Duration: 280 ms
   Response    : (empty)
 
 [#27] [PASS] GET /admin/bookings?page=1&pageSize=10
   Description : List Admin bookings / transactions
-  Timestamp   : 2026-11-21T01:35:56.845Z
-  HTTP Status : 200 (Expected: 200) | Duration: 441 ms
-  Response    : {"items":[{"bookingId":"80000000-0000-0000-0000-000000000001","bookingDate":"2026-11-18","startTime":"09:00:00","endTime":"10:00:00","totalAmount":100000,"depositAmount":30000,"status":"COMPLETED","photographerName":"Nguyen Minh Anh","providerName":"","spaceName":"Studio Daylight"},{"bookingId":"80000000-0000-0000-0000-000000000002","bookingDate":"2026-11-18","startTime":"11:00:00","endTime":"12:00:00","totalAmount":80000,"depositAmount":24000,"status":"COMPLETED","photographerName":"Tran Bao Chau","providerName":"","spaceName":"Darkroom B&W"},{"bookingId":"80000000-0000-0000-0000-000000000003... [truncated]
+  Timestamp   : 2026-11-25T09:47:54.713Z
+  HTTP Status : 200 (Expected: 200) | Duration: 748 ms
+  Response    : {"items":[{"bookingId":"f572f1e8-4aa0-4c14-b256-d5aeac850a24","bookingDate":"2026-11-28","startTime":"12:45:00","endTime":"15:45:00","totalAmount":2250000,"depositAmount":675000,"status":"CANCELLED","photographerName":"API Tester","providerName":"","spaceName":"CuongNM Test Studio 1"},{"bookingId":"a0f336fb-0e4e-4f78-ba4a-d52920dc86de","bookingDate":"2026-11-28","startTime":"12:45:00","endTime":"15:45:00","totalAmount":2250000,"depositAmount":675000,"status":"CANCELLED","photographerName":"API Tester","providerName":"","spaceName":"CuongNM Test Studio 1"},{"bookingId":"7b1a9132-91c8-4255-ab3d-... [truncated]
 
-[#28] [PASS] GET /admin/bookings/80000000-0000-0000-0000-000000000001
+[#28] [PASS] GET /admin/bookings/f572f1e8-4aa0-4c14-b256-d5aeac850a24
   Description : Get Admin booking detail by ID
-  Timestamp   : 2026-11-21T01:35:57.286Z
-  HTTP Status : 200 (Expected: 200) | Duration: 283 ms
-  Response    : {"bookingId":"80000000-0000-0000-0000-000000000001","bookingDate":"2026-11-18","startTime":"09:00:00","endTime":"10:00:00","totalAmount":100000,"depositAmount":30000,"status":"COMPLETED","createdAt":"2026-11-16T20:27:05.179415Z","updatedAt":"2026-11-20T20:45:43.26243Z","photographerName":"Nguyen Minh Anh","photographerEmail":"photographer.demo@filmbooking.local","providerName":"","providerEmail":"","providerPhone":"","spaceName":"Studio Daylight","spaceType":"STUDIO","spaceAddress":"12 Nguyen Hue, District 1, Ho Chi Minh City","packageName":null,"packagePrice":null,"payment":{"amount":30000,"p... [truncated]
+  Timestamp   : 2026-11-25T09:47:55.462Z
+  HTTP Status : 200 (Expected: 200) | Duration: 431 ms
+  Response    : {"bookingId":"f572f1e8-4aa0-4c14-b256-d5aeac850a24","bookingDate":"2026-11-28","startTime":"12:45:00","endTime":"15:45:00","totalAmount":2250000,"depositAmount":675000,"status":"CANCELLED","createdAt":"2026-11-25T01:05:25.633024Z","updatedAt":"2026-11-25T01:05:30.919629Z","photographerName":"API Tester","photographerEmail":"apitest_20261125_080502@example.com","providerName":"","providerEmail":"","providerPhone":"","spaceName":"CuongNM Test Studio 1","spaceType":"STUDIO","spaceAddress":"D2 Street, District 9, Ho Chi Minh City","packageName":null,"packagePrice":null,"payment":{"amount":675000,"... [truncated]
 
 [#29] [PASS] PATCH /admin/bookings/00000000-0000-0000-0000-000000000000/no-show
   Description : Verify Admin mark booking No-Show endpoint contract
-  Timestamp   : 2026-11-21T01:35:57.569Z
-  HTTP Status : 404 (Expected: 404) | Duration: 369 ms
+  Timestamp   : 2026-11-25T09:47:55.894Z
+  HTTP Status : 404 (Expected: 404) | Duration: 353 ms
   Request     : {"staffNote":"Contract verification test"}
-  Response    : {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Not Found","status":404,"traceId":"00-8e6bd72a379e086ab3653731c9cd2ea1-c45f6b4a86d55dc9-00"}
+  Response    : {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Not Found","status":404,"traceId":"00-a1985a0ad7e2bac55d562fdb773b6aee-7a779efa4d550a88-00"}
 
 
 --------------------------------------------------------------------------------
@@ -210,347 +210,373 @@ SECTION: 3. PROVIDER ENDPOINTS
 --------------------------------------------------------------------------------
 [#30] [PASS] GET /provider/account
   Description : Get Provider business account profile
-  Timestamp   : 2026-11-21T01:35:57.938Z
-  HTTP Status : 200 (Expected: 200) | Duration: 221 ms
-  Response    : {"userId":"10000000-0000-0000-0000-000000000002","businessName":"Analog House Studio","businessDescription":"Demo studio and darkroom provider.","businessAddress":"12 Nguyen Hue, District 1, Ho Chi Minh City","businessPhone":"+84900000002","email":"provider.demo@filmbooking.local","providerApprovalStatus":"APPROVED","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-20T20:45:43.26243Z"}
+  Timestamp   : 2026-11-25T09:47:56.247Z
+  HTTP Status : 200 (Expected: 200) | Duration: 160 ms
+  Response    : {"userId":"10000000-0000-0000-0000-000000000002","businessName":"Analog House Studio","businessDescription":"Demo studio and darkroom provider.","businessAddress":"12 Nguyen Hue, District 1, Ho Chi Minh City","businessPhone":"+84900000002","email":"provider.demo@filmbooking.local","providerApprovalStatus":"APPROVED","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-21T01:35:58.488402Z"}
 
 [#31] [PASS] PUT /provider/account
   Description : Update Provider business account profile
-  Timestamp   : 2026-11-21T01:35:58.159Z
-  HTTP Status : 200 (Expected: 200) | Duration: 438 ms
+  Timestamp   : 2026-11-25T09:47:56.407Z
+  HTTP Status : 200 (Expected: 200) | Duration: 228 ms
   Request     : {"businessName":"Analog House Studio","businessDescription":"Demo studio and darkroom provider.","businessAddress":"12 Nguyen Hue, District 1, Ho Chi Minh City","businessPhone":"+84900000002"}
-  Response    : {"userId":"10000000-0000-0000-0000-000000000002","businessName":"Analog House Studio","businessDescription":"Demo studio and darkroom provider.","businessAddress":"12 Nguyen Hue, District 1, Ho Chi Minh City","businessPhone":"+84900000002","email":"provider.demo@filmbooking.local","providerApprovalStatus":"APPROVED","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-21T01:35:58.5959635Z"}
+  Response    : {"userId":"10000000-0000-0000-0000-000000000002","businessName":"Analog House Studio","businessDescription":"Demo studio and darkroom provider.","businessAddress":"12 Nguyen Hue, District 1, Ho Chi Minh City","businessPhone":"+84900000002","email":"provider.demo@filmbooking.local","providerApprovalStatus":"APPROVED","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-25T09:47:57.2965137Z"}
 
 [#32] [PASS] GET /provider/dashboard
   Description : Get Provider Dashboard analytics & utilization metrics
-  Timestamp   : 2026-11-21T01:35:58.597Z
-  HTTP Status : 200 (Expected: 200) | Duration: 1486 ms
+  Timestamp   : 2026-11-25T09:47:56.635Z
+  HTTP Status : 200 (Expected: 200) | Duration: 200 ms
   Response    : {"totalSpaces":6,"activeSpaces":6,"totalEquipment":6,"activeEquipment":6,"pendingBookings":0,"confirmedBookings":0,"revenue":69000,"occupancyRate":0.04,"equipmentUtilizationRate":0.02,"scheduledMaintenance":0}
 
 [#33] [PASS] GET /provider/spaces?page=1&pageSize=20
   Description : List Provider creative spaces
-  Timestamp   : 2026-11-21T01:36:00.083Z
-  HTTP Status : 200 (Expected: 200) | Duration: 419 ms
-  Response    : {"items":[{"spaceId":"20000000-0000-0000-0000-000000000001","providerId":"10000000-0000-0000-0000-000000000002","name":"Studio Daylight","type":"STUDIO","description":"Bright portrait studio with a north-facing window.","address":"12 Nguyen Hue, District 1, Ho Chi Minh City","capacity":8,"hourlyRate":250000,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":"No issues reported; ready for booking.","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-20T20:45:43.26243Z","details":{"lengthM":8,"widthM":6,"heightM":3.5,"artisticStyle":"Minimalist","lightingConditions":"Large north-... [truncated]
+  Timestamp   : 2026-11-25T09:47:56.836Z
+  HTTP Status : 200 (Expected: 200) | Duration: 178 ms
+  Response    : {"items":[{"spaceId":"20000000-0000-0000-0000-000000000001","providerId":"10000000-0000-0000-0000-000000000002","name":"Studio Daylight","type":"STUDIO","description":"Bright portrait studio with a north-facing window.","address":"12 Nguyen Hue, District 1, Ho Chi Minh City","capacity":8,"hourlyRate":250000,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":"No issues reported; ready for booking.","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-20T20:45:43.26243Z","details":{"lengthM":8,"widthM":6,"heightM":3.5,"artisticStyle":"Minimalist","supportedProcesses":null,"lightin... [truncated]
 
 [#34] [PASS] POST /provider/spaces
   Description : Create Provider Darkroom space
-  Timestamp   : 2026-11-21T01:36:00.503Z
-  HTTP Status : 201 (Expected: 201) | Duration: 634 ms
-  Request     : {"name":"Temp Provider Darkroom 1795224931432","type":"DARKROOM","description":"Temporary darkroom for full API verification","address":"101 Pasteur, HCMC","capacity":4,"status":"ACTIVE"}
-  Response    : {"spaceId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","providerId":"10000000-0000-0000-0000-000000000002","name":"Temp Provider Darkroom 1795224931432","type":"DARKROOM","description":"Temporary darkroom for full API verification","address":"101 Pasteur, HCMC","capacity":4,"hourlyRate":0,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":null,"createdAt":"2026-11-21T01:36:00.732238Z","updatedAt":null,"details":{"lengthM":null,"widthM":null,"heightM":null,"artisticStyle":null,"lightingConditions":null,"ventilationDetails":null,"acousticDetails":null,"usagePolicies":null},"images":[]}
+  Timestamp   : 2026-11-25T09:47:57.014Z
+  HTTP Status : 201 (Expected: 201) | Duration: 342 ms
+  Request     : {"name":"Temp Provider Darkroom 1795600062243","type":"DARKROOM","description":"Temporary darkroom for full API verification","address":"101 Pasteur, HCMC","capacity":4,"status":"ACTIVE"}
+  Response    : {"spaceId":"bf20c398-1394-498d-a0d8-c049f78ff632","providerId":"10000000-0000-0000-0000-000000000002","name":"Temp Provider Darkroom 1795600062243","type":"DARKROOM","description":"Temporary darkroom for full API verification","address":"101 Pasteur, HCMC","capacity":4,"hourlyRate":0,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":null,"createdAt":"2026-11-25T09:47:57.806512Z","updatedAt":null,"details":{"lengthM":null,"widthM":null,"heightM":null,"artisticStyle":null,"supportedProcesses":null,"lightingConditions":null,"ventilationDetails":null,"acousticDetails":null,"usagePolicies":nu... [truncated]
 
-[#35] [PASS] GET /provider/spaces/5ab30790-951c-4262-a6f1-9d4d8d4978e2
+[#35] [PASS] GET /provider/spaces/bf20c398-1394-498d-a0d8-c049f78ff632
   Description : Get Provider creative space details by ID
-  Timestamp   : 2026-11-21T01:36:01.137Z
-  HTTP Status : 200 (Expected: 200) | Duration: 349 ms
-  Response    : {"spaceId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","providerId":"10000000-0000-0000-0000-000000000002","name":"Temp Provider Darkroom 1795224931432","type":"DARKROOM","description":"Temporary darkroom for full API verification","address":"101 Pasteur, HCMC","capacity":4,"hourlyRate":0,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":null,"createdAt":"2026-11-21T01:36:00.732238Z","updatedAt":null,"details":{"lengthM":null,"widthM":null,"heightM":null,"artisticStyle":null,"lightingConditions":null,"ventilationDetails":null,"acousticDetails":null,"usagePolicies":null},"images":[]}
+  Timestamp   : 2026-11-25T09:47:57.357Z
+  HTTP Status : 200 (Expected: 200) | Duration: 134 ms
+  Response    : {"spaceId":"bf20c398-1394-498d-a0d8-c049f78ff632","providerId":"10000000-0000-0000-0000-000000000002","name":"Temp Provider Darkroom 1795600062243","type":"DARKROOM","description":"Temporary darkroom for full API verification","address":"101 Pasteur, HCMC","capacity":4,"hourlyRate":0,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":null,"createdAt":"2026-11-25T09:47:57.806512Z","updatedAt":null,"details":{"lengthM":null,"widthM":null,"heightM":null,"artisticStyle":null,"supportedProcesses":null,"lightingConditions":null,"ventilationDetails":null,"acousticDetails":null,"usagePolicies":nu... [truncated]
 
-[#36] [PASS] PUT /provider/spaces/5ab30790-951c-4262-a6f1-9d4d8d4978e2
+[#36] [PASS] PUT /provider/spaces/bf20c398-1394-498d-a0d8-c049f78ff632
   Description : Update Provider creative space
-  Timestamp   : 2026-11-21T01:36:01.486Z
-  HTTP Status : 200 (Expected: 200) | Duration: 907 ms
-  Request     : {"name":"Temp Provider Darkroom Updated 1795224931432","type":"DARKROOM","description":"Updated temporary darkroom","address":"101 Pasteur, HCMC","capacity":5,"status":"ACTIVE"}
-  Response    : {"spaceId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","providerId":"10000000-0000-0000-0000-000000000002","name":"Temp Provider Darkroom Updated 1795224931432","type":"DARKROOM","description":"Updated temporary darkroom","address":"101 Pasteur, HCMC","capacity":5,"hourlyRate":0,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":null,"createdAt":"2026-11-21T01:36:00.732238Z","updatedAt":"2026-11-21T01:36:02.051014Z","details":{"lengthM":null,"widthM":null,"heightM":null,"artisticStyle":null,"lightingConditions":null,"ventilationDetails":null,"acousticDetails":null,"usagePolicies":null},"images... [truncated]
+  Timestamp   : 2026-11-25T09:47:57.491Z
+  HTTP Status : 200 (Expected: 200) | Duration: 289 ms
+  Request     : {"name":"Temp Provider Darkroom Updated 1795600062243","type":"DARKROOM","description":"Updated temporary darkroom","address":"101 Pasteur, HCMC","capacity":5,"status":"ACTIVE"}
+  Response    : {"spaceId":"bf20c398-1394-498d-a0d8-c049f78ff632","providerId":"10000000-0000-0000-0000-000000000002","name":"Temp Provider Darkroom Updated 1795600062243","type":"DARKROOM","description":"Updated temporary darkroom","address":"101 Pasteur, HCMC","capacity":5,"hourlyRate":0,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":null,"createdAt":"2026-11-25T09:47:57.806512Z","updatedAt":"2026-11-25T09:47:58.419333Z","details":{"lengthM":null,"widthM":null,"heightM":null,"artisticStyle":null,"supportedProcesses":null,"lightingConditions":null,"ventilationDetails":null,"acousticDetails":null,"us... [truncated]
 
-[#37] [PASS] POST /provider/spaces/5ab30790-951c-4262-a6f1-9d4d8d4978e2/images
+[#37] [PASS] POST /provider/spaces/bf20c398-1394-498d-a0d8-c049f78ff632/images
   Description : Add image URL to Provider creative space
-  Timestamp   : 2026-11-21T01:36:02.393Z
-  HTTP Status : 201 (Expected: 201) | Duration: 454 ms
+  Timestamp   : 2026-11-25T09:47:57.780Z
+  HTTP Status : 201 (Expected: 201) | Duration: 177 ms
   Request     : {"imageUrl":"https://images.unsplash.com/photo-1516035069371-29a1b244cc32"}
-  Response    : {"imageId":"0b9ccc1e-df69-4f53-987c-c788a831024a","imageUrl":"https://images.unsplash.com/photo-1516035069371-29a1b244cc32","createdAt":"2026-11-21T01:36:02.7218846Z","imageType":"OTHER"}
+  Response    : {"imageId":"64180932-fcc7-4e50-94cf-2202c02c0095","imageUrl":"https://images.unsplash.com/photo-1516035069371-29a1b244cc32","createdAt":"2026-11-25T09:47:58.6087452Z","imageType":"OTHER"}
 
-[#38] [PASS] DELETE /provider/spaces/5ab30790-951c-4262-a6f1-9d4d8d4978e2/images/0b9ccc1e-df69-4f53-987c-c788a831024a
+[#38] [PASS] DELETE /provider/spaces/bf20c398-1394-498d-a0d8-c049f78ff632/images/64180932-fcc7-4e50-94cf-2202c02c0095
   Description : Delete image from Provider creative space
-  Timestamp   : 2026-11-21T01:36:02.847Z
-  HTTP Status : 204 (Expected: 204) | Duration: 548 ms
+  Timestamp   : 2026-11-25T09:47:57.957Z
+  HTTP Status : 204 (Expected: 204) | Duration: 198 ms
   Response    : (empty)
 
-[#39] [PASS] POST /provider/spaces/5ab30790-951c-4262-a6f1-9d4d8d4978e2/availability
+[#39] [PASS] POST /provider/spaces/bf20c398-1394-498d-a0d8-c049f78ff632/availability
   Description : Create availability slot for Provider space
-  Timestamp   : 2026-11-21T01:36:03.395Z
-  HTTP Status : 201 (Expected: 201) | Duration: 786 ms
+  Timestamp   : 2026-11-25T09:47:58.156Z
+  HTTP Status : 201 (Expected: 201) | Duration: 173 ms
   Request     : {"availableDate":"2026-12-20","startTime":"09:00:00","endTime":"12:00:00","status":"AVAILABLE","price":500000}
-  Response    : {"availabilityId":"1d645fbe-e90c-465f-b4dc-dc2377c43c89","spaceId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","availableDate":"2026-12-20","startTime":"09:00:00","endTime":"12:00:00","status":"AVAILABLE","price":500000}
+  Response    : {"availabilityId":"287efdce-6fa1-4376-9b3e-295fc4413ac5","spaceId":"bf20c398-1394-498d-a0d8-c049f78ff632","availableDate":"2026-12-20","startTime":"09:00:00","endTime":"12:00:00","status":"AVAILABLE","price":500000}
 
-[#40] [PASS] GET /provider/spaces/5ab30790-951c-4262-a6f1-9d4d8d4978e2/availability
+[#40] [PASS] GET /provider/spaces/bf20c398-1394-498d-a0d8-c049f78ff632/availability
   Description : List availability slots for Provider space
-  Timestamp   : 2026-11-21T01:36:04.181Z
-  HTTP Status : 200 (Expected: 200) | Duration: 432 ms
-  Response    : [{"availabilityId":"1d645fbe-e90c-465f-b4dc-dc2377c43c89","spaceId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","availableDate":"2026-12-20","startTime":"09:00:00","endTime":"12:00:00","status":"AVAILABLE","price":500000}]
+  Timestamp   : 2026-11-25T09:47:58.329Z
+  HTTP Status : 200 (Expected: 200) | Duration: 130 ms
+  Response    : [{"availabilityId":"287efdce-6fa1-4376-9b3e-295fc4413ac5","spaceId":"bf20c398-1394-498d-a0d8-c049f78ff632","availableDate":"2026-12-20","startTime":"09:00:00","endTime":"12:00:00","status":"AVAILABLE","price":500000}]
 
-[#41] [PASS] PUT /provider/spaces/5ab30790-951c-4262-a6f1-9d4d8d4978e2/availability/1d645fbe-e90c-465f-b4dc-dc2377c43c89
+[#41] [PASS] PUT /provider/spaces/bf20c398-1394-498d-a0d8-c049f78ff632/availability/287efdce-6fa1-4376-9b3e-295fc4413ac5
   Description : Update availability slot for Provider space
-  Timestamp   : 2026-11-21T01:36:04.613Z
-  HTTP Status : 200 (Expected: 200) | Duration: 1174 ms
+  Timestamp   : 2026-11-25T09:47:58.459Z
+  HTTP Status : 200 (Expected: 200) | Duration: 266 ms
   Request     : {"availableDate":"2026-12-20","startTime":"10:00:00","endTime":"13:00:00","status":"AVAILABLE","price":550000}
-  Response    : {"availabilityId":"1d645fbe-e90c-465f-b4dc-dc2377c43c89","spaceId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","availableDate":"2026-12-20","startTime":"10:00:00","endTime":"13:00:00","status":"AVAILABLE","price":550000}
+  Response    : {"availabilityId":"287efdce-6fa1-4376-9b3e-295fc4413ac5","spaceId":"bf20c398-1394-498d-a0d8-c049f78ff632","availableDate":"2026-12-20","startTime":"10:00:00","endTime":"13:00:00","status":"AVAILABLE","price":550000}
 
-[#42] [PASS] DELETE /provider/spaces/5ab30790-951c-4262-a6f1-9d4d8d4978e2/availability/1d645fbe-e90c-465f-b4dc-dc2377c43c89
+[#42] [PASS] DELETE /provider/spaces/bf20c398-1394-498d-a0d8-c049f78ff632/availability/287efdce-6fa1-4376-9b3e-295fc4413ac5
   Description : Delete availability slot from Provider space
-  Timestamp   : 2026-11-21T01:36:05.787Z
-  HTTP Status : 204 (Expected: 204) | Duration: 958 ms
+  Timestamp   : 2026-11-25T09:47:58.725Z
+  HTTP Status : 204 (Expected: 204) | Duration: 201 ms
   Response    : (empty)
 
 [#43] [PASS] GET /provider/equipment?page=1&pageSize=10
   Description : List Provider equipment catalogue
-  Timestamp   : 2026-11-21T01:36:06.745Z
-  HTTP Status : 200 (Expected: 200) | Duration: 359 ms
+  Timestamp   : 2026-11-25T09:47:58.926Z
+  HTTP Status : 200 (Expected: 200) | Duration: 132 ms
   Response    : {"items":[{"equipmentId":"40000000-0000-0000-0000-000000000001","spaceId":"20000000-0000-0000-0000-000000000001","spaceType":"STUDIO","equipmentType":"STUDIO","name":"Canon EOS 5D Mark IV","category":"Camera","variant":"Full-frame DSLR","description":"Studio camera body with two batteries.","specificationsJson":"{\"mount\": \"EF\", \"sensor\": \"30.4MP\", \"batteryCount\": 2}","quantityTotal":2,"rentalPrice":50000,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":"No issues reported; equipment is ready to rent.","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-20T20:45:43.2... [truncated]
 
 [#44] [PASS] POST /provider/equipment
   Description : Create Provider equipment
-  Timestamp   : 2026-11-21T01:36:07.104Z
-  HTTP Status : 201 (Expected: 201) | Duration: 669 ms
-  Request     : {"spaceId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","name":"Temp Enlarger 1795224931432","category":"Enlarger","equipmentType":"DARKROOM","variant":"Beseler 23C III","description":"Temporary enlarger for API test","quantityTotal":2,"rentalPrice":200000,"conditionStatus":"GOOD","conditionNote":null,"lastCheckedAt":"2026-11-21T01:36:07.104Z","status":"ACTIVE","statusNote":null}
-  Response    : {"equipmentId":"07a98691-1414-47e7-a6b5-76989d598918","spaceId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","spaceType":"DARKROOM","equipmentType":"DARKROOM","name":"Temp Enlarger 1795224931432","category":"Enlarger","variant":"Beseler 23C III","description":"Temporary enlarger for API test","specificationsJson":null,"quantityTotal":2,"rentalPrice":200000,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":null,"createdAt":"2026-11-21T01:36:07.6559902Z","updatedAt":null}
+  Timestamp   : 2026-11-25T09:47:59.059Z
+  HTTP Status : 201 (Expected: 201) | Duration: 165 ms
+  Request     : {"spaceId":"bf20c398-1394-498d-a0d8-c049f78ff632","name":"Temp Enlarger 1795600062243","category":"Enlarger","equipmentType":"DARKROOM","variant":"Beseler 23C III","description":"Temporary enlarger for API test","quantityTotal":2,"rentalPrice":200000,"conditionStatus":"GOOD","conditionNote":null,"lastCheckedAt":"2026-11-25T09:47:59.059Z","status":"ACTIVE","statusNote":null}
+  Response    : {"equipmentId":"6c65db40-c8fa-41e0-855e-76b1ae8371c7","spaceId":"bf20c398-1394-498d-a0d8-c049f78ff632","spaceType":"DARKROOM","equipmentType":"DARKROOM","name":"Temp Enlarger 1795600062243","category":"Enlarger","variant":"Beseler 23C III","description":"Temporary enlarger for API test","specificationsJson":null,"quantityTotal":2,"rentalPrice":200000,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":null,"createdAt":"2026-11-25T09:47:59.8774337Z","updatedAt":null}
 
-[#45] [PASS] GET /provider/equipment/07a98691-1414-47e7-a6b5-76989d598918
+[#45] [PASS] GET /provider/equipment/6c65db40-c8fa-41e0-855e-76b1ae8371c7
   Description : Get Provider equipment detail by ID
-  Timestamp   : 2026-11-21T01:36:07.773Z
-  HTTP Status : 200 (Expected: 200) | Duration: 220 ms
-  Response    : {"equipmentId":"07a98691-1414-47e7-a6b5-76989d598918","spaceId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","spaceType":"DARKROOM","equipmentType":"DARKROOM","name":"Temp Enlarger 1795224931432","category":"Enlarger","variant":"Beseler 23C III","description":"Temporary enlarger for API test","specificationsJson":null,"quantityTotal":2,"rentalPrice":200000,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":null,"createdAt":"2026-11-21T01:36:07.65599Z","updatedAt":null}
+  Timestamp   : 2026-11-25T09:47:59.224Z
+  HTTP Status : 200 (Expected: 200) | Duration: 131 ms
+  Response    : {"equipmentId":"6c65db40-c8fa-41e0-855e-76b1ae8371c7","spaceId":"bf20c398-1394-498d-a0d8-c049f78ff632","spaceType":"DARKROOM","equipmentType":"DARKROOM","name":"Temp Enlarger 1795600062243","category":"Enlarger","variant":"Beseler 23C III","description":"Temporary enlarger for API test","specificationsJson":null,"quantityTotal":2,"rentalPrice":200000,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":null,"createdAt":"2026-11-25T09:47:59.877433Z","updatedAt":null}
 
-[#46] [PASS] PUT /provider/equipment/07a98691-1414-47e7-a6b5-76989d598918
+[#46] [PASS] PUT /provider/equipment/6c65db40-c8fa-41e0-855e-76b1ae8371c7
   Description : Update Provider equipment
-  Timestamp   : 2026-11-21T01:36:07.993Z
-  HTTP Status : 200 (Expected: 200) | Duration: 658 ms
-  Request     : {"name":"Temp Enlarger Updated 1795224931432","category":"Enlarger","equipmentType":"DARKROOM","variant":"Beseler 23C III-XL","description":"Updated enlarger","quantityTotal":3,"rentalPrice":250000,"conditionStatus":"GOOD","conditionNote":"Checked OK","lastCheckedAt":"2026-11-21T01:36:07.993Z","status":"ACTIVE","statusNote":null}
-  Response    : {"equipmentId":"07a98691-1414-47e7-a6b5-76989d598918","spaceId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","spaceType":"DARKROOM","equipmentType":"DARKROOM","name":"Temp Enlarger Updated 1795224931432","category":"Enlarger","variant":"Beseler 23C III-XL","description":"Updated enlarger","specificationsJson":null,"quantityTotal":3,"rentalPrice":250000,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":null,"createdAt":"2026-11-21T01:36:07.65599Z","updatedAt":"2026-11-21T01:36:08.4385363Z"}
+  Timestamp   : 2026-11-25T09:47:59.355Z
+  HTTP Status : 200 (Expected: 200) | Duration: 288 ms
+  Request     : {"name":"Temp Enlarger Updated 1795600062243","category":"Enlarger","equipmentType":"DARKROOM","variant":"Beseler 23C III-XL","description":"Updated enlarger","quantityTotal":3,"rentalPrice":250000,"conditionStatus":"GOOD","conditionNote":"Checked OK","lastCheckedAt":"2026-11-25T09:47:59.355Z","status":"ACTIVE","statusNote":null}
+  Response    : {"equipmentId":"6c65db40-c8fa-41e0-855e-76b1ae8371c7","spaceId":"bf20c398-1394-498d-a0d8-c049f78ff632","spaceType":"DARKROOM","equipmentType":"DARKROOM","name":"Temp Enlarger Updated 1795600062243","category":"Enlarger","variant":"Beseler 23C III-XL","description":"Updated enlarger","specificationsJson":null,"quantityTotal":3,"rentalPrice":250000,"status":"ACTIVE","conditionStatus":"GOOD","statusNote":null,"createdAt":"2026-11-25T09:47:59.877433Z","updatedAt":"2026-11-25T09:48:00.2716806Z"}
 
-[#47] [PASS] GET /provider/chemicals?page=1&pageSize=20
+[#47] [PASS] GET /provider/equipment/6c65db40-c8fa-41e0-855e-76b1ae8371c7/availability
+  Description : List Provider equipment availability
+  Timestamp   : 2026-11-25T09:47:59.643Z
+  HTTP Status : 200 (Expected: 200) | Duration: 131 ms
+  Response    : []
+
+[#48] [PASS] POST /provider/equipment/6c65db40-c8fa-41e0-855e-76b1ae8371c7/availability
+  Description : Create Provider equipment availability slot
+  Timestamp   : 2026-11-25T09:47:59.774Z
+  HTTP Status : 201 (Expected: 200/201) | Duration: 145 ms
+  Request     : {"availableDate":"2026-12-31","startTime":"09:00:00","endTime":"17:00:00","status":"AVAILABLE","price":300000}
+  Response    : {"availabilityId":"98470bcf-16c8-445c-a337-a0d17b6daeba","equipmentId":"6c65db40-c8fa-41e0-855e-76b1ae8371c7","availableDate":"2026-12-31","startTime":"09:00:00","endTime":"17:00:00","status":"AVAILABLE","price":300000}
+
+[#49] [PASS] PUT /provider/equipment/6c65db40-c8fa-41e0-855e-76b1ae8371c7/availability/98470bcf-16c8-445c-a337-a0d17b6daeba
+  Description : Update Provider equipment availability slot
+  Timestamp   : 2026-11-25T09:47:59.920Z
+  HTTP Status : 200 (Expected: 200/204) | Duration: 284 ms
+  Request     : {"availableDate":"2026-12-31","startTime":"09:00:00","endTime":"18:00:00","status":"AVAILABLE","price":350000}
+  Response    : {"availabilityId":"98470bcf-16c8-445c-a337-a0d17b6daeba","equipmentId":"6c65db40-c8fa-41e0-855e-76b1ae8371c7","availableDate":"2026-12-31","startTime":"09:00:00","endTime":"18:00:00","status":"AVAILABLE","price":350000}
+
+[#50] [PASS] DELETE /provider/equipment/6c65db40-c8fa-41e0-855e-76b1ae8371c7/availability/98470bcf-16c8-445c-a337-a0d17b6daeba
+  Description : Delete Provider equipment availability slot
+  Timestamp   : 2026-11-25T09:48:00.204Z
+  HTTP Status : 204 (Expected: 200/204) | Duration: 228 ms
+  Response    : (empty)
+
+[#51] [PASS] GET /provider/chemicals?page=1&pageSize=20
   Description : List Provider darkroom chemicals
-  Timestamp   : 2026-11-21T01:36:08.652Z
-  HTTP Status : 200 (Expected: 200) | Duration: 353 ms
-  Response    : {"items":[{"chemicalId":"50000000-0000-0000-0000-000000000001","darkroomId":"30000000-0000-0000-0000-000000000001","name":"Developer","chemicalType":"B&W developer","brand":"Kodak","stockQuantity":5000,"stockUnit":"ml","minimumStock":500,"isLowStock":false,"unitCost":0.08,"expiresOn":"2027-05-19","status":"ACTIVE","statusNote":"Fresh stock; above the minimum level.","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-20T20:45:43.26243Z"},{"chemicalId":"50000000-0000-0000-0000-000000000002","darkroomId":"30000000-0000-0000-0000-000000000002","name":"C-41 Developer","chemicalType":"Co... [truncated]
+  Timestamp   : 2026-11-25T09:48:00.432Z
+  HTTP Status : 200 (Expected: 200) | Duration: 268 ms
+  Response    : {"items":[{"chemicalId":"50000000-0000-0000-0000-000000000001","darkroomId":"30000000-0000-0000-0000-000000000001","name":"Developer","chemicalType":"B&W developer","brand":"Kodak","stockQuantity":5000,"stockUnit":"ml","minimumStock":500,"isLowStock":false,"unitCost":0.08,"expiresOn":"2027-05-19","status":"ACTIVE","statusNote":"Fresh stock; above the minimum level.","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-21T01:36:10.987144Z"},{"chemicalId":"50000000-0000-0000-0000-000000000002","darkroomId":"30000000-0000-0000-0000-000000000002","name":"C-41 Developer","chemicalType":"C... [truncated]
 
-[#48] [PASS] POST /provider/chemicals
+[#52] [PASS] POST /provider/chemicals
   Description : Create Provider darkroom chemical
-  Timestamp   : 2026-11-21T01:36:09.005Z
-  HTTP Status : 201 (Expected: 201) | Duration: 447 ms
-  Request     : {"darkroomId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","name":"Temp Ilford ID-11 1795224931432","chemicalType":"DEVELOPER","brand":"Ilford","stockQuantity":4,"stockUnit":"L","minimumStock":1,"unitCost":300000,"expiresOn":"2027-06-30","status":"ACTIVE","statusNote":null}
-  Response    : {"chemicalId":"d7000516-5ef3-4083-a0b2-d23ab3ecb0a1","darkroomId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","name":"Temp Ilford ID-11 1795224931432","chemicalType":"DEVELOPER","brand":"Ilford","stockQuantity":4,"stockUnit":"L","minimumStock":1,"isLowStock":false,"unitCost":300000,"expiresOn":"2027-06-30","status":"ACTIVE","statusNote":null,"createdAt":"2026-11-21T01:36:09.3331666Z","updatedAt":null}
+  Timestamp   : 2026-11-25T09:48:00.700Z
+  HTTP Status : 201 (Expected: 201) | Duration: 589 ms
+  Request     : {"darkroomId":"bf20c398-1394-498d-a0d8-c049f78ff632","name":"Temp Ilford ID-11 1795600062243","chemicalType":"DEVELOPER","brand":"Ilford","stockQuantity":4,"stockUnit":"L","minimumStock":1,"unitCost":300000,"expiresOn":"2027-06-30","status":"ACTIVE","statusNote":null}
+  Response    : {"chemicalId":"18efb01f-9452-4b58-94b0-cf01a942bce0","darkroomId":"bf20c398-1394-498d-a0d8-c049f78ff632","name":"Temp Ilford ID-11 1795600062243","chemicalType":"DEVELOPER","brand":"Ilford","stockQuantity":4,"stockUnit":"L","minimumStock":1,"isLowStock":false,"unitCost":300000,"expiresOn":"2027-06-30","status":"ACTIVE","statusNote":null,"createdAt":"2026-11-25T09:48:01.58073Z","updatedAt":null}
 
-[#49] [PASS] GET /provider/chemicals/d7000516-5ef3-4083-a0b2-d23ab3ecb0a1
+[#53] [PASS] GET /provider/chemicals/18efb01f-9452-4b58-94b0-cf01a942bce0
   Description : Get Provider darkroom chemical detail by ID
-  Timestamp   : 2026-11-21T01:36:09.452Z
-  HTTP Status : 200 (Expected: 200) | Duration: 220 ms
-  Response    : {"chemicalId":"d7000516-5ef3-4083-a0b2-d23ab3ecb0a1","darkroomId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","name":"Temp Ilford ID-11 1795224931432","chemicalType":"DEVELOPER","brand":"Ilford","stockQuantity":4,"stockUnit":"L","minimumStock":1,"isLowStock":false,"unitCost":300000,"expiresOn":"2027-06-30","status":"ACTIVE","statusNote":null,"createdAt":"2026-11-21T01:36:09.333166Z","updatedAt":null}
+  Timestamp   : 2026-11-25T09:48:01.289Z
+  HTTP Status : 200 (Expected: 200) | Duration: 321 ms
+  Response    : {"chemicalId":"18efb01f-9452-4b58-94b0-cf01a942bce0","darkroomId":"bf20c398-1394-498d-a0d8-c049f78ff632","name":"Temp Ilford ID-11 1795600062243","chemicalType":"DEVELOPER","brand":"Ilford","stockQuantity":4,"stockUnit":"L","minimumStock":1,"isLowStock":false,"unitCost":300000,"expiresOn":"2027-06-30","status":"ACTIVE","statusNote":null,"createdAt":"2026-11-25T09:48:01.58073Z","updatedAt":null}
 
-[#50] [PASS] PUT /provider/chemicals/d7000516-5ef3-4083-a0b2-d23ab3ecb0a1
+[#54] [PASS] PUT /provider/chemicals/18efb01f-9452-4b58-94b0-cf01a942bce0
   Description : Update Provider darkroom chemical
-  Timestamp   : 2026-11-21T01:36:09.672Z
-  HTTP Status : 200 (Expected: 200) | Duration: 650 ms
-  Request     : {"name":"Temp Ilford ID-11 Updated 1795224931432","chemicalType":"DEVELOPER","brand":"Ilford","stockQuantity":5,"stockUnit":"L","minimumStock":1.5,"unitCost":320000,"expiresOn":"2027-06-30","status":"ACTIVE","statusNote":null}
-  Response    : {"chemicalId":"d7000516-5ef3-4083-a0b2-d23ab3ecb0a1","darkroomId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","name":"Temp Ilford ID-11 Updated 1795224931432","chemicalType":"DEVELOPER","brand":"Ilford","stockQuantity":5,"stockUnit":"L","minimumStock":1.5,"isLowStock":false,"unitCost":320000,"expiresOn":"2027-06-30","status":"ACTIVE","statusNote":null,"createdAt":"2026-11-21T01:36:09.333166Z","updatedAt":"2026-11-21T01:36:10.1063056Z"}
+  Timestamp   : 2026-11-25T09:48:01.611Z
+  HTTP Status : 200 (Expected: 200) | Duration: 430 ms
+  Request     : {"name":"Temp Ilford ID-11 Updated 1795600062243","chemicalType":"DEVELOPER","brand":"Ilford","stockQuantity":5,"stockUnit":"L","minimumStock":1.5,"unitCost":320000,"expiresOn":"2027-06-30","status":"ACTIVE","statusNote":null}
+  Response    : {"chemicalId":"18efb01f-9452-4b58-94b0-cf01a942bce0","darkroomId":"bf20c398-1394-498d-a0d8-c049f78ff632","name":"Temp Ilford ID-11 Updated 1795600062243","chemicalType":"DEVELOPER","brand":"Ilford","stockQuantity":5,"stockUnit":"L","minimumStock":1.5,"isLowStock":false,"unitCost":320000,"expiresOn":"2027-06-30","status":"ACTIVE","statusNote":null,"createdAt":"2026-11-25T09:48:01.58073Z","updatedAt":"2026-11-25T09:48:02.636812Z"}
 
-[#51] [PASS] POST /provider/chemicals/50000000-0000-0000-0000-000000000001/stock-adjustments
+[#55] [PASS] POST /provider/chemicals/50000000-0000-0000-0000-000000000001/stock-adjustments
   Description : Adjust chemical stock (+1 PURCHASE movement)
-  Timestamp   : 2026-11-21T01:36:10.322Z
-  HTTP Status : 200 (Expected: 200) | Duration: 453 ms
+  Timestamp   : 2026-11-25T09:48:02.041Z
+  HTTP Status : 200 (Expected: 200) | Duration: 1132 ms
   Request     : {"movementType":"PURCHASE","quantityDelta":1,"unitCost":300000,"supplierOrReference":"PO-VERIFY-1","note":"Added 1 unit in API test"}
-  Response    : {"chemicalId":"50000000-0000-0000-0000-000000000001","darkroomId":"30000000-0000-0000-0000-000000000001","name":"Developer","chemicalType":"B&W developer","brand":"Kodak","stockQuantity":5001,"stockUnit":"ml","minimumStock":500,"isLowStock":false,"unitCost":0.08,"expiresOn":"2027-05-19","status":"ACTIVE","statusNote":"Fresh stock; above the minimum level.","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-21T01:36:10.539989Z"}
+  Response    : {"chemicalId":"50000000-0000-0000-0000-000000000001","darkroomId":"30000000-0000-0000-0000-000000000001","name":"Developer","chemicalType":"B&W developer","brand":"Kodak","stockQuantity":5001,"stockUnit":"ml","minimumStock":500,"isLowStock":false,"unitCost":0.08,"expiresOn":"2027-05-19","status":"ACTIVE","statusNote":"Fresh stock; above the minimum level.","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-25T09:48:03.0111206Z"}
 
-[#52] [PASS] POST /provider/chemicals/50000000-0000-0000-0000-000000000001/stock-adjustments
+[#56] [PASS] POST /provider/chemicals/50000000-0000-0000-0000-000000000001/stock-adjustments
   Description : Adjust chemical stock (-1 ADJUSTMENT revert)
-  Timestamp   : 2026-11-21T01:36:10.775Z
-  HTTP Status : 200 (Expected: 200) | Duration: 424 ms
+  Timestamp   : 2026-11-25T09:48:03.173Z
+  HTTP Status : 200 (Expected: 200) | Duration: 184 ms
   Request     : {"movementType":"ADJUSTMENT","quantityDelta":-1,"unitCost":null,"supplierOrReference":"PO-VERIFY-1-REVERT","note":"Reverted 1 unit in API test"}
-  Response    : {"chemicalId":"50000000-0000-0000-0000-000000000001","darkroomId":"30000000-0000-0000-0000-000000000001","name":"Developer","chemicalType":"B&W developer","brand":"Kodak","stockQuantity":5000,"stockUnit":"ml","minimumStock":500,"isLowStock":false,"unitCost":0.08,"expiresOn":"2027-05-19","status":"ACTIVE","statusNote":"Fresh stock; above the minimum level.","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-21T01:36:10.9871443Z"}
+  Response    : {"chemicalId":"50000000-0000-0000-0000-000000000001","darkroomId":"30000000-0000-0000-0000-000000000001","name":"Developer","chemicalType":"B&W developer","brand":"Kodak","stockQuantity":5000,"stockUnit":"ml","minimumStock":500,"isLowStock":false,"unitCost":0.08,"expiresOn":"2027-05-19","status":"ACTIVE","statusNote":"Fresh stock; above the minimum level.","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-25T09:48:04.0043506Z"}
 
-[#53] [PASS] GET /provider/maintenance?page=1&pageSize=10
+[#57] [PASS] GET /provider/maintenance?page=1&pageSize=10
   Description : List Provider maintenance schedules
-  Timestamp   : 2026-11-21T01:36:11.199Z
-  HTTP Status : 200 (Expected: 200) | Duration: 366 ms
+  Timestamp   : 2026-11-25T09:48:03.358Z
+  HTTP Status : 200 (Expected: 200) | Duration: 696 ms
   Response    : {"items":[{"maintenanceId":"87000000-0000-0000-0000-000000000003","studioId":null,"darkroomId":null,"equipmentId":"40000000-0000-0000-0000-000000000001","resourceName":"Canon EOS 5D Mark IV","resourceType":"EQUIPMENT","maintenanceDate":"2026-11-10T20:27:05.179415Z","completedAt":"2026-11-10T22:27:05.179415Z","description":"Camera sensor cleaning","repairNote":"Sensor cleaned and tested.","status":"COMPLETED","cost":100000,"createdAt":"2026-11-20T20:27:05.179415Z"},{"maintenanceId":"87000000-0000-0000-0000-000000000002","studioId":null,"darkroomId":"30000000-0000-0000-0000-000000000001","equipm... [truncated]
 
-[#54] [PASS] POST /provider/maintenance
+[#58] [PASS] POST /provider/maintenance
   Description : Create Provider maintenance schedule
-  Timestamp   : 2026-11-21T01:36:11.565Z
-  HTTP Status : 201 (Expected: 201) | Duration: 558 ms
-  Request     : {"studioId":null,"darkroomId":null,"equipmentId":"07a98691-1414-47e7-a6b5-76989d598918","maintenanceDate":"2026-11-21T01:36:11.565Z","description":"Routine alignment check","repairNote":"Initial inspection","status":"SCHEDULED","cost":100000}
-  Response    : {"maintenanceId":"3b5c23aa-d70f-4651-b596-74ca4083075d","studioId":null,"darkroomId":null,"equipmentId":"07a98691-1414-47e7-a6b5-76989d598918","resourceName":"Temp Enlarger Updated 1795224931432","resourceType":"EQUIPMENT","maintenanceDate":"2026-11-21T01:36:11.565Z","completedAt":null,"description":"Routine alignment check","repairNote":"Initial inspection","status":"SCHEDULED","cost":100000,"createdAt":"2026-11-21T01:36:11.8920483Z"}
+  Timestamp   : 2026-11-25T09:48:04.054Z
+  HTTP Status : 201 (Expected: 201) | Duration: 617 ms
+  Request     : {"studioId":null,"darkroomId":null,"equipmentId":"6c65db40-c8fa-41e0-855e-76b1ae8371c7","maintenanceDate":"2026-11-25T09:48:04.054Z","description":"Routine alignment check","repairNote":"Initial inspection","status":"SCHEDULED","cost":100000}
+  Response    : {"maintenanceId":"8f12b64b-73f0-4ba9-8e21-2a7587f0fb83","studioId":null,"darkroomId":null,"equipmentId":"6c65db40-c8fa-41e0-855e-76b1ae8371c7","resourceName":"Temp Enlarger Updated 1795600062243","resourceType":"EQUIPMENT","maintenanceDate":"2026-11-25T09:48:04.054Z","completedAt":null,"description":"Routine alignment check","repairNote":"Initial inspection","status":"SCHEDULED","cost":100000,"createdAt":"2026-11-25T09:48:05.1401666Z"}
 
-[#55] [PASS] GET /provider/maintenance/3b5c23aa-d70f-4651-b596-74ca4083075d
+[#59] [PASS] GET /provider/maintenance/8f12b64b-73f0-4ba9-8e21-2a7587f0fb83
   Description : Get Provider maintenance detail by ID
-  Timestamp   : 2026-11-21T01:36:12.123Z
-  HTTP Status : 200 (Expected: 200) | Duration: 217 ms
-  Response    : {"maintenanceId":"3b5c23aa-d70f-4651-b596-74ca4083075d","studioId":null,"darkroomId":null,"equipmentId":"07a98691-1414-47e7-a6b5-76989d598918","resourceName":"Temp Enlarger Updated 1795224931432","resourceType":"EQUIPMENT","maintenanceDate":"2026-11-21T01:36:11.565Z","completedAt":null,"description":"Routine alignment check","repairNote":"Initial inspection","status":"SCHEDULED","cost":100000,"createdAt":"2026-11-21T01:36:11.892048Z"}
+  Timestamp   : 2026-11-25T09:48:04.671Z
+  HTTP Status : 200 (Expected: 200) | Duration: 165 ms
+  Response    : {"maintenanceId":"8f12b64b-73f0-4ba9-8e21-2a7587f0fb83","studioId":null,"darkroomId":null,"equipmentId":"6c65db40-c8fa-41e0-855e-76b1ae8371c7","resourceName":"Temp Enlarger Updated 1795600062243","resourceType":"EQUIPMENT","maintenanceDate":"2026-11-25T09:48:04.054Z","completedAt":null,"description":"Routine alignment check","repairNote":"Initial inspection","status":"SCHEDULED","cost":100000,"createdAt":"2026-11-25T09:48:05.140166Z"}
 
-[#56] [PASS] PUT /provider/maintenance/3b5c23aa-d70f-4651-b596-74ca4083075d
+[#60] [PASS] PUT /provider/maintenance/8f12b64b-73f0-4ba9-8e21-2a7587f0fb83
   Description : Update Provider maintenance schedule to COMPLETED
-  Timestamp   : 2026-11-21T01:36:12.340Z
-  HTTP Status : 200 (Expected: 200) | Duration: 440 ms
-  Request     : {"maintenanceDate":"2026-11-21T01:36:12.340Z","completedAt":"2026-11-21T01:36:12.340Z","description":"Routine alignment check completed","repairNote":"Lens stage calibrated","status":"COMPLETED","cost":120000}
-  Response    : {"maintenanceId":"3b5c23aa-d70f-4651-b596-74ca4083075d","studioId":null,"darkroomId":null,"equipmentId":"07a98691-1414-47e7-a6b5-76989d598918","resourceName":"Temp Enlarger Updated 1795224931432","resourceType":"EQUIPMENT","maintenanceDate":"2026-11-21T01:36:12.34Z","completedAt":"2026-11-21T01:36:12.34Z","description":"Routine alignment check completed","repairNote":"Lens stage calibrated","status":"COMPLETED","cost":120000,"createdAt":"2026-11-21T01:36:11.892048Z"}
+  Timestamp   : 2026-11-25T09:48:04.836Z
+  HTTP Status : 200 (Expected: 200) | Duration: 548 ms
+  Request     : {"maintenanceDate":"2026-11-25T09:48:04.836Z","completedAt":"2026-11-25T09:48:04.836Z","description":"Routine alignment check completed","repairNote":"Lens stage calibrated","status":"COMPLETED","cost":120000}
+  Response    : {"maintenanceId":"8f12b64b-73f0-4ba9-8e21-2a7587f0fb83","studioId":null,"darkroomId":null,"equipmentId":"6c65db40-c8fa-41e0-855e-76b1ae8371c7","resourceName":"Temp Enlarger Updated 1795600062243","resourceType":"EQUIPMENT","maintenanceDate":"2026-11-25T09:48:04.836Z","completedAt":"2026-11-25T09:48:04.836Z","description":"Routine alignment check completed","repairNote":"Lens stage calibrated","status":"COMPLETED","cost":120000,"createdAt":"2026-11-25T09:48:05.140166Z"}
 
-[#57] [PASS] DELETE /provider/maintenance/3b5c23aa-d70f-4651-b596-74ca4083075d
+[#61] [PASS] DELETE /provider/maintenance/8f12b64b-73f0-4ba9-8e21-2a7587f0fb83
   Description : Delete Provider maintenance schedule
-  Timestamp   : 2026-11-21T01:36:12.780Z
-  HTTP Status : 204 (Expected: 204) | Duration: 326 ms
+  Timestamp   : 2026-11-25T09:48:05.384Z
+  HTTP Status : 204 (Expected: 204) | Duration: 175 ms
   Response    : (empty)
 
-[#58] [PASS] GET /provider/services?page=1&pageSize=10
+[#62] [PASS] GET /provider/services?page=1&pageSize=10
   Description : List Provider standalone services
-  Timestamp   : 2026-11-21T01:36:13.106Z
-  HTTP Status : 200 (Expected: 200) | Duration: 348 ms
+  Timestamp   : 2026-11-25T09:48:05.559Z
+  HTTP Status : 200 (Expected: 200) | Duration: 174 ms
   Response    : {"items":[{"serviceId":"60000000-0000-0000-0000-000000000001","name":"35mm Film Developing","description":"Standard black-and-white processing.","price":90000,"status":"ACTIVE","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-20T20:45:43.26243Z"},{"serviceId":"60000000-0000-0000-0000-000000000002","name":"Film Scanning","description":"High-resolution scan delivery for one roll.","price":120000,"status":"ACTIVE","createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-20T20:45:43.26243Z"},{"serviceId":"60000000-0000-0000-0000-000000000003","name":"Contact Sheet Printing","de... [truncated]
 
-[#59] [PASS] POST /provider/services
+[#63] [PASS] POST /provider/services
   Description : Create Provider standalone service
-  Timestamp   : 2026-11-21T01:36:13.454Z
-  HTTP Status : 201 (Expected: 201) | Duration: 334 ms
-  Request     : {"name":"Temp B&W Film Push Processing 1795224931432","description":"+1 to +3 stop push processing","price":150000,"status":"ACTIVE"}
-  Response    : {"serviceId":"ffb4dbd5-69bf-4bde-bf3f-30a8d1f0cd49","name":"Temp B&W Film Push Processing 1795224931432","description":"+1 to +3 stop push processing","price":150000,"status":"ACTIVE","createdAt":"2026-11-21T01:36:13.6733675Z","updatedAt":null}
+  Timestamp   : 2026-11-25T09:48:05.733Z
+  HTTP Status : 201 (Expected: 201) | Duration: 343 ms
+  Request     : {"name":"Temp B&W Film Push Processing 1795600062243","description":"+1 to +3 stop push processing","price":150000,"status":"ACTIVE"}
+  Response    : {"serviceId":"e155301f-b7b5-4854-98b4-3474a2f5d791","name":"Temp B&W Film Push Processing 1795600062243","description":"+1 to +3 stop push processing","price":150000,"status":"ACTIVE","createdAt":"2026-11-25T09:48:06.5913865Z","updatedAt":null}
 
-[#60] [PASS] GET /provider/services/ffb4dbd5-69bf-4bde-bf3f-30a8d1f0cd49
+[#64] [PASS] GET /provider/services/e155301f-b7b5-4854-98b4-3474a2f5d791
   Description : Get Provider standalone service detail by ID
-  Timestamp   : 2026-11-21T01:36:13.788Z
-  HTTP Status : 200 (Expected: 200) | Duration: 218 ms
-  Response    : {"serviceId":"ffb4dbd5-69bf-4bde-bf3f-30a8d1f0cd49","name":"Temp B&W Film Push Processing 1795224931432","description":"+1 to +3 stop push processing","price":150000,"status":"ACTIVE","createdAt":"2026-11-21T01:36:13.673367Z","updatedAt":null}
+  Timestamp   : 2026-11-25T09:48:06.076Z
+  HTTP Status : 200 (Expected: 200) | Duration: 171 ms
+  Response    : {"serviceId":"e155301f-b7b5-4854-98b4-3474a2f5d791","name":"Temp B&W Film Push Processing 1795600062243","description":"+1 to +3 stop push processing","price":150000,"status":"ACTIVE","createdAt":"2026-11-25T09:48:06.591386Z","updatedAt":null}
 
-[#61] [PASS] PUT /provider/services/ffb4dbd5-69bf-4bde-bf3f-30a8d1f0cd49
+[#65] [PASS] PUT /provider/services/e155301f-b7b5-4854-98b4-3474a2f5d791
   Description : Update Provider standalone service
-  Timestamp   : 2026-11-21T01:36:14.006Z
-  HTTP Status : 200 (Expected: 200) | Duration: 639 ms
-  Request     : {"name":"Temp B&W Film Push Processing Updated 1795224931432","description":"Updated push processing service","price":175000,"status":"ACTIVE"}
-  Response    : {"serviceId":"ffb4dbd5-69bf-4bde-bf3f-30a8d1f0cd49","name":"Temp B&W Film Push Processing Updated 1795224931432","description":"Updated push processing service","price":175000,"status":"ACTIVE","createdAt":"2026-11-21T01:36:13.673367Z","updatedAt":"2026-11-21T01:36:14.4328775Z"}
+  Timestamp   : 2026-11-25T09:48:06.247Z
+  HTTP Status : 200 (Expected: 200) | Duration: 213 ms
+  Request     : {"name":"Temp B&W Film Push Processing Updated 1795600062243","description":"Updated push processing service","price":175000,"status":"ACTIVE"}
+  Response    : {"serviceId":"e155301f-b7b5-4854-98b4-3474a2f5d791","name":"Temp B&W Film Push Processing Updated 1795600062243","description":"Updated push processing service","price":175000,"status":"ACTIVE","createdAt":"2026-11-25T09:48:06.591386Z","updatedAt":"2026-11-25T09:48:07.0959062Z"}
 
-[#62] [PASS] GET /provider/service-packages?page=1&pageSize=10
+[#66] [PASS] GET /provider/service-packages?page=1&pageSize=10
   Description : List Provider service packages
-  Timestamp   : 2026-11-21T01:36:14.645Z
-  HTTP Status : 200 (Expected: 200) | Duration: 376 ms
+  Timestamp   : 2026-11-25T09:48:06.460Z
+  HTTP Status : 200 (Expected: 200) | Duration: 161 ms
   Response    : {"items":[{"packageId":"70000000-0000-0000-0000-000000000001","name":"Studio Starter","description":"Three monthly studio sessions.","price":450000,"usesPerMonth":3,"validityMonths":1,"status":"ACTIVE","itemCount":1,"createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-20T20:45:43.26243Z"},{"packageId":"70000000-0000-0000-0000-000000000002","name":"Darkroom Starter","description":"Three monthly darkroom sessions.","price":360000,"usesPerMonth":3,"validityMonths":1,"status":"ACTIVE","itemCount":1,"createdAt":"2026-11-20T20:27:05.179415Z","updatedAt":"2026-11-20T20:45:43.26243Z"},{"pack... [truncated]
 
-[#63] [PASS] POST /provider/service-packages
+[#67] [PASS] POST /provider/service-packages
   Description : Create Provider service package
-  Timestamp   : 2026-11-21T01:36:15.021Z
-  HTTP Status : 201 (Expected: 201) | Duration: 332 ms
-  Request     : {"name":"Temp Complete Analog Pass 1795224931432","description":"Temporary package testing package items","price":2500000,"usesPerMonth":4,"validityMonths":1,"status":"ACTIVE"}
-  Response    : {"packageId":"2455e848-e42f-42ff-a57d-106041c603bd","name":"Temp Complete Analog Pass 1795224931432","description":"Temporary package testing package items","price":2500000,"usesPerMonth":4,"validityMonths":1,"status":"ACTIVE","itemCount":0,"createdAt":"2026-11-21T01:36:15.2413101Z","updatedAt":null}
+  Timestamp   : 2026-11-25T09:48:06.621Z
+  HTTP Status : 201 (Expected: 201) | Duration: 278 ms
+  Request     : {"name":"Temp Complete Analog Pass 1795600062243","description":"Temporary package testing package items","price":2500000,"usesPerMonth":4,"validityMonths":1,"status":"ACTIVE"}
+  Response    : {"packageId":"2b56363c-4bea-4262-8d19-1d572fe1638f","name":"Temp Complete Analog Pass 1795600062243","description":"Temporary package testing package items","price":2500000,"usesPerMonth":4,"validityMonths":1,"status":"ACTIVE","itemCount":0,"createdAt":"2026-11-25T09:48:07.4627935Z","updatedAt":null}
 
-[#64] [PASS] GET /provider/service-packages/2455e848-e42f-42ff-a57d-106041c603bd
+[#68] [PASS] GET /provider/service-packages/2b56363c-4bea-4262-8d19-1d572fe1638f
   Description : Get Provider service package detail by ID
-  Timestamp   : 2026-11-21T01:36:15.353Z
-  HTTP Status : 200 (Expected: 200) | Duration: 227 ms
-  Response    : {"packageId":"2455e848-e42f-42ff-a57d-106041c603bd","name":"Temp Complete Analog Pass 1795224931432","description":"Temporary package testing package items","price":2500000,"usesPerMonth":4,"validityMonths":1,"status":"ACTIVE","itemCount":0,"createdAt":"2026-11-21T01:36:15.24131Z","updatedAt":null}
+  Timestamp   : 2026-11-25T09:48:06.899Z
+  HTTP Status : 200 (Expected: 200) | Duration: 191 ms
+  Response    : {"packageId":"2b56363c-4bea-4262-8d19-1d572fe1638f","name":"Temp Complete Analog Pass 1795600062243","description":"Temporary package testing package items","price":2500000,"usesPerMonth":4,"validityMonths":1,"status":"ACTIVE","itemCount":0,"createdAt":"2026-11-25T09:48:07.462793Z","updatedAt":null}
 
-[#65] [PASS] PUT /provider/service-packages/2455e848-e42f-42ff-a57d-106041c603bd
+[#69] [PASS] PUT /provider/service-packages/2b56363c-4bea-4262-8d19-1d572fe1638f
   Description : Update Provider service package
-  Timestamp   : 2026-11-21T01:36:15.580Z
-  HTTP Status : 200 (Expected: 200) | Duration: 647 ms
-  Request     : {"name":"Temp Complete Analog Pass Updated 1795224931432","description":"Updated temporary package","price":2600000,"usesPerMonth":5,"validityMonths":2,"status":"ACTIVE"}
-  Response    : {"packageId":"2455e848-e42f-42ff-a57d-106041c603bd","name":"Temp Complete Analog Pass Updated 1795224931432","description":"Updated temporary package","price":2600000,"usesPerMonth":5,"validityMonths":2,"status":"ACTIVE","itemCount":0,"createdAt":"2026-11-21T01:36:15.24131Z","updatedAt":"2026-11-21T01:36:16.0102464Z"}
+  Timestamp   : 2026-11-25T09:48:07.090Z
+  HTTP Status : 200 (Expected: 200) | Duration: 204 ms
+  Request     : {"name":"Temp Complete Analog Pass Updated 1795600062243","description":"Updated temporary package","price":2600000,"usesPerMonth":5,"validityMonths":2,"status":"ACTIVE"}
+  Response    : {"packageId":"2b56363c-4bea-4262-8d19-1d572fe1638f","name":"Temp Complete Analog Pass Updated 1795600062243","description":"Updated temporary package","price":2600000,"usesPerMonth":5,"validityMonths":2,"status":"ACTIVE","itemCount":0,"createdAt":"2026-11-25T09:48:07.462793Z","updatedAt":"2026-11-25T09:48:07.9377303Z"}
 
-[#66] [PASS] POST /provider/service-packages/2455e848-e42f-42ff-a57d-106041c603bd/items
+[#70] [PASS] POST /provider/service-packages/2b56363c-4bea-4262-8d19-1d572fe1638f/items
   Description : Attach DARKROOM item to Service Package
-  Timestamp   : 2026-11-21T01:36:16.227Z
-  HTTP Status : 201 (Expected: 201) | Duration: 690 ms
-  Request     : {"componentType":"DARKROOM","resourceId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","quantity":1,"includedDurationMinutes":180,"includedChemicalQuantity":null,"notes":"3 hours darkroom session"}
-  Response    : {"packageItemId":"5ad05075-f3f6-42cc-ba10-a2d786791142","packageId":"2455e848-e42f-42ff-a57d-106041c603bd","componentType":"DARKROOM","resourceId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","resourceName":"Temp Provider Darkroom Updated 1795224931432","quantity":1,"includedDurationMinutes":180,"includedChemicalQuantity":null,"notes":"3 hours darkroom session"}
+  Timestamp   : 2026-11-25T09:48:07.294Z
+  HTTP Status : 201 (Expected: 201) | Duration: 431 ms
+  Request     : {"componentType":"DARKROOM","resourceId":"bf20c398-1394-498d-a0d8-c049f78ff632","quantity":1,"includedDurationMinutes":180,"includedChemicalQuantity":null,"notes":"3 hours darkroom session"}
+  Response    : {"packageItemId":"d2b3776e-d071-43d3-be73-120bfecefa85","packageId":"2b56363c-4bea-4262-8d19-1d572fe1638f","componentType":"DARKROOM","resourceId":"bf20c398-1394-498d-a0d8-c049f78ff632","resourceName":"Temp Provider Darkroom Updated 1795600062243","quantity":1,"stepOrder":1,"includedDurationMinutes":180,"includedChemicalQuantity":null,"notes":"3 hours darkroom session"}
 
-[#67] [PASS] POST /provider/service-packages/2455e848-e42f-42ff-a57d-106041c603bd/items
+[#71] [PASS] POST /provider/service-packages/2b56363c-4bea-4262-8d19-1d572fe1638f/items
   Description : Attach EQUIPMENT item to Service Package
-  Timestamp   : 2026-11-21T01:36:16.917Z
-  HTTP Status : 201 (Expected: 201) | Duration: 649 ms
-  Request     : {"componentType":"EQUIPMENT","resourceId":"07a98691-1414-47e7-a6b5-76989d598918","quantity":1,"includedDurationMinutes":180,"includedChemicalQuantity":null,"notes":"Includes enlarger"}
-  Response    : {"packageItemId":"2a35102c-2c24-40f2-a8dd-303952437bbf","packageId":"2455e848-e42f-42ff-a57d-106041c603bd","componentType":"EQUIPMENT","resourceId":"07a98691-1414-47e7-a6b5-76989d598918","resourceName":"Temp Enlarger Updated 1795224931432","quantity":1,"includedDurationMinutes":180,"includedChemicalQuantity":null,"notes":"Includes enlarger"}
+  Timestamp   : 2026-11-25T09:48:07.725Z
+  HTTP Status : 201 (Expected: 201) | Duration: 194 ms
+  Request     : {"componentType":"EQUIPMENT","resourceId":"6c65db40-c8fa-41e0-855e-76b1ae8371c7","quantity":1,"includedDurationMinutes":180,"includedChemicalQuantity":null,"notes":"Includes enlarger"}
+  Response    : {"packageItemId":"dbb3c224-0ab4-486b-a3cc-abe37c53a7f0","packageId":"2b56363c-4bea-4262-8d19-1d572fe1638f","componentType":"EQUIPMENT","resourceId":"6c65db40-c8fa-41e0-855e-76b1ae8371c7","resourceName":"Temp Enlarger Updated 1795600062243","quantity":1,"stepOrder":1,"includedDurationMinutes":180,"includedChemicalQuantity":null,"notes":"Includes enlarger"}
 
-[#68] [PASS] POST /provider/service-packages/2455e848-e42f-42ff-a57d-106041c603bd/items
+[#72] [PASS] POST /provider/service-packages/2b56363c-4bea-4262-8d19-1d572fe1638f/items
   Description : Attach CHEMICAL item to Service Package
-  Timestamp   : 2026-11-21T01:36:17.566Z
-  HTTP Status : 201 (Expected: 201) | Duration: 647 ms
-  Request     : {"componentType":"CHEMICAL","resourceId":"d7000516-5ef3-4083-a0b2-d23ab3ecb0a1","quantity":1,"includedDurationMinutes":null,"includedChemicalQuantity":0.5,"notes":"Includes 0.5L developer"}
-  Response    : {"packageItemId":"38b458f7-f681-48f1-8473-8f4176a62919","packageId":"2455e848-e42f-42ff-a57d-106041c603bd","componentType":"CHEMICAL","resourceId":"d7000516-5ef3-4083-a0b2-d23ab3ecb0a1","resourceName":"Temp Ilford ID-11 Updated 1795224931432","quantity":1,"includedDurationMinutes":null,"includedChemicalQuantity":0.5,"notes":"Includes 0.5L developer"}
+  Timestamp   : 2026-11-25T09:48:07.919Z
+  HTTP Status : 201 (Expected: 201) | Duration: 169 ms
+  Request     : {"componentType":"CHEMICAL","resourceId":"18efb01f-9452-4b58-94b0-cf01a942bce0","quantity":1,"includedDurationMinutes":null,"includedChemicalQuantity":0.5,"notes":"Includes 0.5L developer"}
+  Response    : {"packageItemId":"8ee6ba48-3746-454f-a1b5-41bd9c540d42","packageId":"2b56363c-4bea-4262-8d19-1d572fe1638f","componentType":"CHEMICAL","resourceId":"18efb01f-9452-4b58-94b0-cf01a942bce0","resourceName":"Temp Ilford ID-11 Updated 1795600062243","quantity":1,"stepOrder":1,"includedDurationMinutes":null,"includedChemicalQuantity":0.5,"notes":"Includes 0.5L developer"}
 
-[#69] [PASS] POST /provider/service-packages/2455e848-e42f-42ff-a57d-106041c603bd/items
+[#73] [PASS] POST /provider/service-packages/2b56363c-4bea-4262-8d19-1d572fe1638f/items
   Description : Attach SERVICE item to Service Package
-  Timestamp   : 2026-11-21T01:36:18.213Z
-  HTTP Status : 201 (Expected: 201) | Duration: 649 ms
-  Request     : {"componentType":"SERVICE","resourceId":"ffb4dbd5-69bf-4bde-bf3f-30a8d1f0cd49","quantity":1,"includedDurationMinutes":null,"includedChemicalQuantity":null,"notes":"Includes push processing service"}
-  Response    : {"packageItemId":"fe7dad08-a20a-4a9e-9294-8d1b6d2b242b","packageId":"2455e848-e42f-42ff-a57d-106041c603bd","componentType":"SERVICE","resourceId":"ffb4dbd5-69bf-4bde-bf3f-30a8d1f0cd49","resourceName":"Temp B&W Film Push Processing Updated 1795224931432","quantity":1,"includedDurationMinutes":null,"includedChemicalQuantity":null,"notes":"Includes push processing service"}
+  Timestamp   : 2026-11-25T09:48:08.089Z
+  HTTP Status : 201 (Expected: 201) | Duration: 196 ms
+  Request     : {"componentType":"SERVICE","resourceId":"e155301f-b7b5-4854-98b4-3474a2f5d791","quantity":1,"includedDurationMinutes":null,"includedChemicalQuantity":null,"notes":"Includes push processing service"}
+  Response    : {"packageItemId":"42e48c1f-ea39-4869-9864-99cc12d2206a","packageId":"2b56363c-4bea-4262-8d19-1d572fe1638f","componentType":"SERVICE","resourceId":"e155301f-b7b5-4854-98b4-3474a2f5d791","resourceName":"Temp B&W Film Push Processing Updated 1795600062243","quantity":1,"stepOrder":1,"includedDurationMinutes":null,"includedChemicalQuantity":null,"notes":"Includes push processing service"}
 
-[#70] [PASS] GET /provider/service-packages/2455e848-e42f-42ff-a57d-106041c603bd/items
+[#74] [PASS] GET /provider/service-packages/2b56363c-4bea-4262-8d19-1d572fe1638f/items
   Description : List attached items of Service Package
-  Timestamp   : 2026-11-21T01:36:18.863Z
-  HTTP Status : 200 (Expected: 200) | Duration: 329 ms
-  Response    : [{"packageItemId":"38b458f7-f681-48f1-8473-8f4176a62919","packageId":"2455e848-e42f-42ff-a57d-106041c603bd","componentType":"CHEMICAL","resourceId":"d7000516-5ef3-4083-a0b2-d23ab3ecb0a1","resourceName":"Temp Ilford ID-11 Updated 1795224931432","quantity":1,"includedDurationMinutes":null,"includedChemicalQuantity":0.5,"notes":"Includes 0.5L developer"},{"packageItemId":"5ad05075-f3f6-42cc-ba10-a2d786791142","packageId":"2455e848-e42f-42ff-a57d-106041c603bd","componentType":"DARKROOM","resourceId":"5ab30790-951c-4262-a6f1-9d4d8d4978e2","resourceName":"Temp Provider Darkroom Updated 1795224931432... [truncated]
+  Timestamp   : 2026-11-25T09:48:08.285Z
+  HTTP Status : 200 (Expected: 200) | Duration: 161 ms
+  Response    : [{"packageItemId":"8ee6ba48-3746-454f-a1b5-41bd9c540d42","packageId":"2b56363c-4bea-4262-8d19-1d572fe1638f","componentType":"CHEMICAL","resourceId":"18efb01f-9452-4b58-94b0-cf01a942bce0","resourceName":"Temp Ilford ID-11 Updated 1795600062243","quantity":1,"stepOrder":1,"includedDurationMinutes":null,"includedChemicalQuantity":0.5,"notes":"Includes 0.5L developer"},{"packageItemId":"d2b3776e-d071-43d3-be73-120bfecefa85","packageId":"2b56363c-4bea-4262-8d19-1d572fe1638f","componentType":"DARKROOM","resourceId":"bf20c398-1394-498d-a0d8-c049f78ff632","resourceName":"Temp Provider Darkroom Updated... [truncated]
 
-[#71] [PASS] DELETE /provider/service-packages/2455e848-e42f-42ff-a57d-106041c603bd/items/5ad05075-f3f6-42cc-ba10-a2d786791142
+[#75] [PASS] DELETE /provider/service-packages/2b56363c-4bea-4262-8d19-1d572fe1638f/items/d2b3776e-d071-43d3-be73-120bfecefa85
   Description : Remove package item #1 (DARKROOM) from Service Package
-  Timestamp   : 2026-11-21T01:36:19.192Z
-  HTTP Status : 204 (Expected: 204) | Duration: 645 ms
+  Timestamp   : 2026-11-25T09:48:08.447Z
+  HTTP Status : 204 (Expected: 204) | Duration: 257 ms
   Response    : (empty)
 
-[#72] [PASS] DELETE /provider/service-packages/2455e848-e42f-42ff-a57d-106041c603bd/items/2a35102c-2c24-40f2-a8dd-303952437bbf
+[#76] [PASS] DELETE /provider/service-packages/2b56363c-4bea-4262-8d19-1d572fe1638f/items/dbb3c224-0ab4-486b-a3cc-abe37c53a7f0
   Description : Remove package item #2 (EQUIPMENT) from Service Package
-  Timestamp   : 2026-11-21T01:36:19.837Z
-  HTTP Status : 204 (Expected: 204) | Duration: 637 ms
+  Timestamp   : 2026-11-25T09:48:08.705Z
+  HTTP Status : 204 (Expected: 204) | Duration: 130 ms
   Response    : (empty)
 
-[#73] [PASS] DELETE /provider/service-packages/2455e848-e42f-42ff-a57d-106041c603bd/items/38b458f7-f681-48f1-8473-8f4176a62919
+[#77] [PASS] DELETE /provider/service-packages/2b56363c-4bea-4262-8d19-1d572fe1638f/items/8ee6ba48-3746-454f-a1b5-41bd9c540d42
   Description : Remove package item #3 (CHEMICAL) from Service Package
-  Timestamp   : 2026-11-21T01:36:20.474Z
-  HTTP Status : 204 (Expected: 204) | Duration: 640 ms
+  Timestamp   : 2026-11-25T09:48:08.835Z
+  HTTP Status : 204 (Expected: 204) | Duration: 156 ms
   Response    : (empty)
 
-[#74] [PASS] DELETE /provider/service-packages/2455e848-e42f-42ff-a57d-106041c603bd/items/fe7dad08-a20a-4a9e-9294-8d1b6d2b242b
+[#78] [PASS] DELETE /provider/service-packages/2b56363c-4bea-4262-8d19-1d572fe1638f/items/42e48c1f-ea39-4869-9864-99cc12d2206a
   Description : Remove package item #4 (SERVICE) from Service Package
-  Timestamp   : 2026-11-21T01:36:21.114Z
-  HTTP Status : 204 (Expected: 204) | Duration: 638 ms
+  Timestamp   : 2026-11-25T09:48:08.991Z
+  HTTP Status : 204 (Expected: 204) | Duration: 171 ms
   Response    : (empty)
 
-[#75] [PASS] DELETE /provider/service-packages/2455e848-e42f-42ff-a57d-106041c603bd
+[#79] [PASS] DELETE /provider/service-packages/2b56363c-4bea-4262-8d19-1d572fe1638f
   Description : Delete Provider service package
-  Timestamp   : 2026-11-21T01:36:21.752Z
-  HTTP Status : 204 (Expected: 204) | Duration: 648 ms
+  Timestamp   : 2026-11-25T09:48:09.162Z
+  HTTP Status : 204 (Expected: 204) | Duration: 367 ms
   Response    : (empty)
 
-[#76] [PASS] DELETE /provider/services/ffb4dbd5-69bf-4bde-bf3f-30a8d1f0cd49
+[#80] [PASS] DELETE /provider/services/e155301f-b7b5-4854-98b4-3474a2f5d791
   Description : Delete Provider standalone service
-  Timestamp   : 2026-11-21T01:36:22.400Z
-  HTTP Status : 204 (Expected: 204) | Duration: 1068 ms
+  Timestamp   : 2026-11-25T09:48:09.529Z
+  HTTP Status : 204 (Expected: 204) | Duration: 217 ms
   Response    : (empty)
 
-[#77] [PASS] DELETE /provider/chemicals/d7000516-5ef3-4083-a0b2-d23ab3ecb0a1
+[#81] [PASS] DELETE /provider/chemicals/18efb01f-9452-4b58-94b0-cf01a942bce0
   Description : Delete Provider darkroom chemical
-  Timestamp   : 2026-11-21T01:36:23.468Z
-  HTTP Status : 204 (Expected: 204) | Duration: 1071 ms
+  Timestamp   : 2026-11-25T09:48:09.746Z
+  HTTP Status : 204 (Expected: 204) | Duration: 265 ms
   Response    : (empty)
 
-[#78] [PASS] DELETE /provider/equipment/07a98691-1414-47e7-a6b5-76989d598918
+[#82] [PASS] DELETE /provider/equipment/6c65db40-c8fa-41e0-855e-76b1ae8371c7
   Description : Delete Provider equipment
-  Timestamp   : 2026-11-21T01:36:24.539Z
-  HTTP Status : 204 (Expected: 204) | Duration: 1182 ms
+  Timestamp   : 2026-11-25T09:48:10.012Z
+  HTTP Status : 204 (Expected: 204) | Duration: 278 ms
   Response    : (empty)
 
-[#79] [PASS] DELETE /provider/spaces/5ab30790-951c-4262-a6f1-9d4d8d4978e2
+[#83] [PASS] DELETE /provider/spaces/bf20c398-1394-498d-a0d8-c049f78ff632
   Description : Delete Provider Darkroom space
-  Timestamp   : 2026-11-21T01:36:25.721Z
-  HTTP Status : 204 (Expected: 204) | Duration: 1650 ms
+  Timestamp   : 2026-11-25T09:48:10.290Z
+  HTTP Status : 204 (Expected: 204) | Duration: 405 ms
   Response    : (empty)
 
-[#80] [PASS] GET /provider/bookings?page=1&pageSize=10
+[#84] [PASS] GET /provider/bookings?page=1&pageSize=10
   Description : List Provider bookings
-  Timestamp   : 2026-11-21T01:36:27.371Z
-  HTTP Status : 200 (Expected: 200) | Duration: 437 ms
-  Response    : {"items":[{"bookingId":"80000000-0000-0000-0000-000000000001","photographerId":"10000000-0000-0000-0000-000000000003","providerId":"10000000-0000-0000-0000-000000000002","spaceId":"20000000-0000-0000-0000-000000000001","packageId":null,"bookingDate":"2026-11-18","startTime":"09:00:00","endTime":"10:00:00","totalAmount":100000,"depositAmount":30000,"depositStatus":"SUCCESS","status":"COMPLETED","qrCode":"96000000000000000000000000000101","photographerName":"Nguyen Minh Anh","providerName":"Analog House Studio","spaceName":"Studio Daylight","packageName":null,"createdAt":"2026-11-16T20:27:05.179... [truncated]
+  Timestamp   : 2026-11-25T09:48:10.695Z
+  HTTP Status : 200 (Expected: 200) | Duration: 175 ms
+  Response    : {"items":[{"bookingId":"80000000-0000-0000-0000-000000000001","photographerId":"10000000-0000-0000-0000-000000000003","providerId":"10000000-0000-0000-0000-000000000002","spaceId":"20000000-0000-0000-0000-000000000001","packageId":"70000000-0000-0000-0000-000000000001","bookingDate":"2026-11-18","startTime":"09:00:00","endTime":"10:00:00","totalAmount":100000,"depositAmount":30000,"depositDueAt":"2026-11-17T20:27:05.179415Z","depositStatus":"SUCCESS","status":"COMPLETED","qrCode":"96000000000000000000000000000101","photographerName":"Nguyen Minh Anh","providerName":"Analog House Studio","space... [truncated]
 
-[#81] [PASS] GET /provider/bookings/80000000-0000-0000-0000-000000000001
+[#85] [PASS] GET /provider/bookings/80000000-0000-0000-0000-000000000001
   Description : Get Provider booking detail by ID
-  Timestamp   : 2026-11-21T01:36:27.808Z
-  HTTP Status : 200 (Expected: 200) | Duration: 292 ms
-  Response    : {"bookingId":"80000000-0000-0000-0000-000000000001","photographerId":"10000000-0000-0000-0000-000000000003","providerId":"10000000-0000-0000-0000-000000000002","spaceId":"20000000-0000-0000-0000-000000000001","packageId":null,"bookingDate":"2026-11-18","startTime":"09:00:00","endTime":"10:00:00","totalAmount":100000,"depositAmount":30000,"depositStatus":"SUCCESS","status":"COMPLETED","qrCode":"96000000000000000000000000000101","photographerName":"Nguyen Minh Anh","providerName":"Analog House Studio","spaceName":"Studio Daylight","packageName":null,"createdAt":"2026-11-16T20:27:05.179415Z","equ... [truncated]
+  Timestamp   : 2026-11-25T09:48:10.870Z
+  HTTP Status : 200 (Expected: 200) | Duration: 163 ms
+  Response    : {"bookingId":"80000000-0000-0000-0000-000000000001","photographerId":"10000000-0000-0000-0000-000000000003","providerId":"10000000-0000-0000-0000-000000000002","spaceId":"20000000-0000-0000-0000-000000000001","packageId":"70000000-0000-0000-0000-000000000001","bookingDate":"2026-11-18","startTime":"09:00:00","endTime":"10:00:00","totalAmount":100000,"depositAmount":30000,"depositDueAt":"2026-11-17T20:27:05.179415Z","depositStatus":"SUCCESS","status":"COMPLETED","qrCode":"96000000000000000000000000000101","photographerName":"Nguyen Minh Anh","providerName":"Analog House Studio","spaceName":"Stu... [truncated]
 
-[#82] [PASS] GET /provider/bookings/80000000-0000-0000-0000-000000000001/allocations
+[#86] [PASS] GET /provider/bookings/80000000-0000-0000-0000-000000000001/allocations
   Description : List resource allocations for Provider booking
-  Timestamp   : 2026-11-21T01:36:28.100Z
-  HTTP Status : 200 (Expected: 200) | Duration: 245 ms
+  Timestamp   : 2026-11-25T09:48:11.033Z
+  HTTP Status : 200 (Expected: 200) | Duration: 162 ms
   Response    : [{"scheduleId":"82000000-0000-0000-0000-000000000001","availabilityId":"74000000-0000-0000-0000-000000000001","resourceType":"STUDIO","resourceId":"20000000-0000-0000-0000-000000000001","resourceName":"Studio Daylight","startAt":"2026-11-18T09:00:00Z","endAt":"2026-11-18T10:00:00Z","quantity":1,"status":"COMPLETED"}]
 
-[#83] [PASS] PATCH /provider/bookings/11111111-1111-1111-1111-111111111111/allocations/11111111-1111-1111-1111-111111111111
+[#87] [PASS] PATCH /provider/bookings/11111111-1111-1111-1111-111111111111/allocations/11111111-1111-1111-1111-111111111111
   Description : Verify Provider booking schedule reallocation endpoint contract
-  Timestamp   : 2026-11-21T01:36:28.345Z
-  HTTP Status : 404 (Expected: 404) | Duration: 335 ms
+  Timestamp   : 2026-11-25T09:48:11.195Z
+  HTTP Status : 404 (Expected: 404) | Duration: 245 ms
   Request     : {"availabilityId":"11111111-1111-1111-1111-111111111111"}
-  Response    : {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Not Found","status":404,"traceId":"00-a2ce6ac8f10ce4d2999fd85a8b818098-8293bfbb29811f3c-00"}
+  Response    : {"type":"https://tools.ietf.org/html/rfc9110#section-15.5.5","title":"Not Found","status":404,"traceId":"00-d3347052f14e9b158bd0316b8630add7-b90c75925cb1ecf7-00"}
