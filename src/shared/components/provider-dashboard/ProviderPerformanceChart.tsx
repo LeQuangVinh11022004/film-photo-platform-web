@@ -63,6 +63,7 @@ export function ProviderPerformanceChart({
           <p className="mt-0.5 truncate text-xs text-[#777973] sm:text-sm">
             {isRevenue ? p.revenueDesc : p.reservationsDesc}
           </p>
+          <p className="mt-1 text-xs text-[#9a6a20]">{p.sampleDataNote}</p>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">

@@ -19,7 +19,7 @@ type ProviderReservationStatusProps = {
 	total: number;
 };
 
-const COLORS = ["#4d875d", "#c89b42", "#647c98", "#bf6a59"];
+const COLORS = ["#4d875d", "#c89b42", "#647c98", "#bf6a59", "#8b6f9c", "#777973"];
 
 export function ProviderReservationStatus({
 	data,
@@ -33,6 +33,8 @@ export function ProviderReservationStatus({
 		Pending: s.pending,
 		Completed: s.completed,
 		Cancelled: s.cancelled,
+		Rejected: s.rejected,
+		Other: s.other,
 	};
 
 	return (

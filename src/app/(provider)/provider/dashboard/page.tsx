@@ -55,6 +55,8 @@ const initialReservationStatus = [
 	{ name: "Pending", value: 0 },
 	{ name: "Completed", value: 0 },
 	{ name: "Cancelled", value: 0 },
+	{ name: "Rejected", value: 0 },
+	{ name: "Other", value: 0 },
 ];
 
 const initialSpacePerformance: { name: string; bookings: number }[] = [];
@@ -129,13 +131,15 @@ export default function DashboardPage() {
 				bySpace.set(s.name, 0);
 			}
 
-			const counts = { Confirmed: 0, Pending: 0, Completed: 0, Cancelled: 0 };
+			const counts = { Confirmed: 0, Pending: 0, Completed: 0, Cancelled: 0, Rejected: 0, Other: 0 };
 			for (const b of bookingItems) {
 				const st = b.status.toUpperCase();
-				if (st === "CONFIRMED") counts.Confirmed += 1;
+				if (st === "CONFIRMED" || st === "APPROVED") counts.Confirmed += 1;
 				else if (st === "COMPLETED") counts.Completed += 1;
 				else if (st === "CANCELLED") counts.Cancelled += 1;
-				else counts.Pending += 1;
+				else if (st === "PENDING") counts.Pending += 1;
+				else if (st === "REJECTED") counts.Rejected += 1;
+				else counts.Other += 1;
 
 				bySpace.set(b.spaceName, (bySpace.get(b.spaceName) ?? 0) + 1);
 			}
@@ -152,18 +156,36 @@ export default function DashboardPage() {
 					.sort((a, b) => b.bookings - a.bookings)
 					.slice(0, 5),
 			);
+			const now = new Date();
+			const today = [
+				now.getFullYear(),
+				String(now.getMonth() + 1).padStart(2, "0"),
+				String(now.getDate()).padStart(2, "0"),
+			].join("-");
 			setLiveUpcoming(
-				bookingItems.slice(0, 4).map((b) => ({
+				bookingItems
+					.filter((booking) => {
+						const status = booking.status.toUpperCase();
+						return (
+							(status === "PENDING" || status === "APPROVED" || status === "CONFIRMED") &&
+							booking.bookingDate.slice(0, 10) >= today
+						);
+					})
+					.sort((a, b) =>
+						`${a.bookingDate}T${a.startTime}`.localeCompare(`${b.bookingDate}T${b.startTime}`),
+					)
+					.slice(0, 4)
+					.map((b) => ({
 					id: b.bookingId,
 					customer: b.photographerName,
 					space: b.spaceName,
 					date: b.bookingDate,
 					time: `${b.startTime.slice(0, 5)} – ${b.endTime.slice(0, 5)}`,
 					status:
-						b.status.toUpperCase() === "CONFIRMED"
+						b.status.toUpperCase() === "CONFIRMED" || b.status.toUpperCase() === "APPROVED"
 							? ("Confirmed" as const)
 							: ("Pending" as const),
-				})),
+					})),
 			);
 		});
 		return () => {

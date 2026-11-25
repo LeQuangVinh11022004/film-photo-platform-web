@@ -175,6 +175,7 @@ export default function AdminDashboardPage() {
 					</article>
 				))}
 			</section>
+			<p role="note" className="mt-3 rounded-md border border-[#ead9b5] bg-[#fff9ed] px-4 py-3 text-sm text-[#72551f]">{t.sampleDataNotice}</p>
 
 			<section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(310px,1fr)]">
 				<article className="rounded-lg border border-[#e0e0da] bg-white p-5 sm:p-6">
