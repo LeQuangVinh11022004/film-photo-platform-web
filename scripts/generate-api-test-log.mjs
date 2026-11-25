@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-const BASE_URL = process.env.TEST_API_BASE_URL || "https://localhost:7104/api";
+const BASE_URL = process.env.TEST_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "https://filmbooking-api-h7bghwcydwb8eecn.japaneast-01.azurewebsites.net/api";
 const LOG_TXT_PATH = path.resolve("api-test.log");
 
 const logs = [];
@@ -547,6 +547,43 @@ async function main() {
       },
       expectedStatus: 200,
     });
+
+    await req(s3, "List Provider equipment availability", "GET", `/provider/equipment/${eqId}/availability`, {
+      token: providerToken,
+      expectedStatus: 200,
+    });
+
+    const createdEqAvail = await req(s3, "Create Provider equipment availability slot", "POST", `/provider/equipment/${eqId}/availability`, {
+      token: providerToken,
+      body: {
+        availableDate: "2026-12-31",
+        startTime: "09:00:00",
+        endTime: "17:00:00",
+        status: "AVAILABLE",
+        price: 300000,
+      },
+      expectedStatus: [200, 201],
+    });
+    const eqAvailId = createdEqAvail.data?.availabilityId || createdEqAvail.data?.id;
+
+    if (eqAvailId) {
+      await req(s3, "Update Provider equipment availability slot", "PUT", `/provider/equipment/${eqId}/availability/${eqAvailId}`, {
+        token: providerToken,
+        body: {
+          availableDate: "2026-12-31",
+          startTime: "09:00:00",
+          endTime: "18:00:00",
+          status: "AVAILABLE",
+          price: 350000,
+        },
+        expectedStatus: [200, 204],
+      });
+
+      await req(s3, "Delete Provider equipment availability slot", "DELETE", `/provider/equipment/${eqId}/availability/${eqAvailId}`, {
+        token: providerToken,
+        expectedStatus: [200, 204],
+      });
+    }
 
     const existingChems = await req(s3, "List Provider darkroom chemicals", "GET", "/provider/chemicals?page=1&pageSize=20", {
       token: providerToken,

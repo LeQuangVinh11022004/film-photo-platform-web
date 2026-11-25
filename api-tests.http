@@ -17,6 +17,7 @@
 @availabilityId = replace-with-availability-id
 @imageId = replace-with-image-id
 @equipmentId = replace-with-equipment-id
+@equipmentAvailabilityId = replace-with-equipment-availability-id
 @chemicalId = replace-with-chemical-id
 @packageId = replace-with-package-id
 @bookingId = replace-with-booking-id
@@ -422,6 +423,40 @@ Content-Type: application/json
 
 ### Delete provider equipment (permanent)
 DELETE {{baseUrl}}/provider/equipment/{{equipmentId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### List provider equipment availability
+GET {{baseUrl}}/provider/equipment/{{equipmentId}}/availability?fromDate=2026-01-01&toDate=2026-12-31
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Create provider equipment availability
+POST {{baseUrl}}/provider/equipment/{{equipmentId}}/availability
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "availableDate": "2026-12-31",
+  "startTime": "09:00:00",
+  "endTime": "17:00:00",
+  "status": "AVAILABLE",
+  "price": 300000
+}
+
+### Update provider equipment availability
+PUT {{baseUrl}}/provider/equipment/{{equipmentId}}/availability/{{equipmentAvailabilityId}}
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+Content-Type: application/json
+
+{
+  "availableDate": "2026-12-31",
+  "startTime": "09:00:00",
+  "endTime": "17:00:00",
+  "status": "AVAILABLE",
+  "price": 350000
+}
+
+### Delete provider equipment availability (permanent)
+DELETE {{baseUrl}}/provider/equipment/{{equipmentId}}/availability/{{equipmentAvailabilityId}}
 Authorization: Bearer {{providerLogin.response.body.$.token}}
 
 ### List provider chemicals
