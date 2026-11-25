@@ -9,46 +9,12 @@ import { listMyProviderEquipment } from "@/features/equipment/api";
 import { listProviderBookings } from "@/features/reservation/api";
 import { listMyProviderServicePackages } from "@/features/service-package/api";
 import { getMyProviderDashboard } from "@/features/provider-dashboard/api";
-import type { ProviderDashboard } from "@/features/provider-dashboard/types";
 import {
 	ProviderMetricCard,
-	ProviderPerformanceChart,
 	ProviderReservationStatus,
 	ProviderSpacePerformance,
 	ProviderUpcomingReservations,
-	type ProviderPeriod,
 } from "@/shared/components/provider-dashboard";
-
-const performanceData = {
-	"7d": [
-		{ label: "02/10", reservations: 8, revenue: 920000 },
-		{ label: "03/10", reservations: 12, revenue: 1350000 },
-		{ label: "04/10", reservations: 7, revenue: 760000 },
-		{ label: "05/10", reservations: 15, revenue: 1680000 },
-		{ label: "06/10", reservations: 18, revenue: 2140000 },
-		{ label: "07/10", reservations: 24, revenue: 2890000 },
-		{ label: "08/10", reservations: 20, revenue: 2310000 },
-	],
-
-	"30d": [
-		{ label: "W1", reservations: 48, revenue: 6200000 },
-		{ label: "W2", reservations: 61, revenue: 7850000 },
-		{ label: "W3", reservations: 54, revenue: 7100000 },
-		{ label: "W4", reservations: 72, revenue: 9480000 },
-	],
-
-	"90d": [
-		{ label: "Jan", reservations: 148, revenue: 18200000 },
-		{ label: "Feb", reservations: 176, revenue: 22100000 },
-		{ label: "Mar", reservations: 194, revenue: 24600000 },
-		{ label: "Apr", reservations: 218, revenue: 27900000 },
-		{ label: "May", reservations: 236, revenue: 30200000 },
-		{ label: "Jun", reservations: 251, revenue: 32800000 },
-	],
-} satisfies Record<
-	ProviderPeriod,
-	{ label: string; reservations: number; revenue: number }[]
->;
 
 const initialReservationStatus = [
 	{ name: "Confirmed", value: 0 },
@@ -71,11 +37,9 @@ const initialUpcomingReservations: {
 }[] = [];
 
 export default function DashboardPage() {
-	const [period, setPeriod] = useState<ProviderPeriod>("30d");
 	const { messages } = useProviderLanguage();
 	const t = messages.dashboard;
 
-	const [dashboardSummary, setDashboardSummary] = useState<ProviderDashboard | null>(null);
 	const [liveTotals, setLiveTotals] = useState<{
 		totalSpaces: number;
 		activeSpaces: number;
@@ -93,9 +57,9 @@ export default function DashboardPage() {
 		let cancelled = false;
 		Promise.allSettled([
 			getMyProviderDashboard(),
-			listMyProviderSpaces({ page: 1, pageSize: 50 }),
-			listMyProviderEquipment({ page: 1, pageSize: 50 }),
-			listProviderBookings({ page: 1, pageSize: 50 }),
+			listMyProviderSpaces({ page: 1, pageSize: 100 }),
+			listMyProviderEquipment({ page: 1, pageSize: 100 }),
+			listProviderBookings({ page: 1, pageSize: 200 }),
 			listMyProviderServicePackages({ status: "ACTIVE", page: 1, pageSize: 1 }),
 		]).then(([dashRes, spacesRes, eqRes, bookingsRes, pkgRes]) => {
 			if (cancelled) return;
@@ -104,10 +68,6 @@ export default function DashboardPage() {
 			const eq = eqRes.status === "fulfilled" ? eqRes.value : null;
 			const bookings = bookingsRes.status === "fulfilled" ? bookingsRes.value : null;
 			const pkgs = pkgRes.status === "fulfilled" ? pkgRes.value : null;
-
-			if (dash) {
-				setDashboardSummary(dash);
-			}
 
 			const activeSpaces = dash?.activeSpaces ?? (spaces?.items.filter((s) => s.status.toUpperCase() === "ACTIVE").length ?? 0);
 			const activeEq = dash?.activeEquipment ?? (eq?.items.filter((e) => e.status.toUpperCase() === "ACTIVE").length ?? 0);
@@ -240,55 +200,8 @@ export default function DashboardPage() {
 				/>
 			</section>
 
-			{dashboardSummary && (
-				<section
-					aria-label="Operational utilization and maintenance"
-					className="mt-3 grid gap-3 sm:grid-cols-3"
-				>
-					<div className="rounded-xl border border-[#e2e4dd] bg-white p-4">
-						<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]">
-							Space Occupancy Rate
-						</p>
-						<p className="mt-1.5 text-2xl font-bold text-[#20221f]">
-							{dashboardSummary.occupancyRate.toFixed(1)}%
-						</p>
-						<p className="mt-1 text-xs text-[#686a64]">
-							{dashboardSummary.confirmedBookings} confirmed · {dashboardSummary.pendingBookings} pending
-						</p>
-					</div>
-					<div className="rounded-xl border border-[#e2e4dd] bg-white p-4">
-						<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]">
-							Equipment Utilization Rate
-						</p>
-						<p className="mt-1.5 text-2xl font-bold text-[#20221f]">
-							{dashboardSummary.equipmentUtilizationRate.toFixed(1)}%
-						</p>
-						<p className="mt-1 text-xs text-[#686a64]">
-							{dashboardSummary.activeEquipment} / {dashboardSummary.totalEquipment} active units
-						</p>
-					</div>
-					<div className="rounded-xl border border-[#e2e4dd] bg-white p-4">
-						<p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#777973]">
-							Scheduled Maintenance
-						</p>
-						<p className="mt-1.5 text-2xl font-bold text-[#20221f]">
-							{dashboardSummary.scheduledMaintenance}
-						</p>
-						<p className="mt-1 text-xs text-[#686a64]">
-							Scheduled or in-progress maintenance jobs
-						</p>
-					</div>
-				</section>
-			)}
-
 			{/* Main analytics */}
-			<section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.8fr)]">
-				<ProviderPerformanceChart
-					period={period}
-					onPeriodChange={setPeriod}
-					data={performanceData}
-				/>
-
+			<section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)]">
 				<ProviderReservationStatus
 					data={liveStatusDist}
 					total={liveStatusDist.reduce((total, item) => total + item.value, 0)}

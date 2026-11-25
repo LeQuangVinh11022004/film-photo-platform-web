@@ -3,298 +3,722 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { ArrowUpRight, Clock3 } from "lucide-react";
-import { distributeTotal, formatChartCurrency, formatChartNumber } from "@/shared/utils/adminCharts";
+import {
+	Bar,
+	BarChart,
+	CartesianGrid,
+	Cell,
+	Pie,
+	PieChart,
+	ResponsiveContainer,
+	Tooltip,
+	XAxis,
+	YAxis,
+} from "recharts";
+import { PageHeader } from "@/shared/components/PageHeader";
 import { useAdminLanguage } from "@/shared/providers/AdminLanguageProvider";
-import { AdminNotificationCenter, type DashboardNotification } from "@/shared/components/AdminNotificationCenter";
-import { AreaTrendChart, ProportionTiles } from "@/shared/components/AdminCharts";
 import { getAdminDashboard } from "@/features/admin-dashboard/api";
 import type { AdminDashboardStats } from "@/features/admin-dashboard/types";
+import {
+	loadAdminDashboardCharts,
+	type AdminDashboardCharts,
+	type TrendPoint,
+} from "@/features/admin-dashboard/aggregates";
+import { ProviderMetricCard } from "@/shared/components/provider-dashboard";
 
-type Period = "7d" | "30d" | "90d";
+type ChartMetric = "bookings" | "revenue";
 
-const periodData: Record<Period, { bookings: string; revenue: string; bars: number[] }> = {
-	"7d": {
-		bookings: "326",
-		revenue: "$12,840",
-		bars: [42, 61, 47, 73, 56, 88, 68],
-	},
-	"30d": {
-		bookings: "1,284",
-		revenue: "$48,290",
-		bars: [48, 68, 54, 79, 63, 92, 74],
-	},
-	"90d": {
-		bookings: "3,642",
-		revenue: "$138,760",
-		bars: [38, 54, 62, 48, 72, 84, 96],
-	},
-};
+const CHART_COLORS = ["#4d875d", "#c89b42", "#647c98", "#bf6a59", "#7b6d8d"];
 
-const activity = [
-	{ initials: "MC", name: "Maya Chen", detail: "booking", time: 0, tone: "bg-[#e5f0e8] text-[#39724b]" },
-	{ initials: "JL", name: "Jonas Lee", detail: "provider", time: 1, tone: "bg-[#f8edd9] text-[#9a6a20]" },
-	{ initials: "AS", name: "Amara Singh", detail: "cancelled", time: 2, tone: "bg-[#f5e4e1] text-[#a34d42]" },
-	{ initials: "RP", name: "Rory Patel", detail: "equipment", time: 3, tone: "bg-[#e6ebf2] text-[#526784]" },
-];
+const formatCompactCurrency = (value: number) =>
+	new Intl.NumberFormat("vi-VN", {
+		notation: "compact",
+		maximumFractionDigits: 1,
+	}).format(value);
 
-const operationsQueue = [
-	{ id: "provider-review", title: "providerReview", detail: "providerReviewDetail", age: "19h", href: "/providers", priority: "high" },
-	{ id: "open-disputes", title: "openDisputes", detail: "openDisputesDetail", age: "4h", href: "/transactions", priority: "urgent" },
-	{ id: "pending-payments", title: "pendingPayments", detail: "pendingPaymentsDetail", age: "2h", href: "/transactions", priority: "normal" },
-] as const;
+const formatFullCurrency = (value: number) =>
+	`₫${new Intl.NumberFormat("vi-VN").format(value)}`;
 
-const serviceMix = [
-	{ key: "studios", share: 54, color: "#39724b" },
-	{ key: "equipment", share: 29, color: "#d4a33b" },
-	{ key: "packages", share: 17, color: "#647c98" },
-] as const;
-
-const priorityStyles = {
-	urgent: "border-l-[#bf6a59] bg-[#f5e4e1]",
-	high: "border-l-[#d4a33b] bg-[#f8edd9]",
-	normal: "border-l-[#647c98] bg-[#e6ebf2]",
-};
-
-function donutSegmentPath(startPercentage: number, endPercentage: number) {
-	const center = 90;
-	const outerRadius = 80;
-	const innerRadius = 56;
-	const startAngle = (startPercentage / 100) * 360 - 90;
-	const endAngle = (endPercentage / 100) * 360 - 90;
-	const point = (radius: number, angle: number) => {
-		const radians = (angle * Math.PI) / 180;
-		return { x: center + radius * Math.cos(radians), y: center + radius * Math.sin(radians) };
-	};
-	const outerStart = point(outerRadius, startAngle);
-	const outerEnd = point(outerRadius, endAngle);
-	const innerEnd = point(innerRadius, endAngle);
-	const innerStart = point(innerRadius, startAngle);
-	const largeArc = endPercentage - startPercentage > 50 ? 1 : 0;
-
-	return [
-		`M ${outerStart.x} ${outerStart.y}`,
-		`A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}`,
-		`L ${innerEnd.x} ${innerEnd.y}`,
-		`A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${innerStart.x} ${innerStart.y}`,
-		"Z",
-	].join(" ");
-}
+const formatNumber = (value: number) =>
+	new Intl.NumberFormat("vi-VN").format(value);
 
 export default function AdminDashboardPage() {
-	const [period, setPeriod] = useState<Period>("30d");
-	const [hoveredStatus, setHoveredStatus] = useState<string | null>(null);
+	const [metric, setMetric] = useState<ChartMetric>("bookings");
 	const [dashboard, setDashboard] = useState<AdminDashboardStats | null>(null);
+	const [charts, setCharts] = useState<AdminDashboardCharts | null>(null);
+	const [chartsLoading, setChartsLoading] = useState(true);
 	const [dashboardError, setDashboardError] = useState("");
+
 	const { locale, messages } = useAdminLanguage();
 	const t = messages.dashboard;
+
 	useEffect(() => {
 		let cancelled = false;
+
 		getAdminDashboard()
-			.then((data) => { if (!cancelled) setDashboard(data); })
+			.then((data) => {
+				if (!cancelled) setDashboard(data);
+			})
 			.catch((error: unknown) => {
 				if (cancelled) return;
 				if (axios.isAxiosError(error)) {
 					const data = error.response?.data as { message?: string } | undefined;
-					setDashboardError(data?.message ?? (error.response ? "Could not load dashboard data." : "Cannot reach the backend. Check that the API is running."));
-				} else setDashboardError("Could not load dashboard data.");
+					setDashboardError(
+						data?.message ??
+							(error.response
+								? "Could not load dashboard data."
+								: "Cannot reach the backend. Check that the API is running."),
+					);
+				} else {
+					setDashboardError("Could not load dashboard data.");
+				}
 			});
-		return () => { cancelled = true; };
-	}, []);
-	const periodKey = period === "7d" ? "d7" : period === "30d" ? "d30" : "d90";
-	const current = periodData[period];
-	const reservationValues = distributeTotal(Number(current.bookings.replaceAll(",", "")), current.bars);
-	const revenueValues = distributeTotal(Number(current.revenue.replace(/[^\d]/g, "")), current.bars);
-	const totalRevenue = Number(current.revenue.replace(/[^\d]/g, ""));
-	const liveMetrics = [
-		{ label: t.liveTotalUsers, value: dashboard?.totalUsers },
-		{ label: t.liveActiveUsers, value: dashboard?.activeUsers },
-		{ label: t.liveTotalBookings, value: dashboard?.totalBookings },
-		{ label: t.livePendingBookings, value: dashboard?.pendingBookings },
-	];
-	const dashboardNotifications: DashboardNotification[] = [
-		{ id: "dispute", title: t.alertDisputeTitle, detail: t.alertDisputeDetail, time: t.alertDisputeTime, href: "/transactions" },
-		{ id: "provider", title: t.alertProviderTitle, detail: t.alertProviderDetail, time: t.alertProviderTime, href: "/providers" },
-		{ id: "payment", title: t.alertPaymentTitle, detail: t.alertPaymentDetail, time: t.alertPaymentTime, href: "/transactions" },
-	];
-	const statusSegments = [
-		{ label: t.statuses.confirmed, percentage: 68, color: "#39724b" },
-		{ label: t.statuses.pending, percentage: 19, color: "#d4a33b" },
-		{ label: t.statuses.completed, percentage: 10, color: "#647c98" },
-		{ label: t.statuses.cancelled, percentage: 3, color: "#bf6a59" },
-	];
-	const totalReservations = Number(current.bookings.replaceAll(",", ""));
-	const statusCounts = statusSegments.map((segment) => Math.floor((totalReservations * segment.percentage) / 100));
-	const remainingReservations = totalReservations - statusCounts.reduce((total, count) => total + count, 0);
-	const roundingOrder = statusSegments
-		.map((segment, index) => ({ index, remainder: (totalReservations * segment.percentage) % 100 }))
-		.sort((first, second) => second.remainder - first.remainder);
-	for (let index = 0; index < remainingReservations; index += 1) {
-		statusCounts[roundingOrder[index].index] += 1;
-	}
-	let statusOffset = 0;
-	const chartSegments = statusSegments.map((segment, index) => {
-		const start = statusOffset;
-		statusOffset += segment.percentage;
-		return { ...segment, count: statusCounts[index], start, end: statusOffset };
-	});
-	const hoveredSegment = chartSegments.find((segment) => segment.label === hoveredStatus);
+
+		loadAdminDashboardCharts()
+			.then((data) => {
+				if (!cancelled) setCharts(data);
+			})
+			.catch(() => {
+				if (!cancelled) setDashboardError((prev) => prev || t.chartsError);
+			})
+			.finally(() => {
+				if (!cancelled) setChartsLoading(false);
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [t.chartsError]);
+
+	const isRevenue = metric === "revenue";
+	const trendData = charts?.bookingTrend ?? [];
+	const bookingStatusData = charts?.bookingStatus ?? [];
+	const totalBookingsCount = bookingStatusData.reduce((acc, item) => acc + item.count, 0);
+	const usersByRoleData = charts?.usersByRole ?? [];
+	const totalUsersCount = usersByRoleData.reduce((acc, item) => acc + item.count, 0);
+	const spacesByStatusData = charts?.spacesByStatus ?? [];
+	const totalSpacesCount = spacesByStatusData.reduce((acc, item) => acc + item.count, 0);
+	const topProvidersData = charts?.topProviders ?? [];
+	const recentBookings = charts?.recentBookings ?? [];
+
+	const formatStatusLabel = (rawKey: string) => {
+		const upper = rawKey.toUpperCase();
+		if (upper === "CONFIRMED" || upper === "APPROVED") return t.statuses.confirmed;
+		if (upper === "PENDING") return t.statuses.pending;
+		if (upper === "COMPLETED") return t.statuses.completed;
+		if (upper === "CANCELLED" || upper === "REJECTED") return t.statuses.cancelled;
+		return rawKey;
+	};
+
+	const statusBadgeStyle = (rawStatus: string) => {
+		const upper = rawStatus.toUpperCase();
+		if (upper === "CONFIRMED" || upper === "COMPLETED" || upper === "APPROVED") {
+			return "bg-[#e6f0e8] text-[#39724b]";
+		}
+		if (upper === "CANCELLED" || upper === "REJECTED") {
+			return "bg-[#f5e4e1] text-[#a34d42]";
+		}
+		return "bg-[#f8edd9] text-[#9a6a20]";
+	};
 
 	return (
-		<div className="mx-auto max-w-375">
-			<header className="mb-7 flex flex-col justify-between gap-5 border-b border-[#deded8] pb-6 xl:flex-row xl:items-end">
-				<div>
-					<p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#72736d]">{messages.common.adminWorkspace}</p>
-					<h1 className="text-3xl font-semibold text-[#20221f]">{t.title}</h1>
-					<p className="mt-2 text-sm text-[#6b6d67]">{t.description}</p>
-				</div>
-				<div className="flex flex-wrap items-center gap-3">
-					<AdminNotificationCenter notifications={dashboardNotifications} />
-					<div className="inline-flex rounded-lg border border-[#d8d8d1] bg-white p-1" role="group" aria-label={t.periodLabel}>
-						{(["7d", "30d", "90d"] as Period[]).map((item) => (
-							<button
-								key={item}
-								type="button"
-								aria-pressed={period === item}
-								onClick={() => setPeriod(item)}
-								className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${period === item ? "bg-[#20221f] text-white" : "text-[#686a64] hover:bg-[#f0f0ec]"}`}
-							>
-								{messages.common.periods[item === "7d" ? "d7" : item === "30d" ? "d30" : "d90"]}
-							</button>
-						))}
-					</div>
-				</div>
-			</header>
+		<div className="mx-auto w-full max-w-375">
+			<PageHeader
+				eyebrow={messages.common.adminWorkspace}
+				title={t.title}
+				description={t.description}
+			/>
 
-			{dashboardError && <p role="alert" className="mb-4 rounded-md border border-[#f0d3cf] bg-[#fdf1ef] px-4 py-3 text-sm text-[#7d372f]">{dashboardError}</p>}
-			<section aria-label="Platform metrics" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-				{liveMetrics.map((metric, metricIndex) => (
-					<article key={metric.label} style={{ animationDelay: `${metricIndex * 90}ms` }} className="admin-metric rounded-lg border border-[#e0e0da] bg-white p-5">
-						<p className="text-sm font-medium text-[#686a64]">{metric.label}</p>
-						<p className="mt-3 text-[28px] font-semibold leading-none text-[#20221f]">{metric.value?.toLocaleString(locale === "vi" ? "vi-VN" : "en-US") ?? "—"}</p>
-					</article>
-				))}
+			{dashboardError && (
+				<p
+					role="alert"
+					className="mb-4 rounded-md border border-[#f0d3cf] bg-[#fdf1ef] px-4 py-3 text-sm text-[#7d372f]"
+				>
+					{dashboardError}
+				</p>
+			)}
+
+			{/* Top KPI Metrics from GET /api/admin/dashboard & /api/admin/bookings */}
+			<section
+				aria-label="Platform metrics"
+				className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+			>
+				<ProviderMetricCard
+					label={t.metricRevenue}
+					value={formatFullCurrency(charts?.totalRevenue ?? 0)}
+					delay={0}
+					href="/transactions"
+				/>
+
+				<ProviderMetricCard
+					label={t.liveTotalBookings}
+					value={(dashboard?.totalBookings ?? 0).toLocaleString(locale === "vi" ? "vi-VN" : "en-US")}
+					change={`${dashboard?.pendingBookings ?? 0} ${t.statuses.pending.toLowerCase()}`}
+					delay={80}
+					href="/transactions"
+				/>
+
+				<ProviderMetricCard
+					label={t.metricStudios}
+					value={String(dashboard?.totalSpaces ?? 0)}
+					change={`${dashboard?.activeSpaces ?? 0} ${locale === "vi" ? "hoạt động" : "active"}`}
+					delay={160}
+					href="/spaces"
+				/>
+
+				<ProviderMetricCard
+					label={t.liveTotalUsers}
+					value={(dashboard?.totalUsers ?? 0).toLocaleString(locale === "vi" ? "vi-VN" : "en-US")}
+					change={`${dashboard?.activeUsers ?? 0} ${locale === "vi" ? "hoạt động" : "active"}`}
+					delay={240}
+					href="/users"
+				/>
 			</section>
-			<p role="note" className="mt-3 rounded-md border border-[#ead9b5] bg-[#fff9ed] px-4 py-3 text-sm text-[#72551f]">{t.sampleDataNotice}</p>
 
-			<section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_minmax(310px,1fr)]">
-				<article className="rounded-lg border border-[#e0e0da] bg-white p-5 sm:p-6">
-					<div className="flex flex-wrap items-start justify-between gap-4">
-						<div>
-								<h2 className="text-base font-semibold text-[#20221f]">{t.performanceTitle}</h2>
-								<p className="mt-1 text-sm text-[#777973]">{t.performanceDescription} · {messages.common.periods[periodKey]}</p>
+			{/* Row 1: 30-Day Live Booking & Revenue BarChart + Booking Status Donut */}
+			<section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,0.8fr)]">
+				{/* Live Booking & Revenue Trend BarChart */}
+				<article className="rounded-xl border border-[#e2e4dd] bg-white p-5 sm:p-6">
+					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+						<div className="min-w-0 flex-1">
+							<h2 className="text-base font-semibold text-[#20221f]">
+								{t.performanceTitle}
+							</h2>
+							<p className="mt-0.5 truncate text-xs text-[#777973] sm:text-sm">
+								{isRevenue ? t.chartRevenueTrend : t.chartBookingTrend}
+							</p>
 						</div>
-						<div className="flex items-center gap-4 text-xs text-[#686a64]">
-								<span className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-[#39724b]" />{t.legendValue}</span>
-						</div>
-					</div>
-					<AreaTrendChart
-						animationKey={`dashboard-${period}`}
-						ariaLabel={t.performanceTitle}
-						labels={t.chartLabels[periodKey]}
-						series={[
-							{ key: "value", label: t.legendValue, values: revenueValues, color: "#39724b", area: true, format: (value) => formatChartCurrency(value, locale) },
-							{ key: "reservations", label: t.legendReservations, values: reservationValues, color: "#d4a33b", plot: false, format: (value) => formatChartNumber(value, locale) },
-						]}
-					/>
-				</article>
 
-				<article className="rounded-lg border border-[#e0e0da] bg-white p-5 sm:p-6">
-					<div className="flex items-start justify-between gap-3">
-						<div><h2 className="text-base font-semibold text-[#20221f]">{t.statusTitle}</h2><p className="mt-1 text-sm text-[#777973]">{t.statusDescription}</p></div>
-						<Link href="/transactions" className="text-xs font-semibold text-[#39724b] hover:underline">{messages.nav.transactions}</Link>
-					</div>
-					<div className="mt-6 flex flex-col items-center gap-6 sm:flex-row sm:justify-center xl:gap-4">
-						<div className="relative h-40 w-40 shrink-0">
-							<svg key={period} viewBox="0 0 180 180" role="group" aria-label={t.statusTitle} className="admin-donut-chart h-full w-full overflow-visible">
-								{chartSegments.map((segment, index) => (
-									<path
-										key={segment.label}
-										d={donutSegmentPath(segment.start, segment.end)}
-										fill={segment.color}
-										stroke="white"
-										strokeWidth="2"
-										role="img"
-										tabIndex={0}
-										aria-label={`${segment.label}: ${segment.count} ${t.metricReservations.toLowerCase()}, ${segment.percentage}%`}
-										className="admin-donut-segment cursor-pointer outline-none transition-opacity hover:opacity-80 focus:opacity-80"
-										style={{ animationDelay: `${index * 90}ms` }}
-										onPointerEnter={() => setHoveredStatus(segment.label)}
-										onPointerLeave={() => setHoveredStatus(null)}
-										onFocus={() => setHoveredStatus(segment.label)}
-										onBlur={() => setHoveredStatus(null)}
+						<div className="flex shrink-0 items-center gap-2">
+							<div
+								className="inline-flex shrink-0 rounded-lg border border-[#dfe1da] bg-[#f8f9f5] p-1"
+								role="group"
+								aria-label="Chart metric"
+							>
+								{(["bookings", "revenue"] as ChartMetric[]).map((item) => (
+									<button
+										key={item}
+										type="button"
+										aria-pressed={metric === item}
+										onClick={() => setMetric(item)}
+										className={`w-28 rounded-md py-1.5 text-center text-xs font-semibold transition-colors duration-150 ${
+											metric === item
+												? "bg-[#20221f] text-white shadow-sm"
+												: "text-[#70736c] hover:bg-white hover:text-[#20221f]"
+										}`}
 									>
-										<title>{`${segment.label}: ${segment.count} · ${segment.percentage}%`}</title>
-									</path>
+										{item === "bookings" ? t.chartLegendBookings : t.chartLegendRevenue}
+									</button>
 								))}
-							</svg>
-							<div aria-live="polite" className="pointer-events-none absolute inset-[20%] flex flex-col items-center justify-center rounded-full bg-white text-center">
-								<span className="max-w-full truncate px-1 text-[10px] font-medium text-[#777973]">{hoveredSegment?.label ?? t.metricReservations}</span>
-								<span className="mt-1 text-lg font-semibold leading-none text-[#20221f]">{hoveredSegment?.count.toLocaleString() ?? current.bookings}</span>
-								{hoveredSegment && <span className="mt-1 text-[10px] text-[#777973]">{hoveredSegment.percentage}%</span>}
 							</div>
 						</div>
-						<ul className="grid w-full max-w-xs grid-cols-2 gap-x-4 gap-y-3 sm:max-w-none xl:grid-cols-1">
-							{chartSegments.map((segment) => (
-								<li key={segment.label} className="flex min-w-0 items-center gap-2 text-sm">
-									<span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: segment.color }} />
-									<span className="min-w-0 flex-1 truncate text-[#4c4e48]">{segment.label}</span>
-									<span className="font-semibold text-[#292b27]">{segment.percentage}%</span>
-								</li>
-							))}
+					</div>
+
+					<div className="mt-6 h-70 w-full min-w-0 sm:h-80">
+						{chartsLoading ? (
+							<div className="flex h-full items-center justify-center text-sm text-[#777973]">
+								{t.chartsLoading}
+							</div>
+						) : (
+							<ResponsiveContainer width="100%" height="100%">
+								<BarChart
+									data={trendData}
+									margin={{ top: 10, right: 4, left: 0, bottom: 0 }}
+								>
+									<CartesianGrid
+										stroke="#eceee8"
+										strokeDasharray="3 3"
+										vertical={false}
+									/>
+									<XAxis
+										dataKey="label"
+										axisLine={false}
+										tickLine={false}
+										interval={3}
+										tick={{ fontSize: 11, fill: "#858880" }}
+										dy={8}
+									/>
+									<YAxis
+										axisLine={false}
+										tickLine={false}
+										width={52}
+										allowDecimals={false}
+										tick={{ fontSize: 11, fill: "#858880" }}
+										tickFormatter={isRevenue ? formatCompactCurrency : formatNumber}
+										dx={-4}
+									/>
+									<Tooltip
+										cursor={{ fill: "rgba(77, 135, 93, 0.06)" }}
+										content={({ active, payload }) => {
+											if (!active || !payload?.length) return null;
+											const point = payload[0].payload as TrendPoint;
+											return (
+												<div className="rounded-xl border border-[#dedfd9] bg-white p-3 shadow-xl">
+													<p className="text-xs font-medium text-[#70736c]">
+														{point.date}
+													</p>
+													<p className="mt-1 text-sm font-semibold text-[#20221f]">
+														{isRevenue
+															? formatFullCurrency(point.revenue)
+															: `${formatNumber(point.bookings)} ${t.chartLegendBookings}`}
+													</p>
+												</div>
+											);
+										}}
+									/>
+									<Bar
+										dataKey={metric}
+										fill="#4d875d"
+										radius={[6, 6, 0, 0]}
+										maxBarSize={32}
+										animationDuration={650}
+									/>
+								</BarChart>
+							</ResponsiveContainer>
+						)}
+					</div>
+				</article>
+
+				{/* Live Booking Status Donut Chart */}
+				<article className="rounded-xl border border-[#e2e4dd] bg-white p-5 sm:p-6">
+					<div className="flex items-start justify-between gap-3">
+						<div>
+							<h2 className="text-base font-semibold text-[#20221f]">
+								{t.statusTitle}
+							</h2>
+							<p className="mt-1 text-sm text-[#777973]">
+								{t.statusDescription}
+							</p>
+						</div>
+						<Link
+							href="/transactions"
+							className="shrink-0 text-xs font-semibold text-[#4d875d] transition-colors hover:text-[#376844]"
+						>
+							{t.viewAll}
+						</Link>
+					</div>
+
+					<div className="mt-5 flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
+						<div className="relative h-44 w-44 shrink-0">
+							<ResponsiveContainer width="100%" height="100%">
+								<PieChart>
+									<Pie
+										data={bookingStatusData.map((s) => ({
+											name: formatStatusLabel(s.key),
+											value: s.count,
+										}))}
+										dataKey="value"
+										nameKey="name"
+										innerRadius={57}
+										outerRadius={78}
+										paddingAngle={2}
+										stroke="none"
+										animationDuration={700}
+									>
+										{bookingStatusData.map((item, index) => (
+											<Cell
+												key={item.key}
+												fill={CHART_COLORS[index % CHART_COLORS.length]}
+												className="cursor-pointer opacity-90 transition-opacity duration-200 hover:opacity-70"
+											/>
+										))}
+									</Pie>
+									<Tooltip
+										content={({ active, payload }) => {
+											if (!active || !payload?.length) return null;
+											const item = payload[0];
+											return (
+												<div className="rounded-lg border border-[#dedfd9] bg-white px-3 py-2 shadow-lg">
+													<p className="text-xs font-medium text-[#70736c]">
+														{item.name}
+													</p>
+													<p className="mt-1 text-sm font-semibold text-[#20221f]">
+														{item.value}
+													</p>
+												</div>
+											);
+										}}
+									/>
+								</PieChart>
+							</ResponsiveContainer>
+
+							<div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+								<span className="text-2xl font-semibold text-[#20221f]">
+									{totalBookingsCount}
+								</span>
+								<span className="mt-1 text-[10px] uppercase tracking-wider text-[#858880]">
+									{t.metricReservations}
+								</span>
+							</div>
+						</div>
+
+						<ul className="w-full max-w-xs space-y-3">
+							{bookingStatusData.length === 0 && !chartsLoading && (
+								<li className="text-xs text-[#777973]">{t.chartNoData}</li>
+							)}
+							{bookingStatusData.map((item, index) => {
+								const percentage =
+									totalBookingsCount > 0
+										? Math.round((item.count / totalBookingsCount) * 100)
+										: 0;
+								return (
+									<li
+										key={item.key}
+										className="flex items-center justify-between text-xs"
+									>
+										<div className="flex items-center gap-2">
+											<span
+												className="h-2.5 w-2.5 rounded-full"
+												style={{
+													backgroundColor:
+														CHART_COLORS[index % CHART_COLORS.length],
+												}}
+											/>
+											<span className="font-medium text-[#20221f]">
+												{formatStatusLabel(item.key)}
+											</span>
+										</div>
+										<div className="flex items-center gap-2 text-[#70736c]">
+											<span className="font-semibold text-[#20221f]">
+												{item.count}
+											</span>
+											<span className="text-[11px] text-[#858880]">
+												({percentage}%)
+											</span>
+										</div>
+									</li>
+								);
+							})}
 						</ul>
 					</div>
-					<div className="mt-7 border-t border-[#e8e8e2] pt-5">
-						<p className="text-xs font-semibold uppercase tracking-widest text-[#777973]">{t.platformHealth}</p>
-						<div className="mt-3 flex items-center justify-between text-sm"><span className="text-[#4c4e48]">{t.servicesOperational}</span><span className="inline-flex items-center gap-2 font-semibold text-[#39724b]"><span className="h-2 w-2 rounded-full bg-[#55a16c]" />{t.allSystems}</span></div>
+				</article>
+			</section>
+
+			{/* Row 2: Users by Role Donut + Spaces by Status Donut + Top Providers BarChart */}
+			<section className="mt-4 grid gap-4 xl:grid-cols-3">
+				{/* Users by Role */}
+				<article className="rounded-xl border border-[#e2e4dd] bg-white p-5 sm:p-6">
+					<div className="flex items-start justify-between gap-3">
+						<div>
+							<h2 className="text-base font-semibold text-[#20221f]">
+								{t.chartUsersByRole}
+							</h2>
+							<p className="mt-1 text-sm text-[#777973]">
+								{t.liveTotalUsers}: {totalUsersCount}
+							</p>
+						</div>
+						<Link
+							href="/users"
+							className="shrink-0 text-xs font-semibold text-[#4d875d] hover:text-[#376844]"
+						>
+							{t.viewAll}
+						</Link>
+					</div>
+
+					<div className="mt-5 flex flex-col items-center gap-5 sm:flex-row sm:justify-center">
+						<div className="relative h-36 w-36 shrink-0">
+							<ResponsiveContainer width="100%" height="100%">
+								<PieChart>
+									<Pie
+										data={usersByRoleData.map((r) => ({
+											name: r.key,
+											value: r.count,
+										}))}
+										dataKey="value"
+										nameKey="name"
+										innerRadius={45}
+										outerRadius={64}
+										paddingAngle={2}
+										stroke="none"
+										animationDuration={700}
+									>
+										{usersByRoleData.map((item, index) => (
+											<Cell
+												key={item.key}
+												fill={CHART_COLORS[index % CHART_COLORS.length]}
+											/>
+										))}
+									</Pie>
+									<Tooltip />
+								</PieChart>
+							</ResponsiveContainer>
+							<div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+								<span className="text-xl font-semibold text-[#20221f]">
+									{totalUsersCount}
+								</span>
+								<span className="text-[10px] uppercase tracking-wider text-[#858880]">
+									{t.chartLegendUsers}
+								</span>
+							</div>
+						</div>
+
+						<ul className="w-full space-y-2.5">
+							{usersByRoleData.map((item, index) => {
+								const pct =
+									totalUsersCount > 0
+										? Math.round((item.count / totalUsersCount) * 100)
+										: 0;
+								return (
+									<li
+										key={item.key}
+										className="flex items-center justify-between text-xs"
+									>
+										<div className="flex items-center gap-2">
+											<span
+												className="h-2.5 w-2.5 rounded-full"
+												style={{
+													backgroundColor:
+														CHART_COLORS[index % CHART_COLORS.length],
+												}}
+											/>
+											<span className="font-medium text-[#20221f]">
+												{item.key}
+											</span>
+										</div>
+										<span className="font-semibold text-[#20221f]">
+											{item.count}{" "}
+											<span className="font-normal text-[#858880]">({pct}%)</span>
+										</span>
+									</li>
+								);
+							})}
+						</ul>
+					</div>
+				</article>
+
+				{/* Spaces by Status */}
+				<article className="rounded-xl border border-[#e2e4dd] bg-white p-5 sm:p-6">
+					<div className="flex items-start justify-between gap-3">
+						<div>
+							<h2 className="text-base font-semibold text-[#20221f]">
+								{t.chartSpacesByStatus}
+							</h2>
+							<p className="mt-1 text-sm text-[#777973]">
+								{t.metricStudios}: {totalSpacesCount}
+							</p>
+						</div>
+						<Link
+							href="/spaces"
+							className="shrink-0 text-xs font-semibold text-[#4d875d] hover:text-[#376844]"
+						>
+							{t.viewAll}
+						</Link>
+					</div>
+
+					<div className="mt-5 flex flex-col items-center gap-5 sm:flex-row sm:justify-center">
+						<div className="relative h-36 w-36 shrink-0">
+							<ResponsiveContainer width="100%" height="100%">
+								<PieChart>
+									<Pie
+										data={spacesByStatusData.map((s) => ({
+											name: s.key,
+											value: s.count,
+										}))}
+										dataKey="value"
+										nameKey="name"
+										innerRadius={45}
+										outerRadius={64}
+										paddingAngle={2}
+										stroke="none"
+										animationDuration={700}
+									>
+										{spacesByStatusData.map((item, index) => (
+											<Cell
+												key={item.key}
+												fill={CHART_COLORS[index % CHART_COLORS.length]}
+											/>
+										))}
+									</Pie>
+									<Tooltip />
+								</PieChart>
+							</ResponsiveContainer>
+							<div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+								<span className="text-xl font-semibold text-[#20221f]">
+									{totalSpacesCount}
+								</span>
+								<span className="text-[10px] uppercase tracking-wider text-[#858880]">
+									Spaces
+								</span>
+							</div>
+						</div>
+
+						<ul className="w-full space-y-2.5">
+							{spacesByStatusData.map((item, index) => {
+								const pct =
+									totalSpacesCount > 0
+										? Math.round((item.count / totalSpacesCount) * 100)
+										: 0;
+								return (
+									<li
+										key={item.key}
+										className="flex items-center justify-between text-xs"
+									>
+										<div className="flex items-center gap-2">
+											<span
+												className="h-2.5 w-2.5 rounded-full"
+												style={{
+													backgroundColor:
+														CHART_COLORS[index % CHART_COLORS.length],
+												}}
+											/>
+											<span className="font-medium text-[#20221f]">
+												{item.key}
+											</span>
+										</div>
+										<span className="font-semibold text-[#20221f]">
+											{item.count}{" "}
+											<span className="font-normal text-[#858880]">({pct}%)</span>
+										</span>
+									</li>
+								);
+							})}
+						</ul>
+					</div>
+				</article>
+
+				{/* Top Providers / Studios by Bookings */}
+				<article className="rounded-xl border border-[#e2e4dd] bg-white p-5 sm:p-6">
+					<div className="flex items-start justify-between gap-3">
+						<div>
+							<h2 className="text-base font-semibold text-[#20221f]">
+								{t.chartTopProviders}
+							</h2>
+							<p className="mt-1 text-sm text-[#777973]">
+								{t.serviceMixDescription}
+							</p>
+						</div>
+						<Link
+							href="/providers"
+							className="shrink-0 text-xs font-semibold text-[#4d875d] hover:text-[#376844]"
+						>
+							{t.viewAll}
+						</Link>
+					</div>
+
+					<div className="mt-5 h-44 w-full min-w-0">
+						{topProvidersData.length === 0 ? (
+							<div className="flex h-full items-center justify-center text-sm text-[#777973]">
+								{chartsLoading ? t.chartsLoading : t.chartNoData}
+							</div>
+						) : (
+							<ResponsiveContainer width="100%" height="100%">
+								<BarChart
+									data={topProvidersData}
+									layout="vertical"
+									margin={{ top: 0, right: 8, left: 0, bottom: 0 }}
+								>
+									<XAxis
+										type="number"
+										allowDecimals={false}
+										axisLine={false}
+										tickLine={false}
+										tick={{ fontSize: 11, fill: "#858880" }}
+									/>
+									<YAxis
+										type="category"
+										dataKey="name"
+										axisLine={false}
+										tickLine={false}
+										tick={{ fontSize: 11, fill: "#343631" }}
+										width={120}
+									/>
+									<Tooltip
+										cursor={{ fill: "rgba(77, 135, 93, 0.06)" }}
+										content={({ active, payload }) => {
+											if (!active || !payload?.length) return null;
+											const item = payload[0].payload as {
+												name: string;
+												bookings: number;
+												revenue: number;
+											};
+											return (
+												<div className="rounded-xl border border-[#dedfd9] bg-white p-3 shadow-xl">
+													<p className="text-xs font-medium text-[#70736c]">
+														{item.name}
+													</p>
+													<p className="mt-1 text-sm font-semibold text-[#20221f]">
+														{item.bookings} {t.chartLegendBookings.toLowerCase()} ·{" "}
+														{formatFullCurrency(item.revenue)}
+													</p>
+												</div>
+											);
+										}}
+									/>
+									<Bar
+										dataKey="bookings"
+										fill="#4d875d"
+										radius={[0, 6, 6, 0]}
+										barSize={16}
+										animationDuration={650}
+									/>
+								</BarChart>
+							</ResponsiveContainer>
+						)}
 					</div>
 				</article>
 			</section>
 
-			<section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(230px,0.8fr)_minmax(280px,1fr)]">
-				<article className="min-w-0 rounded-lg border border-[#e0e0da] bg-white">
-					<div className="flex items-center justify-between gap-3 border-b border-[#e8e8e2] px-5 py-4 sm:px-6">
-						<div><h2 className="text-base font-semibold text-[#20221f]">{t.recentTitle}</h2><p className="mt-1 text-sm text-[#777973]">{t.recentDescription}</p></div>
-						<Link href="/transactions" className="text-sm font-semibold text-[#39724b] hover:underline">{t.viewAll}</Link>
+			{/* Row 3: Live Recent Bookings from /api/admin/bookings */}
+			<section className="mt-4">
+				<article className="rounded-xl border border-[#e2e4dd] bg-white">
+					<div className="flex items-start justify-between gap-4 border-b border-[#eeeeea] px-5 py-5 sm:px-6">
+						<div>
+							<h2 className="text-base font-semibold text-[#20221f]">
+								{t.recentTitle}
+							</h2>
+							<p className="mt-1 text-sm text-[#777973]">
+								{t.recentDescription}
+							</p>
+						</div>
+						<Link
+							href="/transactions"
+							className="shrink-0 text-xs font-semibold text-[#4d875d] hover:text-[#376844]"
+						>
+							{t.viewAll}
+						</Link>
 					</div>
-					<ul className="divide-y divide-[#eeeeea]">
-						{activity.map((item) => (
-							<li key={item.name} className="flex items-center gap-3 px-5 py-4 sm:px-6">
-								<span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${item.tone}`}>{item.initials}</span>
-								<div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-[#292b27]">{item.name}</p><p className="mt-0.5 truncate text-xs text-[#777973]">{t.activity[item.detail as keyof typeof t.activity]}</p></div>
-								<time className="shrink-0 text-xs text-[#858680]">{t.activity.times[item.time]}</time>
-							</li>
-						))}
-					</ul>
-				</article>
 
-				<article className="rounded-lg border border-[#e0e0da] bg-white p-5 sm:p-6">
-					<div><h2 className="text-base font-semibold text-[#20221f]">{t.serviceMixTitle}</h2><p className="mt-1 text-sm text-[#777973]">{t.serviceMixDescription}</p></div>
-					<ProportionTiles items={serviceMix.map((service) => ({ label: t.serviceMix[service.key], share: service.share, value: formatChartCurrency(Math.round(totalRevenue * service.share / 100), locale), color: service.color }))} key={period} />
-					<p className="mt-5 border-t border-[#e8e8e2] pt-4 text-xs text-[#777973]">{messages.common.periods[periodKey]}</p>
-				</article>
-
-				<article className="overflow-hidden rounded-lg border border-[#e0e0da] bg-white">
-					<div className="flex items-start justify-between gap-3 border-b border-[#e8e8e2] px-5 py-4 sm:px-6">
-						<div><h2 className="text-base font-semibold text-[#20221f]">{t.opsTitle}</h2><p className="mt-1 text-sm text-[#777973]">{t.opsDescription}</p></div>
-						<span className="shrink-0 rounded-md bg-[#f5e4e1] px-2 py-1 text-xs font-semibold text-[#a34d42]">{operationsQueue.length} {t.openItems}</span>
-					</div>
-					<ol className="space-y-3 p-4 sm:p-5">
-						{operationsQueue.map((item, index) => <li key={item.id}>
-							<div className={`rounded-r-md border-l-[3px] p-3.5 ${priorityStyles[item.priority]}`}>
-								<div className="flex items-start justify-between gap-3">
-									<div className="flex min-w-0 items-start gap-2.5">
-										<span className="mt-0.5 text-xs font-bold tabular-nums opacity-70">0{index + 1}</span>
-										<div className="min-w-0"><p className="text-sm font-semibold text-[#292b27]">{t[item.title]}</p><p className="mt-1 text-xs leading-5 text-[#686a64]">{t[item.detail]}</p></div>
+					<div className="divide-y divide-[#eeeeea]">
+						{recentBookings.length === 0 && (
+							<p className="px-5 py-8 text-center text-sm text-[#777973] sm:px-6">
+								{chartsLoading ? t.chartsLoading : t.chartNoData}
+							</p>
+						)}
+						{recentBookings.map((booking, index) => (
+							<div
+								key={`${booking.bookingId}-${index}`}
+								className="flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-[#fafbf8] sm:flex-row sm:items-center sm:px-6"
+							>
+								<div className="min-w-0 flex-1">
+									<div className="flex flex-wrap items-center gap-2">
+										<p className="truncate text-sm font-semibold text-[#292b27]">
+											{booking.photographerName}
+										</p>
+										<span
+											className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusBadgeStyle(
+												booking.status,
+											)}`}
+										>
+											{formatStatusLabel(booking.status)}
+										</span>
 									</div>
-									<span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold text-[#686a64]"><Clock3 size={12} />{item.age}</span>
+									<p className="mt-1 truncate text-xs text-[#70736c]">
+										{booking.spaceName}
+										{booking.providerName ? ` · ${booking.providerName}` : ""}
+									</p>
 								</div>
-								<Link href={item.href} className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-[#20221f] hover:underline">{t.reviewItem}<ArrowUpRight size={13} /></Link>
+
+								<div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
+									<span className="text-xs font-semibold text-[#20221f]">
+										{formatFullCurrency(booking.totalAmount)}
+									</span>
+									<span className="text-[11px] text-[#858880]">
+										{booking.bookingDate} · {booking.startTime.slice(0, 5)} –{" "}
+										{booking.endTime.slice(0, 5)}
+									</span>
+								</div>
 							</div>
-						</li>)}
-					</ol>
-					<div className="flex items-center justify-end gap-3 border-t border-[#e8e8e2] px-5 py-3 sm:px-6">
-						<Link href="/transactions" className="inline-flex items-center gap-1 text-xs font-semibold text-[#39724b] hover:underline">{messages.nav.transactions}<ArrowUpRight size={13} /></Link>
+						))}
 					</div>
 				</article>
 			</section>
