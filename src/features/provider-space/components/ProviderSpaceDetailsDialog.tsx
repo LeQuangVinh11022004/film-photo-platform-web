@@ -269,21 +269,80 @@ function buildBulkAvailabilitySlots(
     };
 }
 
-function formatAmenities(amenities?: ProviderSpaceDetails["amenities"]) {
-    if (!amenities) return null;
-    if (Array.isArray(amenities)) return amenities.join(", ");
-    return amenities;
+function humanizeKey(key: string): string {
+    return key
+        .replace(/([A-Z])/g, " $1")
+        .replace(/^./, (str) => str.toUpperCase())
+        .trim();
 }
 
-function formatOperatingHours(hours?: ProviderSpaceDetails["operatingHours"]) {
-    if (!hours) return null;
-    if (typeof hours === "object") {
-        return Object.entries(hours)
-            .filter(([, time]) => Boolean(time))
-            .map(([day, time]) => `${day.charAt(0).toUpperCase() + day.slice(1)}: ${time}`)
-            .join(" | ");
+function formatAmenities(amenities?: unknown): string | null {
+    if (!amenities) return null;
+    if (Array.isArray(amenities)) {
+        const items = amenities.map(String).map((s) => s.trim()).filter(Boolean);
+        return items.length ? items.join(", ") : null;
     }
-    return hours;
+    if (typeof amenities === "string") {
+        const trimmed = amenities.trim();
+        if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
+            try {
+                return formatAmenities(JSON.parse(trimmed));
+            } catch {
+                return trimmed;
+            }
+        }
+        return trimmed || null;
+    }
+    if (typeof amenities === "object") {
+        const items: string[] = [];
+        for (const [key, value] of Object.entries(amenities as Record<string, unknown>)) {
+            const label = humanizeKey(key);
+            if (value === true) {
+                items.push(label);
+            } else if (value === false || value == null) {
+                continue;
+            } else if (Array.isArray(value)) {
+                const sub = value.map(String).map((s) => s.trim()).filter(Boolean).join(", ");
+                items.push(sub ? `${label}: ${sub}` : label);
+            } else if (typeof value === "object") {
+                const nested = formatAmenities(value);
+                if (nested) items.push(`${label}: ${nested}`);
+            } else {
+                items.push(`${label}: ${String(value)}`);
+            }
+        }
+        return items.length ? items.join(", ") : null;
+    }
+    return String(amenities);
+}
+
+function formatOperatingHours(hours?: unknown): string | null {
+    if (!hours) return null;
+    if (typeof hours === "string") {
+        const trimmed = hours.trim();
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+            try {
+                return formatOperatingHours(JSON.parse(trimmed));
+            } catch {
+                return trimmed;
+            }
+        }
+        return trimmed || null;
+    }
+    if (typeof hours === "object") {
+        const items: string[] = [];
+        for (const [day, time] of Object.entries(hours as Record<string, unknown>)) {
+            if (!time) continue;
+            const dayLabel = day.charAt(0).toUpperCase() + day.slice(1);
+            if (typeof time === "string" || typeof time === "number") {
+                items.push(`${dayLabel}: ${time}`);
+            } else if (typeof time === "object") {
+                items.push(`${dayLabel}: ${JSON.stringify(time)}`);
+            }
+        }
+        return items.length ? items.join(" | ") : null;
+    }
+    return String(hours);
 }
 
 export function ProviderSpaceDetailsDialog({
@@ -615,23 +674,24 @@ export function ProviderSpaceDetailsDialog({
                                 "Dimensions",
                                 [space.details.lengthM, space.details.widthM, space.details.heightM]
                                     .filter((value) => value != null)
-                                    .join(" × ") + " m",
+                                    .join(" × ") +
+                                    (space.details.lengthM != null || space.details.widthM != null || space.details.heightM != null ? " m" : ""),
                             ],
-                            ["Artistic style", space.details.artisticStyle],
-                            ["Supported processes", space.details.supportedProcesses],
-                            ["Lighting", space.details.lightingConditions],
-                            ["Ventilation", space.details.ventilationDetails],
-                            ["Acoustics", space.details.acousticDetails],
-                            ["Usage policies", space.details.usagePolicies],
+                            ["Artistic style", formatAmenities(space.details.artisticStyle)],
+                            ["Supported processes", formatAmenities(space.details.supportedProcesses)],
+                            ["Lighting", formatAmenities(space.details.lightingConditions)],
+                            ["Ventilation", formatAmenities(space.details.ventilationDetails)],
+                            ["Acoustics", formatAmenities(space.details.acousticDetails)],
+                            ["Usage policies", formatAmenities(space.details.usagePolicies)],
                             ["Amenities", formatAmenities(space.details.amenities)],
-                            ["Operating hours", formattedOperatingHours],
+                            ["Operating hours", formatOperatingHours(space.details.operatingHours)],
                         ]
-                            .filter(([, value]) => Boolean(value))
+                            .filter(([, value]) => Boolean(value && String(value).trim() && String(value).trim() !== "m"))
                             .map(([label, value]) => (
                                 <div key={label} className="border-b border-[#eeeeea] py-2">
                                     <dt className="text-xs text-[#777973]">{label}</dt>
                                     <dd className="mt-1 whitespace-pre-wrap text-sm text-[#343630]">
-                                        {value as string}
+                                        {String(value)}
                                     </dd>
                                 </div>
                             ))}
@@ -661,6 +721,9 @@ export function ProviderSpaceDetailsDialog({
                                     <img
                                         src={providerSpaceImageUrl(image.imageUrl)}
                                         alt={space.name}
+                                        onError={(e) => {
+                                            e.currentTarget.src = "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=900&q=80";
+                                        }}
                                         className="h-full w-full object-cover"
                                     />
                                     <button

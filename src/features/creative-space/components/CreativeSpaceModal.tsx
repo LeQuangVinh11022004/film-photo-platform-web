@@ -53,11 +53,33 @@ const DARKROOM_AMENITIES = [
     "Print Washer & Drying Racks"
 ];
 
-function parseAmenities(amenities: ProviderSpaceDetails["amenities"]): string[] {
+function parseAmenities(amenities: unknown): string[] {
     if (!amenities) return [];
-    if (Array.isArray(amenities)) return amenities;
+    if (Array.isArray(amenities)) return amenities.map(String);
     if (typeof amenities === "string") {
-        return amenities.split(",").map((s) => s.trim()).filter(Boolean);
+        const trimmed = amenities.trim();
+        if ((trimmed.startsWith("{") && trimmed.endsWith("}")) || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
+            try {
+                return parseAmenities(JSON.parse(trimmed));
+            } catch {
+                return trimmed.split(",").map((s) => s.trim()).filter(Boolean);
+            }
+        }
+        return trimmed.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+    if (typeof amenities === "object" && amenities !== null) {
+        const list: string[] = [];
+        for (const [key, value] of Object.entries(amenities as Record<string, unknown>)) {
+            const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase()).trim();
+            if (value === true) {
+                list.push(label);
+            } else if (Array.isArray(value)) {
+                list.push(...value.map(String).map((s) => s.trim()).filter(Boolean));
+            } else if (typeof value === "string" && value) {
+                list.push(value.trim());
+            }
+        }
+        return list;
     }
     return [];
 }

@@ -25,8 +25,8 @@ export type ProviderSpaceDetails = {
 	ventilationDetails: string | null;
 	acousticDetails: string | null;
 	usagePolicies: string | null;
-	amenities: string[] | string | null;
-    operatingHours: OperatingHours | string | null;
+	amenities: string[] | Record<string, unknown> | string | null;
+    operatingHours: OperatingHours | Record<string, unknown> | string | null;
 };
 
 export type ProviderSpaceAvailability = {

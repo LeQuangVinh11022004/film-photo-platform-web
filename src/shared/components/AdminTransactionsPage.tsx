@@ -26,7 +26,7 @@ function humanize(value: string) {
 }
 
 function currency(value: number, locale: "en" | "vi") {
-	return new Intl.NumberFormat(locale === "vi" ? "vi-VN" : "en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(value);
+	return new Intl.NumberFormat(locale === "vi" ? "vi-VN" : "en-US", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(value);
 }
 
 function dateLabel(value: string, locale: "en" | "vi") {

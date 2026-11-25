@@ -67,7 +67,7 @@ function ProviderToolbar({
   const { displayName } = useProviderProfile();
   const [query, setQuery] = useState("");
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-  const clearSession = useAuthStore((state) => state.clearSession);
+  const startLogout = useAuthStore((state) => state.startLogout);
 
   const pages = [
     { label: messages.nav.dashboard, href: "/provider/dashboard" },
@@ -99,8 +99,8 @@ function ProviderToolbar({
   }
 
   function logout() {
-    clearSession();
     setAccountMenuOpen(false);
+    startLogout();
     router.replace("/login");
   }
 
