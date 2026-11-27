@@ -1,8 +1,7 @@
 import type { Status } from "@/types";
 export type Reservation = { id: string; photographerName: string; startTime: string; endTime: string; totalAmount: number; status: Status; createdAt: string; };
 
-export type ProviderBookingStatus = "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED" | "COMPLETED" | string;
-export type ProviderBookingDecision = "APPROVED" | "REJECTED";
+export type ProviderBookingStatus = "AWAITING_DEPOSIT" | "CONFIRMED" | "IN_PROGRESS" | "CANCELLED" | "COMPLETED" | "NO_SHOW" | string;
 
 export type ProviderBookingEquipment = {
 	equipmentId: string;
@@ -22,7 +21,7 @@ export type ProviderBooking = {
 	endTime: string;
 	totalAmount: number;
 	status: ProviderBookingStatus;
-	qrCode: string;
+	sessionStatus: string;
 	photographerName: string;
 	providerName: string;
 	spaceName: string;
@@ -42,4 +41,17 @@ export type ProviderBookingAllocation = {
 	endAt: string;
 	quantity: number;
 	status: string;
+	canCheckInOut: boolean;
+	checkInAt: string | null;
+	checkOutAt: string | null;
+};
+
+export type ProviderBookingCancellation = {
+	bookingId: string;
+	status: string;
+	refundAmount: number;
+	refundTransactionId: string | null;
+	refundStatus: string;
+	packageUseRestored: boolean;
+	policy: string;
 };

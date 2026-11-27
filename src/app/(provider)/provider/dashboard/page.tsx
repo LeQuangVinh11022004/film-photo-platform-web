@@ -19,9 +19,10 @@ import {
 const initialReservationStatus = [
 	{ name: "Confirmed", value: 0 },
 	{ name: "Pending", value: 0 },
+	{ name: "In progress", value: 0 },
 	{ name: "Completed", value: 0 },
 	{ name: "Cancelled", value: 0 },
-	{ name: "Rejected", value: 0 },
+	{ name: "No show", value: 0 },
 	{ name: "Other", value: 0 },
 ];
 
@@ -52,6 +53,7 @@ export default function DashboardPage() {
 	const [liveStatusDist, setLiveStatusDist] = useState(initialReservationStatus);
 	const [liveUpcoming, setLiveUpcoming] = useState(initialUpcomingReservations);
 	const [liveSpacePerf, setLiveSpacePerf] = useState(initialSpacePerformance);
+	const [loadError, setLoadError] = useState(false);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -59,10 +61,11 @@ export default function DashboardPage() {
 			getMyProviderDashboard(),
 			listMyProviderSpaces({ page: 1, pageSize: 100 }),
 			listMyProviderEquipment({ page: 1, pageSize: 100 }),
-			listProviderBookings({ page: 1, pageSize: 200 }),
+			listProviderBookings({ page: 1, pageSize: 100 }),
 			listMyProviderServicePackages({ status: "ACTIVE", page: 1, pageSize: 1 }),
 		]).then(([dashRes, spacesRes, eqRes, bookingsRes, pkgRes]) => {
 			if (cancelled) return;
+			setLoadError([dashRes, spacesRes, eqRes, bookingsRes, pkgRes].some((result) => result.status === "rejected"));
 			const dash = dashRes.status === "fulfilled" ? dashRes.value : null;
 			const spaces = spacesRes.status === "fulfilled" ? spacesRes.value : null;
 			const eq = eqRes.status === "fulfilled" ? eqRes.value : null;
@@ -91,14 +94,15 @@ export default function DashboardPage() {
 				bySpace.set(s.name, 0);
 			}
 
-			const counts = { Confirmed: 0, Pending: 0, Completed: 0, Cancelled: 0, Rejected: 0, Other: 0 };
+			const counts = { Confirmed: 0, Pending: 0, InProgress: 0, Completed: 0, Cancelled: 0, NoShow: 0, Other: 0 };
 			for (const b of bookingItems) {
 				const st = b.status.toUpperCase();
-				if (st === "CONFIRMED" || st === "APPROVED") counts.Confirmed += 1;
+				if (st === "CONFIRMED") counts.Confirmed += 1;
+				else if (st === "IN_PROGRESS") counts.InProgress += 1;
 				else if (st === "COMPLETED") counts.Completed += 1;
 				else if (st === "CANCELLED") counts.Cancelled += 1;
-				else if (st === "PENDING") counts.Pending += 1;
-				else if (st === "REJECTED") counts.Rejected += 1;
+				else if (st === "AWAITING_DEPOSIT") counts.Pending += 1;
+				else if (st === "NO_SHOW") counts.NoShow += 1;
 				else counts.Other += 1;
 
 				bySpace.set(b.spaceName, (bySpace.get(b.spaceName) ?? 0) + 1);
@@ -107,8 +111,11 @@ export default function DashboardPage() {
 			setLiveStatusDist([
 				{ name: "Confirmed", value: counts.Confirmed },
 				{ name: "Pending", value: counts.Pending },
+				{ name: "In progress", value: counts.InProgress },
 				{ name: "Completed", value: counts.Completed },
 				{ name: "Cancelled", value: counts.Cancelled },
+				{ name: "No show", value: counts.NoShow },
+				{ name: "Other", value: counts.Other },
 			]);
 			setLiveSpacePerf(
 				[...bySpace.entries()]
@@ -127,7 +134,7 @@ export default function DashboardPage() {
 					.filter((booking) => {
 						const status = booking.status.toUpperCase();
 						return (
-							(status === "PENDING" || status === "APPROVED" || status === "CONFIRMED") &&
+							(status === "AWAITING_DEPOSIT" || status === "CONFIRMED") &&
 							booking.bookingDate.slice(0, 10) >= today
 						);
 					})
@@ -142,7 +149,7 @@ export default function DashboardPage() {
 					date: b.bookingDate,
 					time: `${b.startTime.slice(0, 5)} – ${b.endTime.slice(0, 5)}`,
 					status:
-						b.status.toUpperCase() === "CONFIRMED" || b.status.toUpperCase() === "APPROVED"
+						b.status.toUpperCase() === "CONFIRMED"
 							? ("Confirmed" as const)
 							: ("Pending" as const),
 					})),
@@ -163,6 +170,7 @@ export default function DashboardPage() {
 				title={t.title}
 				description={t.description}
 			/>
+			{loadError && <p role="alert" className="mb-4 rounded-md border border-[#e6c3bd] bg-[#fbefed] px-4 py-3 text-sm text-[#9c4339]">{t.loadError}</p>}
 
 			{/* Metrics */}
 			<section

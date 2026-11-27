@@ -3,15 +3,16 @@
 # POST/PATCH/PUT/DELETE requests can create, change, send email, or permanently delete data.
 # The backend redirects HTTP :5038 to HTTPS :7104; use HTTPS directly to preserve Authorization.
 @baseUrl = https://localhost:7104/api
-@adminEmail = replace-with-admin-email@example.com
+@adminUsername = replace-with-admin-username
 @adminPassword = replace-with-admin-password
-@providerEmail = replace-with-provider-email@example.com
+@providerUsername = replace-with-provider-username
 @providerPassword = replace-with-provider-password
 @testEmail = replace-with-existing-email@example.com
-@photographerEmail = replace-with-photographer-email@example.com
+@photographerUsername = replace-with-photographer-username
 @photographerPassword = replace-with-photographer-password
 @providerId = replace-with-provider-id
 @adminUserId = replace-with-user-id
+@adminUserUsername = replace-with-existing-username
 @adminSpaceId = replace-with-admin-space-id
 @providerSpaceId = replace-with-provider-space-id
 @availabilityId = replace-with-availability-id
@@ -30,7 +31,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "{{adminEmail}}",
+  "username": "{{adminUsername}}",
   "password": "{{adminPassword}}"
 }
 
@@ -40,7 +41,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "{{photographerEmail}}",
+  "username": "{{photographerUsername}}",
   "password": "{{photographerPassword}}"
 }
 
@@ -50,7 +51,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "{{providerEmail}}",
+  "username": "{{providerUsername}}",
   "password": "{{providerPassword}}"
 }
 
@@ -60,6 +61,7 @@ Content-Type: application/json
 
 {
   "fullName": "API Test Provider",
+  "username": "api-test-provider",
   "email": "replace-with-a-new-email@example.com",
   "password": "replace-with-a-valid-password",
   "businessName": "API Test Studio",
@@ -74,6 +76,7 @@ Content-Type: application/json
 
 {
   "fullName": "API Test Photographer",
+  "username": "api-test-photographer",
   "email": "replace-with-a-new-photographer-email@example.com",
   "password": "replace-with-a-valid-password"
 }
@@ -131,6 +134,7 @@ Content-Type: application/json
 
 {
   "fullName": "API Test Provider",
+  "username": "api-test-admin-provider",
   "email": "replace-with-a-new-email@example.com",
   "password": "replace-with-a-valid-password",
   "businessName": "API Test Studio",
@@ -179,6 +183,7 @@ Content-Type: application/json
 
 {
   "fullName": "API Test User",
+  "username": "api-test-user",
   "email": "replace-with-a-new-email@example.com",
   "password": "replace-with-a-valid-password",
   "role": "PHOTOGRAPHER",
@@ -192,6 +197,7 @@ Content-Type: application/json
 
 {
   "fullName": "API Test User Updated",
+  "username": "{{adminUserUsername}}",
   "email": "{{testEmail}}",
   "role": "PHOTOGRAPHER",
   "status": "ACTIVE"
@@ -673,17 +679,28 @@ Authorization: Bearer {{providerLogin.response.body.$.token}}
 GET {{baseUrl}}/provider/bookings/{{bookingId}}
 Authorization: Bearer {{providerLogin.response.body.$.token}}
 
-### Review provider booking (changes booking status)
-PATCH {{baseUrl}}/provider/bookings/{{bookingId}}/decision
-Authorization: Bearer {{providerLogin.response.body.$.token}}
-Content-Type: application/json
-
-{
-  "decision": "APPROVED"
-}
-
 ### List provider booking resource allocations
 GET {{baseUrl}}/provider/bookings/{{bookingId}}/allocations
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Check in a single-segment booking (changes booking status)
+POST {{baseUrl}}/provider/bookings/{{bookingId}}/check-in
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Check out a single-segment booking (changes booking status)
+POST {{baseUrl}}/provider/bookings/{{bookingId}}/check-out
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Check in a booking segment (changes booking status)
+POST {{baseUrl}}/provider/bookings/{{bookingId}}/allocations/{{scheduleId}}/check-in
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Check out a booking segment (changes booking status)
+POST {{baseUrl}}/provider/bookings/{{bookingId}}/allocations/{{scheduleId}}/check-out
+Authorization: Bearer {{providerLogin.response.body.$.token}}
+
+### Cancel a provider booking (changes booking status and may create a refund)
+PATCH {{baseUrl}}/provider/bookings/{{bookingId}}/cancel
 Authorization: Bearer {{providerLogin.response.body.$.token}}
 
 ### Reallocate provider booking schedule slot

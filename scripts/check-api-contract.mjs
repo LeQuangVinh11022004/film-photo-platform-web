@@ -9,6 +9,42 @@ const knownUndocumentedRoutes = new Set([
   "POST /api/auth/forgot-password",
   "POST /api/auth/reset-password",
 ]);
+// New backend operations outside the admin/provider workspace do not yet have REST Client examples.
+const knownUntestedBackendRoutes = new Set([
+  "DELETE /api/community/posts/{id}",
+  "DELETE /api/community/posts/{id}/comments/{id}",
+  "DELETE /api/community/posts/{id}/like",
+  "DELETE /api/expert/articles/{id}",
+  "GET /api/articles",
+  "GET /api/articles/{id}",
+  "GET /api/community/posts",
+  "GET /api/community/posts/mine",
+  "GET /api/community/posts/{id}",
+  "GET /api/community/posts/{id}/comments",
+  "GET /api/expert/articles",
+  "GET /api/expert/articles/{id}",
+  "GET /api/payments/vnpay/ipn",
+  "GET /api/payments/vnpay/return",
+  "GET /api/photographer/darkrooms/{id}/chemicals",
+  "GET /api/photographer/darkrooms/{id}/reviews",
+  "GET /api/photographer/equipment/{id}/availability",
+  "GET /api/photographer/package-subscriptions",
+  "GET /api/photographer/package-subscriptions/{id}",
+  "GET /api/photographer/service-packages",
+  "GET /api/photographer/spaces/{id}/equipment",
+  "GET /api/photographer/studios/{id}/reviews",
+  "PATCH /api/expert/articles/{id}/status",
+  "POST /api/community/posts",
+  "POST /api/community/posts/{id}/comments",
+  "POST /api/expert/articles",
+  "POST /api/photographer/bookings/{id}/deposit-payment",
+  "POST /api/photographer/bookings/{id}/review",
+  "POST /api/photographer/service-packages/{id}/purchase",
+  "PUT /api/community/posts/{id}",
+  "PUT /api/community/posts/{id}/comments/{id}",
+  "PUT /api/community/posts/{id}/like",
+  "PUT /api/expert/articles/{id}",
+]);
 
 function normalizePath(value) {
   return value.replace(/\{[^}]+\}/g, "{id}").replace(/\/+/g, "/");
@@ -189,6 +225,52 @@ function reportMissing(label, expected, actual) {
   return missing;
 }
 
+async function validateLoginContract(contract) {
+  const schema = contract.components?.schemas?.LoginRequestDTO;
+  if (!schema?.properties || !Array.isArray(schema.required)) {
+    return ["OpenAPI login request schema is missing or invalid."];
+  }
+  const file = await readFile(path.join(root, "src", "features", "admin-auth", "types.ts"), "utf8");
+  const source = ts.createSourceFile("types.ts", file, ts.ScriptTarget.Latest, true);
+  const request = source.statements.find(
+    (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === "AdminLoginRequest",
+  );
+  if (!request || !ts.isTypeLiteralNode(request.type)) {
+    return ["AdminLoginRequest type is missing or invalid."];
+  }
+  const errors = [];
+  const properties = new Map(
+    request.type.members.filter(ts.isPropertySignature).map((member) => [getPropertyName(member.name), member]),
+  );
+  for (const required of schema.required) {
+    const property = properties.get(required);
+    if (!property || property.questionToken || property.type?.kind !== ts.SyntaxKind.StringKeyword ||
+        schema.properties[required]?.type !== "string") {
+      errors.push(`AdminLoginRequest does not match required OpenAPI login property: ${required}`);
+    }
+  }
+  for (const name of properties.keys()) {
+    if (!(name in schema.properties)) errors.push(`AdminLoginRequest has a property absent from OpenAPI: ${name}`);
+  }
+
+  const manualRequests = await readFile(path.join(root, "api-tests.http"), "utf8");
+  const requests = [...manualRequests.matchAll(/POST\s+\{\{baseUrl\}\}\/auth\/login\s*\r?\nContent-Type:\s*application\/json\s*\r?\n\s*\r?\n(\{[^}]*?(?:\}\}[^}]*?)*\})/g)];
+  if (requests.length !== 3) {
+    errors.push("Expected three manual login requests in api-tests.http.");
+  } else {
+    for (const [index, match] of requests.entries()) {
+      const body = JSON.parse(match[1]);
+      for (const required of schema.required) {
+        if (typeof body[required] !== "string") errors.push(`Manual login request ${index + 1} is missing ${required}.`);
+      }
+      for (const name of Object.keys(body)) {
+        if (!(name in schema.properties)) errors.push(`Manual login request ${index + 1} has an unknown property: ${name}`);
+      }
+    }
+  }
+  return errors;
+}
+
 try {
   const contract = JSON.parse(await readFile(path.join(root, "api-contract", "openapi.json"), "utf8"));
   const frontend = await collectFrontendOperations();
@@ -205,7 +287,14 @@ try {
   errors.push(
     ...reportMissing("Frontend API calls missing from api-tests.http", frontendOperationsRequiringTests, testKeys),
   );
-  errors.push(...reportMissing("Backend OpenAPI operations missing from api-tests.http", backend, testKeys));
+  errors.push(...reportMissing("Backend OpenAPI operations missing from api-tests.http",
+    new Set([...backend].filter((operation) => !knownUntestedBackendRoutes.has(operation))), testKeys));
+  for (const operation of knownUntestedBackendRoutes) {
+    if (!backend.has(operation) || testKeys.has(operation)) {
+      errors.push(`Remove resolved or obsolete untested backend exception: ${operation}`);
+    }
+  }
+  errors.push(...await validateLoginContract(contract));
 
   for (const operation of undocumentedFrontend) {
     if (!knownUndocumentedRoutes.has(operation)) {
@@ -229,11 +318,13 @@ try {
   }
 
   if (errors.length > 0) {
+    for (const error of errors) console.error(error);
     console.error(`API contract check failed with ${errors.length} issue(s).`);
     process.exitCode = 1;
   } else {
     console.log(`API contract check passed: ${frontend.size} frontend calls, ${backend.size} backend operations.`);
     console.warn(`${knownUndocumentedRoutes.size} known frontend routes remain undocumented in backend OpenAPI.`);
+    console.warn(`${knownUntestedBackendRoutes.size} backend operations outside admin/provider have no manual examples.`);
   }
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);

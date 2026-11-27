@@ -1,7 +1,7 @@
 import { endpoints } from "@/services/endpoints";
 import { httpClient } from "@/services/httpClient";
 import type { PagedResponse } from "@/types";
-import type { ProviderBooking, ProviderBookingAllocation, ProviderBookingDecision } from "../types";
+import type { ProviderBooking, ProviderBookingAllocation, ProviderBookingCancellation } from "../types";
 
 export const reservationEndpoint = endpoints.reservations;
 
@@ -15,11 +15,24 @@ export async function getProviderBooking(bookingId: string) {
 	return response.data;
 }
 
-export async function reviewProviderBooking(bookingId: string, decision: ProviderBookingDecision) {
-	const response = await httpClient.patch<ProviderBooking>(
-		`${endpoints.provider.bookings}/${encodeURIComponent(bookingId)}/decision`,
-		{ decision },
-	);
+export async function checkInProviderBooking(bookingId: string) {
+	await httpClient.post(`${endpoints.provider.bookings}/${encodeURIComponent(bookingId)}/check-in`);
+}
+
+export async function checkOutProviderBooking(bookingId: string) {
+	await httpClient.post(`${endpoints.provider.bookings}/${encodeURIComponent(bookingId)}/check-out`);
+}
+
+export async function checkInProviderBookingSegment(bookingId: string, scheduleId: string) {
+	await httpClient.post(`${endpoints.provider.bookings}/${encodeURIComponent(bookingId)}/allocations/${encodeURIComponent(scheduleId)}/check-in`);
+}
+
+export async function checkOutProviderBookingSegment(bookingId: string, scheduleId: string) {
+	await httpClient.post(`${endpoints.provider.bookings}/${encodeURIComponent(bookingId)}/allocations/${encodeURIComponent(scheduleId)}/check-out`);
+}
+
+export async function cancelProviderBooking(bookingId: string) {
+	const response = await httpClient.patch<ProviderBookingCancellation>(`${endpoints.provider.bookings}/${encodeURIComponent(bookingId)}/cancel`);
 	return response.data;
 }
 

@@ -13,3 +13,7 @@ operations. The manually runnable requests in `api-tests.http` remain separate.
 Known frontend routes absent from the current backend OpenAPI document are
 allowlisted in `scripts/check-api-contract.mjs`; remove an exception when the
 backend contract is fixed.
+
+The checker verifies login request fields, but does not validate other request
+or response schemas. Explicitly listed new operations outside the admin/provider
+workspace currently have no manual examples; the checker reports their count.

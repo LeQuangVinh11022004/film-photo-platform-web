@@ -2,6 +2,7 @@
 export type AdminUser = {
 	userId: string;
 	fullName: string;
+	username: string;
 	email: string;
 	role: string;
 	status: string;
@@ -14,6 +15,7 @@ export type AdminUserStatus = "ACTIVE" | "INACTIVE";
 /** Matches backend AdminUserCreateRequestDTO. */
 export type CreateAdminUserInput = {
 	fullName: string;
+	username: string;
 	email: string;
 	password: string;
 	role: string;
@@ -23,6 +25,7 @@ export type CreateAdminUserInput = {
 /** Matches backend AdminUserUpdateRequestDTO (password optional = keep current). */
 export type UpdateAdminUserInput = {
 	fullName: string;
+	username: string;
 	email: string;
 	password?: string;
 	role: string;

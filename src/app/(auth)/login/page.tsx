@@ -13,7 +13,7 @@ import { useAuthStore } from "@/store/authStore";
 export default function LoginPage() {
   const router = useRouter();
   const setSession = useAuthStore((state) => state.setSession);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [error, setError] = useState("");
@@ -26,7 +26,7 @@ export default function LoginPage() {
     setError("");
     setSubmitting(true);
     try {
-      const result = await loginUser({ email: email.trim(), password });
+      const result = await loginUser({ username: username.trim(), password });
       if (!result.success || !result.token || !result.user) {
         setError(result.message || "Sign in failed. Please try again.");
         return;
@@ -73,18 +73,22 @@ export default function LoginPage() {
     >
       <form className="space-y-6" onSubmit={handleSubmit}>
         <label
-          htmlFor="email"
+          htmlFor="username"
           className="block text-sm font-semibold text-[#3b3b38]"
         >
-          Email Address
+          Username
           <input
-            id="email"
-            type="email"
-            autoComplete="email"
+            id="username"
+            type="text"
+            autoComplete="username"
             required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="Enter your email"
+            minLength={3}
+            maxLength={50}
+            pattern="(?:[A-Za-z0-9._]|-)+"
+            title="Use 3 to 50 letters, numbers, dots, underscores or hyphens."
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            placeholder="Enter your username"
             className="mt-2.5 h-15 w-full rounded-[10px] border border-white/35 bg-white/65 px-4 text-base font-normal text-[#171715] outline-none transition backdrop-blur-sm focus:border-[#b58a2b] focus:ring-2 focus:ring-[#d6a83f]/20 placeholder:text-[#70706b]"
           />
         </label>

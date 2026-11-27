@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-const BASE_URL = process.env.TEST_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "https://filmbooking-api-h7bghwcydwb8eecn.japaneast-01.azurewebsites.net/api";
+const BASE_URL = process.env.TEST_API_BASE_URL;
 const LOG_TXT_PATH = path.resolve("api-test.log");
 
 const logs = [];
@@ -150,17 +150,24 @@ async function main() {
   const ts = Date.now();
 
   try {
+    const { TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD, TEST_PROVIDER_USERNAME, TEST_PROVIDER_PASSWORD } = process.env;
+    if (!BASE_URL) {
+      throw new Error("Set TEST_API_BASE_URL to a dedicated test backend before running the live API test.");
+    }
+    if (!TEST_ADMIN_USERNAME || !TEST_ADMIN_PASSWORD || !TEST_PROVIDER_USERNAME || !TEST_PROVIDER_PASSWORD) {
+      throw new Error("Set TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD, TEST_PROVIDER_USERNAME and TEST_PROVIDER_PASSWORD before running the live API test.");
+    }
     // ================= 1. AUTH ENDPOINTS =================
     const s1 = "1. AUTH ENDPOINTS";
 
     const adminLogin = await req(s1, "Login as Admin demo account", "POST", "/auth/login", {
-      body: { email: "admin.demo@filmbooking.local", password: "FilmDemo2026!" },
+      body: { username: TEST_ADMIN_USERNAME, password: TEST_ADMIN_PASSWORD },
       expectedStatus: 200,
     });
     const adminToken = adminLogin.data.token;
 
     const providerLogin = await req(s1, "Login as Provider demo account", "POST", "/auth/login", {
-      body: { email: "provider.demo@filmbooking.local", password: "FilmDemo2026!" },
+      body: { username: TEST_PROVIDER_USERNAME, password: TEST_PROVIDER_PASSWORD },
       expectedStatus: 200,
     });
     const providerToken = providerLogin.data.token;
@@ -169,6 +176,7 @@ async function main() {
     await req(s1, "Register new Photographer account", "POST", "/auth/register/photographer", {
       body: {
         fullName: "API Test Photographer",
+        username: `test.photog.${ts}`,
         email: tempPhotogEmail,
         password: "Password123!",
       },
@@ -179,6 +187,7 @@ async function main() {
     await req(s1, "Register new Provider account (Pending approval)", "POST", "/auth/register/provider", {
       body: {
         fullName: "API Test Reg Provider",
+        username: `test.regprov.${ts}`,
         email: tempRegProvEmail,
         password: "Password123!",
         businessName: `API Test Reg Studio ${ts}`,
@@ -207,6 +216,7 @@ async function main() {
       token: adminToken,
       body: {
         fullName: "Temp Admin Created User",
+        username: `test.adminuser.${ts}`,
         email: tempUserEmail,
         password: "Password123!",
         role: "PHOTOGRAPHER",
@@ -225,6 +235,7 @@ async function main() {
       token: adminToken,
       body: {
         fullName: "Temp Admin User Updated",
+        username: `test.adminuser.${ts}`,
         email: tempUserEmail,
         role: "PHOTOGRAPHER",
         status: "ACTIVE",
@@ -249,7 +260,7 @@ async function main() {
       expectedStatus: 200,
     });
     for (const p of allProvsForCleanup.data.items) {
-      if (p.email.toLowerCase().startsWith("test.regprov.") || p.email.toLowerCase().startsWith("test.adminprov.")) {
+      if (p.email.toLowerCase() === tempRegProvEmail.toLowerCase()) {
         await req(s2, `Cleanup temporary provider (${p.email})`, "DELETE", `/admin/providers/${p.providerId}`, {
           token: adminToken,
           expectedStatus: [204, 404],
@@ -263,10 +274,8 @@ async function main() {
     for (const u of allUsersForCleanup.data.items) {
       const em = u.email.toLowerCase();
       if (
-        em.startsWith("test.photog.") ||
-        em.startsWith("test.regprov.") ||
-        em.startsWith("test.adminuser.") ||
-        em.startsWith("test.adminprov.")
+        em === tempPhotogEmail.toLowerCase() ||
+        em === tempRegProvEmail.toLowerCase()
       ) {
         await req(s2, `Cleanup temporary user (${u.email})`, "DELETE", `/admin/users/${u.userId}`, {
           token: adminToken,
@@ -280,6 +289,7 @@ async function main() {
       token: adminToken,
       body: {
         fullName: "Temp Admin Provider Owner",
+        username: `test.adminprov.${ts}`,
         email: tempAdminProvEmail,
         password: "Password123!",
         businessName: `Temp Admin Provider ${ts}`,
