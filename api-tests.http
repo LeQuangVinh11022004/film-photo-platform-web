@@ -81,23 +81,6 @@ Content-Type: application/json
   "password": "replace-with-a-valid-password"
 }
 
-### Request password reset (may send an email)
-POST {{baseUrl}}/auth/forgot-password
-Content-Type: application/json
-
-{
-  "email": "{{testEmail}}"
-}
-
-### Reset password (replace token with a valid reset token)
-POST {{baseUrl}}/auth/reset-password
-Content-Type: application/json
-
-{
-  "token": "replace-with-reset-token",
-  "password": "replace-with-a-new-password"
-}
-
 ### Admin dashboard
 GET {{baseUrl}}/admin/dashboard
 Authorization: Bearer {{adminLogin.response.body.$.token}}
@@ -487,6 +470,7 @@ Content-Type: application/json
   "stockUnit": "L",
   "minimumStock": 1,
   "unitCost": 350000,
+  "unitSellingPrice": 400000,
   "expiresOn": "2027-06-30",
   "status": "ACTIVE",
   "statusNote": null
@@ -505,6 +489,7 @@ Content-Type: application/json
   "stockUnit": "L",
   "minimumStock": 2,
   "unitCost": 380000,
+  "unitSellingPrice": 420000,
   "expiresOn": "2027-06-30",
   "status": "ACTIVE",
   "statusNote": null
@@ -580,6 +565,7 @@ Content-Type: application/json
   "componentType": "EQUIPMENT",
   "resourceId": "{{equipmentId}}",
   "quantity": 1,
+  "stepOrder": 1,
   "includedDurationMinutes": 120,
   "includedChemicalQuantity": null,
   "notes": "Included in package test"

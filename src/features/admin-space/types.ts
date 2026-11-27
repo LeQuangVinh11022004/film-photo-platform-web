@@ -7,6 +7,9 @@ export type AdminSpace = {
 	description: string;
 	address: string;
 	capacity: number | null;
+	hourlyRate: number;
+	conditionStatus: string | null;
+	statusNote: string | null;
 	status: string;
 	createdAt: string | null;
 	updatedAt: string | null;
@@ -18,7 +21,7 @@ export type AdminSpaceRequest = {
 	type: string;
 	description?: string | null;
 	address: string;
-	capacity: number | null;
+	capacity: number;
 	status: "ACTIVE" | "INACTIVE";
 };
 

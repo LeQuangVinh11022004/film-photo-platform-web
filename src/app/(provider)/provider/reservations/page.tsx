@@ -160,8 +160,8 @@ export default function ReservationsPage() {
         try {
           const slots = await listMyProviderSpaceAvailability(booking.spaceId);
           setSpaceSlots(slots);
-        } catch {
-          // Optional space availability slots for reallocation dropdown
+        } catch (requestError) {
+          setDecisionError(`Could not load availability for reallocation: ${errorMessage(requestError)}`);
         }
       }
     } catch (requestError) {

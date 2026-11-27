@@ -110,7 +110,7 @@ export function AdminTransactionsPage() {
 						<input id="booking-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t.searchPlaceholder} className={fieldClassName} />
 						<label className="sr-only" htmlFor="booking-status">{t.columns.status}</label>
 						<select id="booking-status" value={status} onChange={(event) => { setLoading(true); setError(""); setStatus(event.target.value); setPage(1); }} className={fieldClassName}>
-							<option value="">{t.allStatuses}</option><option value="PENDING">Pending</option><option value="CONFIRMED">Confirmed</option><option value="COMPLETED">Completed</option><option value="CANCELLED">Cancelled</option><option value="NO_SHOW">No Show</option>
+							<option value="">{t.allStatuses}</option><option value="AWAITING_DEPOSIT">Awaiting deposit</option><option value="CONFIRMED">Confirmed</option><option value="IN_PROGRESS">In progress</option><option value="COMPLETED">Completed</option><option value="CANCELLED">Cancelled</option><option value="NO_SHOW">No Show</option>
 						</select>
 					</div>
 				</div>

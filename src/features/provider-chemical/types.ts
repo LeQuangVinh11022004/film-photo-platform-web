@@ -17,6 +17,7 @@ export type ProviderChemical = {
 	minimumStock: number;
 	isLowStock: boolean;
 	unitCost: number | null;
+	unitSellingPrice: number | null;
 	expiresOn: string | null;
 	status: ProviderChemicalStatus | string;
 	statusNote: string | null;
@@ -32,6 +33,7 @@ export type ProviderChemicalRequest = {
 	stockUnit: string;
 	minimumStock: number;
 	unitCost?: number | null;
+	unitSellingPrice: number;
 	expiresOn?: string | null;
 	status: ProviderChemicalStatus;
 	statusNote?: string | null;

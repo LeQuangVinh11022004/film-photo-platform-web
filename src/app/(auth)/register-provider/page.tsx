@@ -9,6 +9,7 @@ import { registerProvider } from "@/features/admin-auth";
 
 type FieldKey =
   | "fullName"
+  | "username"
   | "email"
   | "password"
   | "confirmPassword"
@@ -20,6 +21,7 @@ type FieldKey =
 export default function RegisterProviderPage() {
   const [formData, setFormData] = useState({
     fullName: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -67,6 +69,9 @@ export default function RegisterProviderPage() {
 
     if (!formData.fullName.trim()) {
       stepErrors.fullName = "Please enter your full name.";
+    }
+    if (!/^[A-Za-z0-9._-]{3,50}$/.test(formData.username.trim())) {
+      stepErrors.username = "Use 3 to 50 letters, numbers, dots, underscores or hyphens.";
     }
 
     if (!formData.email.trim()) {
@@ -151,6 +156,7 @@ export default function RegisterProviderPage() {
     try {
       const result = await registerProvider({
         fullName: formData.fullName.trim(),
+        username: formData.username.trim(),
         email: formData.email.trim(),
         password: formData.password,
         businessName: formData.businessName.trim(),
@@ -160,7 +166,7 @@ export default function RegisterProviderPage() {
       });
 
       // Successful registration returns user object with userId or role: PROVIDER
-      if (result && (result.userId || result.role === "PROVIDER" || result.success !== false)) {
+      if (result?.userId) {
         setShowSuccessModal(true);
         return;
       }
@@ -177,7 +183,8 @@ export default function RegisterProviderPage() {
             for (const [key, msgs] of Object.entries(errorsObj)) {
               const msg = Array.isArray(msgs) ? msgs[0] : String(msgs);
               const lowerKey = key.toLowerCase();
-              if (lowerKey.includes("email")) serverErrors.email = msg;
+              if (lowerKey.includes("username")) serverErrors.username = msg;
+              else if (lowerKey.includes("email")) serverErrors.email = msg;
               else if (lowerKey.includes("business")) serverErrors.businessName = msg;
               else if (lowerKey.includes("phone")) serverErrors.phone = msg;
               else if (lowerKey.includes("password")) serverErrors.password = msg;
@@ -193,7 +200,8 @@ export default function RegisterProviderPage() {
 
           if (apiMessage) {
             const lowerMsg = apiMessage.toLowerCase();
-            if (lowerMsg.includes("email")) serverErrors.email = apiMessage;
+            if (lowerMsg.includes("username")) serverErrors.username = apiMessage;
+            else if (lowerMsg.includes("email")) serverErrors.email = apiMessage;
             else if (lowerMsg.includes("phone")) serverErrors.phone = apiMessage;
             else if (lowerMsg.includes("password")) serverErrors.password = apiMessage;
             else if (lowerMsg.includes("address")) serverErrors.address = apiMessage;
@@ -201,7 +209,7 @@ export default function RegisterProviderPage() {
 
           if (Object.keys(serverErrors).length > 0) {
             setFieldErrors(serverErrors);
-            if (serverErrors.email || serverErrors.password || serverErrors.fullName) {
+            if (serverErrors.username || serverErrors.email || serverErrors.password || serverErrors.fullName) {
               setCurrentStep(1);
             }
           }
@@ -355,6 +363,14 @@ export default function RegisterProviderPage() {
                   ) : null}
                 </label>
               </div>
+
+              <label htmlFor="username" className="block text-xs font-semibold uppercase tracking-[0.05em] text-[#3b3b38]">
+                Username
+                <input id="username" type="text" autoComplete="username" required maxLength={50}
+                  value={formData.username} onChange={(e) => handleFieldChange("username", e.target.value)}
+                  placeholder="Enter your username" className={getFieldClassName("username")} />
+                {fieldErrors.username && <p role="alert" className="mt-1 text-xs font-medium text-red-600">{fieldErrors.username}</p>}
+              </label>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-[0.05em] text-[#3b3b38]">

@@ -38,8 +38,8 @@ Route-group names in parentheses (`(auth)`, `(provider)`, `(admin)`, `(errors)`)
 | **Authentication** | `/login` | Sign in for Admin and Provider accounts (`POST /api/auth/login`) |
 | | `/register` | Photographer account registration (`POST /api/auth/register/photographer`) |
 | | `/register-provider` | Provider business registration (`POST /api/auth/register/provider`) |
-| | `/forgot-password`, `/reset-password` | Password recovery flows |
-| **Provider Workspace** | `/provider/dashboard` | Live revenue, space occupancy rate, equipment utilization rate, scheduled maintenance count, and booking analytics (`GET /api/provider/dashboard`) |
+| | `/forgot-password`, `/reset-password` | Explain that password recovery is not available in the current backend |
+| **Provider Workspace** | `/provider/dashboard` | Backend metrics and booking analytics (booking charts use at most the first 100 records) |
 | | `/provider/creative-spaces` | Studio & darkroom CRUD, device image uploads, and single/bulk availability slot management (`/api/provider/spaces`, `/images`, `/availability`) |
 | | `/provider/equipment` | **3 tabs:**<br>1. **Equipment:** CRUD studio/darkroom gear (`/api/provider/equipment`)<br>2. **Darkroom Chemicals:** CRUD consumables, low-stock alerts, and stock movement adjustments (`/api/provider/chemicals`, `/stock-adjustments`)<br>3. **Maintenance Schedule:** CRUD maintenance logs for studios, darkrooms, and equipment (`/api/provider/maintenance`) |
 | | `/provider/packages` | **2 tabs:**<br>1. **Service Packages:** CRUD packages and attach/remove package items across `STUDIO`, `DARKROOM`, `EQUIPMENT`, `CHEMICAL`, and `SERVICE` (`/api/provider/service-packages`, `/{id}/items`)<br>2. **Standalone Services:** CRUD add-on services (`/api/provider/services`) |
@@ -48,9 +48,9 @@ Route-group names in parentheses (`(auth)`, `(provider)`, `(admin)`, `(errors)`)
 | **Administration** | `/admin/dashboard` | Platform-wide live metrics and operational summary (`GET /api/admin/dashboard`) |
 | | `/users` | User management CRUD and status toggle across `PHOTOGRAPHER`, `PROVIDER`, `EXPERT`, and `ADMIN` (`/api/admin/users`) |
 | | `/providers` | Provider account CRUD, profile inspection, and approval workflow (`APPROVED` / `REJECTED`) (`/api/admin/providers`) |
-| | `/spaces` | Creative space oversight CRUD and quick `ACTIVE` / `INACTIVE` status toggle (`/api/admin/spaces`) |
+| | `/spaces` | Creative space listing, creation, deletion and `ACTIVE` / `INACTIVE` status toggle (`/api/admin/spaces`). Editing is disabled until the admin API exposes the full details needed to preserve them. |
 | | `/transactions` | Platform booking & payment inspection and `No-Show` resolution (`PATCH /api/admin/bookings/{id}/no-show`) |
-| | `/settings`, `/settings/[section]` | Admin workspace preferences (`profile`, `account`, `appearance`, `notifications`, `display`, `platform`) |
+| | `/settings`, `/settings/[section]` | Admin workspace preferences (`profile`, `account`, `appearance`); unsupported sections redirect to profile |
 | **Error Pages** | `/errors/401`, `/errors/403`, `/errors/404` | Dedicated `401 Unauthorized`, `403 Forbidden`, and `404 Not Found` status pages |
 
 ## Technology stack
@@ -127,10 +127,16 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Sign in with a username and password. Admins can set usernames when creating
+Sign in with a username and password. Google sign-in and password recovery are
+not available in the current backend. Admins can set usernames when creating
 or editing users. Providers can check in or check out eligible booking segments
 and cancel eligible bookings from Reservations; cancellations may create a
 pending refund or restore a package use.
+
+Admin dashboard booking value sums confirmed, in-progress and completed
+bookings; it is not collected revenue. Charts use up to 1,000 records per
+list and indicate when the sample is incomplete. Provider-name charts group
+by the name returned by the API, not a unique provider ID.
 
 ### Environment configuration (`.env.local`)
 
@@ -159,14 +165,15 @@ The Next.js app supports either **proxying requests** through `/api/*` and `/upl
 | `npm run start` | Serve the production build |
 | `npm run lint` | Run ESLint across the project |
 | `npm run typecheck` | Run the TypeScript compiler (`tsc --noEmit`) |
-| `npm run test:api-contract` | Compare frontend routes, manual requests and the login request schema against `api-contract/openapi.json` |
+| `npm run test:api-contract` | Compare frontend routes, manual requests and selected request fields against `api-contract/openapi.json` |
+| `npm run test:dashboard` | Check admin booking-value and trend aggregation |
 | `npm run test:api-log` | Run the live API integration test suite and generate `api-test.log` |
 | `npm run update:api-contract` | Fetch the latest backend OpenAPI document into `api-contract/openapi.json` |
 
 ## API testing, logging, and CI
 
 ### 1. Static API contract check (`npm run test:api-contract`)
-Runs locally and in GitHub Actions on every push and pull request. It compares frontend `httpClient` calls and manual requests with the checked-in OpenAPI routes, and checks the login request fields against the snapshot. Explicitly listed exceptions cover undocumented password-reset routes and new backend operations outside the admin/provider workspace without manual examples; the checker reports their counts.
+Runs locally and in GitHub Actions on every push and pull request. It compares frontend `httpClient` calls and manual requests with the checked-in OpenAPI routes, checks the login request and selected registration, chemical and package request fields. `npm run test:dashboard` also runs in CI. These checks do not replace integration tests of backend behavior. Explicitly listed exceptions cover backend operations outside the admin/provider workspace without manual examples; the checker reports their counts.
 
 When the backend API changes:
 1. Start the backend locally (`http://localhost:5038/swagger/v1/swagger.json`).

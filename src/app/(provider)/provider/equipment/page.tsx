@@ -179,6 +179,7 @@ export default function EquipmentPage() {
     useState<PagedResponse<ProviderChemical> | null>(null);
   const [chemicalLoading, setChemicalLoading] = useState(true);
   const [chemicalError, setChemicalError] = useState("");
+  const [pickerError, setPickerError] = useState("");
   const [chemicalPage, setChemicalPage] = useState(1);
   const [chemicalDarkroomId, setChemicalDarkroomId] = useState("");
   const [chemicalStatus, setChemicalStatus] = useState("");
@@ -204,6 +205,7 @@ export default function EquipmentPage() {
     stockUnit: "L",
     minimumStock: "0.5",
     unitCost: "",
+    unitSellingPrice: "",
     expiresOn: "",
     status: "ACTIVE",
     statusNote: "",
@@ -263,20 +265,19 @@ export default function EquipmentPage() {
 
   useEffect(() => {
     let cancelled = false;
-    listMyProviderSpaces({ page: 1, pageSize: 100 })
-      .then((res) => {
-        if (!cancelled) setSpaces(res.items);
-      })
-      .catch(() => {
-        // Spaces list optional for display labels
-      });
-    listMyProviderEquipment({ page: 1, pageSize: 100 })
-      .then((res) => {
-        if (!cancelled) setAllEquipmentForPicker(res.items);
-      })
-      .catch(() => {
-        // Optional picker list
-      });
+    Promise.allSettled([
+      listMyProviderSpaces({ page: 1, pageSize: 100 }),
+      listMyProviderEquipment({ page: 1, pageSize: 100 }),
+    ]).then(([spaceResult, equipmentResult]) => {
+      if (cancelled) return;
+      if (spaceResult.status === "fulfilled") setSpaces(spaceResult.value.items);
+      if (equipmentResult.status === "fulfilled") setAllEquipmentForPicker(equipmentResult.value.items);
+      setPickerError(
+        spaceResult.status === "rejected" || equipmentResult.status === "rejected"
+          ? "Some resources could not be loaded for the picker. Refresh the page to retry."
+          : "",
+      );
+    });
     return () => {
       cancelled = true;
     };
@@ -500,6 +501,7 @@ export default function EquipmentPage() {
       stockUnit: "L",
       minimumStock: "0.5",
       unitCost: "",
+      unitSellingPrice: "",
       expiresOn: "",
       status: "ACTIVE",
       statusNote: "",
@@ -519,6 +521,7 @@ export default function EquipmentPage() {
       stockUnit: item.stockUnit,
       minimumStock: String(item.minimumStock),
       unitCost: item.unitCost != null ? String(item.unitCost) : "",
+      unitSellingPrice: item.unitSellingPrice != null ? String(item.unitSellingPrice) : "",
       expiresOn: item.expiresOn ?? "",
       status: item.status.toUpperCase() === "INACTIVE" ? "INACTIVE" : "ACTIVE",
       statusNote: item.statusNote ?? "",
@@ -785,6 +788,7 @@ export default function EquipmentPage() {
             title={eq.title}
             description="Manage studio/darkroom equipment and darkroom chemical consumables."
           />
+          {pickerError && <p role="alert" className="mb-4 rounded-md border border-[#e6c3bd] bg-[#fbefed] px-4 py-3 text-sm text-[#9c4339]">{pickerError}</p>}
         </div>
       </div>
 

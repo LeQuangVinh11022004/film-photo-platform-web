@@ -5,12 +5,14 @@ export type AdminLoginRequest = {
 
 export type RegisterPhotographerRequest = {
 	fullName: string;
+	username: string;
 	email: string;
 	password: string;
 };
 
 export type AdminRegisterProviderRequest = {
 	fullName: string;
+	username: string;
 	email: string;
 	password: string;
 	businessName: string;

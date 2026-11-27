@@ -155,6 +155,7 @@ export default function PackagesPage() {
     useState<ProviderPackageComponentType>("STUDIO");
   const [itemResourceId, setItemResourceId] = useState("");
   const [itemQuantity, setItemQuantity] = useState("1");
+  const [itemStepOrder, setItemStepOrder] = useState("1");
   const [itemDurationMinutes, setItemDurationMinutes] = useState("");
   const [itemChemicalQty, setItemChemicalQty] = useState("");
   const [itemNotes, setItemNotes] = useState("");
@@ -164,6 +165,7 @@ export default function PackagesPage() {
   const [ownedEquipment, setOwnedEquipment] = useState<ProviderEquipment[]>([]);
   const [ownedChemicals, setOwnedChemicals] = useState<ProviderChemical[]>([]);
   const [ownedServices, setOwnedServices] = useState<ProviderService[]>([]);
+  const [pickerError, setPickerError] = useState("");
 
   // Standalone Services state
   const [serviceResult, setServiceResult] =
@@ -250,6 +252,11 @@ export default function PackagesPage() {
       if (eqRes.status === "fulfilled") setOwnedEquipment(eqRes.value.items);
       if (chRes.status === "fulfilled") setOwnedChemicals(chRes.value.items);
       if (svRes.status === "fulfilled") setOwnedServices(svRes.value.items);
+      if ([spRes, eqRes, chRes, svRes].some((result) => result.status === "rejected")) {
+        setPickerError("Some package resources could not be loaded. Refresh the page to retry.");
+      } else {
+        setPickerError("");
+      }
     });
     return () => {
       cancelled = true;
@@ -319,6 +326,7 @@ export default function PackagesPage() {
       setItemComponentType(initialType);
       setItemResourceId(getFirstResourceForComponentType(initialType));
       setItemQuantity("1");
+      setItemStepOrder(String(Math.min(100, Math.max(0, ...items.map((item) => item.stepOrder)) + 1)));
       setItemDurationMinutes("");
       setItemChemicalQty("");
       setItemNotes("");
@@ -341,6 +349,7 @@ export default function PackagesPage() {
           componentType: itemComponentType,
           resourceId: itemResourceId,
           quantity: Math.max(1, Number.parseInt(itemQuantity, 10) || 1),
+          stepOrder: Number(itemStepOrder),
           includedDurationMinutes:
             itemDurationMinutes.trim() === ""
               ? null
@@ -351,6 +360,7 @@ export default function PackagesPage() {
         },
       );
       setPackageItems((prev) => [...prev, created]);
+      setItemStepOrder(String(Math.min(100, Number(itemStepOrder) + 1)));
       const refreshedPkg = await getMyProviderServicePackage(
         selectedPackage.packageId,
       );
@@ -565,6 +575,7 @@ export default function PackagesPage() {
             title={pkg.title}
             description={pkg.description}
           />
+          {pickerError && <p role="alert" className="mb-4 rounded-md border border-[#e6c3bd] bg-[#fbefed] px-4 py-3 text-sm text-[#9c4339]">{pickerError}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-2 sm:pt-2">
           <button
@@ -1202,6 +1213,11 @@ export default function PackagesPage() {
                     onChange={(event) => setItemQuantity(event.target.value)}
                     className={fieldClassName}
                   />
+                </label>
+
+                <label className="grid gap-1 text-xs font-medium text-[#454741]">
+                  Step order
+                  <input required type="number" min={1} max={100} step={1} value={itemStepOrder} onChange={(event) => setItemStepOrder(event.target.value)} className={fieldClassName} />
                 </label>
 
                 <label className="grid gap-1 text-xs font-medium text-[#454741]">

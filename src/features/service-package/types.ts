@@ -43,6 +43,7 @@ export type ProviderServicePackageItem = {
 	resourceId: string;
 	resourceName: string;
 	quantity: number;
+	stepOrder: number;
 	includedDurationMinutes: number | null;
 	includedChemicalQuantity: number | null;
 	notes: string;
@@ -53,6 +54,7 @@ export type ProviderServicePackageItemRequest = {
 	componentType: ProviderPackageComponentType;
 	resourceId: string;
 	quantity: number;
+	stepOrder: number;
 	includedDurationMinutes?: number | null;
 	includedChemicalQuantity?: number | null;
 	notes?: string | null;

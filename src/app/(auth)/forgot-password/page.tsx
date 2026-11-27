@@ -6,7 +6,7 @@ export default function ForgotPasswordPage() {
   return (
     <AuthPageLayout
       title="Forgot your password?"
-      description="Enter your email and we’ll send you a reset link."
+      description="Password recovery is not currently supported."
       backgroundImage="/images/auth/forgot-password.jpg"
       footer={
         <p>

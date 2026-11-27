@@ -21,6 +21,7 @@ export type ChemicalFormValues = {
   stockUnit: string;
   minimumStock: string;
   unitCost: string;
+  unitSellingPrice: string;
   expiresOn: string;
   status: ProviderChemicalStatus;
   statusNote: string;
@@ -65,6 +66,7 @@ export function ChemicalModal({
         stockUnit: values.stockUnit.trim() || "L",
         minimumStock: Math.max(0, Number(values.minimumStock) || 0),
         unitCost: values.unitCost.trim() === "" ? null : Number(values.unitCost),
+        unitSellingPrice: Number(values.unitSellingPrice),
         expiresOn: values.expiresOn.trim() || null,
         status: values.status,
         statusNote: values.statusNote.trim() || null,
@@ -155,6 +157,11 @@ export function ChemicalModal({
           <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
             Unit cost (VND, optional)
             <input type="number" min={0} step="0.01" value={values.unitCost} onChange={(e) => set("unitCost", e.target.value)} className={fieldClassName} />
+          </label>
+
+          <label className="grid gap-1.5 text-sm font-medium text-[#343630]">
+            Unit selling price (VND)
+            <input type="number" required min={0.01} max={9999999999.99} step="0.01" value={values.unitSellingPrice} onChange={(e) => set("unitSellingPrice", e.target.value)} className={fieldClassName} />
           </label>
 
           <label className="grid gap-1.5 text-sm font-medium text-[#343630]">

@@ -5,10 +5,7 @@ import ts from "typescript";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const methods = new Set(["get", "post", "put", "patch", "delete"]);
-const knownUndocumentedRoutes = new Set([
-  "POST /api/auth/forgot-password",
-  "POST /api/auth/reset-password",
-]);
+const knownUndocumentedRoutes = new Set();
 // New backend operations outside the admin/provider workspace do not yet have REST Client examples.
 const knownUntestedBackendRoutes = new Set([
   "DELETE /api/community/posts/{id}",
@@ -271,6 +268,30 @@ async function validateLoginContract(contract) {
   return errors;
 }
 
+async function validateRequestFields(contract) {
+  const cases = [
+    ["src/features/admin-auth/types.ts", "RegisterPhotographerRequest", "UserRegistrationRequestDTO", "username", "string"],
+    ["src/features/admin-auth/types.ts", "AdminRegisterProviderRequest", "ProviderRegistrationRequestDTO", "username", "string"],
+    ["src/features/provider-chemical/types.ts", "ProviderChemicalRequest", "ProviderChemicalRequestDTO", "unitSellingPrice", "number"],
+    ["src/features/service-package/types.ts", "ProviderServicePackageItemRequest", "ProviderServicePackageItemRequestDTO", "stepOrder", "number"],
+  ];
+  const errors = [];
+  for (const [file, typeName, schemaName, field, kind] of cases) {
+    const source = ts.createSourceFile(file, await readFile(path.join(root, file), "utf8"), ts.ScriptTarget.Latest, true);
+    const request = source.statements.find((s) => ts.isTypeAliasDeclaration(s) && s.name.text === typeName);
+    const property = request && ts.isTypeLiteralNode(request.type)
+      ? request.type.members.find((member) => ts.isPropertySignature(member) && getPropertyName(member.name) === field)
+      : undefined;
+    const schemaType = contract.components?.schemas?.[schemaName]?.properties?.[field]?.type;
+    const tsKind = kind === "string" ? ts.SyntaxKind.StringKeyword : ts.SyntaxKind.NumberKeyword;
+    if (!property || property.questionToken || property.type?.kind !== tsKind ||
+        (schemaType !== kind && !(kind === "number" && schemaType === "integer"))) {
+      errors.push(`${typeName}.${field} must be a required ${kind} matching ${schemaName}.`);
+    }
+  }
+  return errors;
+}
+
 try {
   const contract = JSON.parse(await readFile(path.join(root, "api-contract", "openapi.json"), "utf8"));
   const frontend = await collectFrontendOperations();
@@ -295,6 +316,7 @@ try {
     }
   }
   errors.push(...await validateLoginContract(contract));
+  errors.push(...await validateRequestFields(contract));
 
   for (const operation of undocumentedFrontend) {
     if (!knownUndocumentedRoutes.has(operation)) {
