@@ -1,5 +1,5 @@
 export type AdminLoginRequest = {
-	email: string;
+	username: string;
 	password: string;
 };
 
@@ -23,6 +23,7 @@ export type AdminRegisterProviderRequest = {
 export type AdminSessionUser = {
 	userId: string;
 	fullName: string;
+	username: string;
 	email: string;
 	role: string;
 	status: string;

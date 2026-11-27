@@ -2,7 +2,7 @@ export type { Reservation } from "./types";
 export type {
 	ProviderBooking,
 	ProviderBookingAllocation,
-	ProviderBookingDecision,
+	ProviderBookingCancellation,
 	ProviderBookingEquipment,
 	ProviderBookingStatus,
 } from "./types";
@@ -11,5 +11,9 @@ export {
 	listProviderBookingAllocations,
 	listProviderBookings,
 	reallocateProviderBookingSchedule,
-	reviewProviderBooking,
+	checkInProviderBooking,
+	checkOutProviderBooking,
+	checkInProviderBookingSegment,
+	checkOutProviderBookingSegment,
+	cancelProviderBooking,
 } from "./api";

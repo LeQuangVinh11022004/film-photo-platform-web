@@ -70,7 +70,7 @@ Route-group names in parentheses (`(auth)`, `(provider)`, `(admin)`, `(errors)`)
 │   └── workflows/
 │       └── api-contract.yml         # API contract CI on pushes and pull requests
 ├── api-contract/
-│   ├── openapi.json                 # Checked-in backend OpenAPI snapshot (82 operations)
+│   ├── openapi.json                 # Checked-in backend OpenAPI snapshot
 │   └── README.md                    # Contract update instructions
 ├── public/                          # Static assets and branding images
 ├── scripts/
@@ -127,6 +127,11 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+Sign in with a username and password. Admins can set usernames when creating
+or editing users. Providers can check in or check out eligible booking segments
+and cancel eligible bookings from Reservations; cancellations may create a
+pending refund or restore a package use.
+
 ### Environment configuration (`.env.local`)
 
 The Next.js app supports either **proxying requests** through `/api/*` and `/uploads/*` via `next.config.ts` or calling `NEXT_PUBLIC_API_URL` directly:
@@ -154,14 +159,14 @@ The Next.js app supports either **proxying requests** through `/api/*` and `/upl
 | `npm run start` | Serve the production build |
 | `npm run lint` | Run ESLint across the project |
 | `npm run typecheck` | Run the TypeScript compiler (`tsc --noEmit`) |
-| `npm run test:api-contract` | Validate all frontend API calls and `api-tests.http` entries against `api-contract/openapi.json` |
-| `npm run test:api-log` | Run the 83-step automated live API integration test suite and generate `api-test.log` |
+| `npm run test:api-contract` | Compare frontend routes, manual requests and the login request schema against `api-contract/openapi.json` |
+| `npm run test:api-log` | Run the live API integration test suite and generate `api-test.log` |
 | `npm run update:api-contract` | Fetch the latest backend OpenAPI document into `api-contract/openapi.json` |
 
 ## API testing, logging, and CI
 
 ### 1. Static API contract check (`npm run test:api-contract`)
-Runs locally and in GitHub Actions on every push and pull request. It verifies that all 76 frontend `httpClient` calls and all 82 backend operations in `api-contract/openapi.json` are aligned with `api-tests.http`.
+Runs locally and in GitHub Actions on every push and pull request. It compares frontend `httpClient` calls and manual requests with the checked-in OpenAPI routes, and checks the login request fields against the snapshot. Explicitly listed exceptions cover undocumented password-reset routes and new backend operations outside the admin/provider workspace without manual examples; the checker reports their counts.
 
 When the backend API changes:
 1. Start the backend locally (`http://localhost:5038/swagger/v1/swagger.json`).
@@ -169,13 +174,18 @@ When the backend API changes:
 3. Update frontend API calls and `api-tests.http`, then verify with `npm run test:api-contract`.
 
 ### 2. Automated live API test suite & log generator (`npm run test:api-log`)
-With the local backend running on `https://localhost:7104`, run:
+With the test backend running on `https://localhost:7104`, set its URL and test account credentials in the current PowerShell session:
 
 ```powershell
+$env:TEST_API_BASE_URL = "https://localhost:7104/api"
+$env:TEST_ADMIN_USERNAME = "<admin username>"
+$env:TEST_ADMIN_PASSWORD = "<admin password>"
+$env:TEST_PROVIDER_USERNAME = "<provider username>"
+$env:TEST_PROVIDER_PASSWORD = "<provider password>"
 npm run test:api-log
 ```
 
-This executes 83 end-to-end API requests across **Auth**, **Admin**, and **Provider** (including full CRUD cycles, stock adjustments, maintenance schedules, standalone services, package items, booking allocations, and automatic cleanup of temporary test records) and writes a timestamped execution report to [`api-test.log`](./api-test.log).
+This executes API requests across **Auth**, **Admin**, and **Provider**, including create, update and delete operations, and writes a timestamped execution report to [`api-test.log`](./api-test.log). Use a dedicated test database: failures can leave temporary records behind. Refresh the OpenAPI snapshot when the backend contract changes. Apart from the login request fields, the static check does not validate request or response schemas.
 
 ### 3. Manual REST Client requests (`api-tests.http`)
 Open [`api-tests.http`](./api-tests.http) with the VS Code **REST Client** extension to run individual requests interactively against the backend.

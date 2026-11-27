@@ -28,6 +28,7 @@ const fieldClassName =
 
 const blankForm: AdminProviderCreateRequest = {
 	fullName: "",
+	username: "",
 	email: "",
 	password: "",
 	businessName: "",
@@ -157,6 +158,7 @@ export default function ProvidersPage() {
 		setEditingProvider(provider);
 		setForm({
 			fullName: provider.businessName,
+			username: "",
 			email: provider.email,
 			password: "",
 			businessName: provider.businessName,
@@ -176,6 +178,7 @@ export default function ProvidersPage() {
 			if (modalMode === "create") {
 				await createAdminProvider({
 					fullName: form.fullName.trim(),
+					username: form.username.trim(),
 					email: form.email.trim(),
 					password: form.password,
 					businessName: form.businessName.trim(),
@@ -513,6 +516,19 @@ export default function ProvidersPage() {
 											maxLength={200}
 											value={form.fullName}
 											onChange={(event) => setForm((current) => ({ ...current, fullName: event.target.value }))}
+											className={fieldClassName}
+										/>
+									</label>
+									<label className="grid gap-1.5 text-sm font-medium text-[#454741]">
+										{messages.users.username}
+										<input
+											required
+											autoComplete="username"
+											minLength={3}
+											maxLength={50}
+											pattern="(?:[A-Za-z0-9._]|-)+"
+											value={form.username}
+											onChange={(event) => setForm((current) => ({ ...current, username: event.target.value }))}
 											className={fieldClassName}
 										/>
 									</label>

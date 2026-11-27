@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import axios from "axios";
 import { Pencil, Trash2, Upload, X } from "lucide-react";
 import {
+    addMyProviderSpaceImage,
     createMyProviderSpaceAvailability,
     deleteMyProviderSpaceAvailability,
     deleteMyProviderSpaceImage,
@@ -399,6 +400,7 @@ export function ProviderSpaceDetailsDialog({
     const [savingAvailability, setSavingAvailability] = useState(false);
     const [bulkProgress, setBulkProgress] = useState<{ current: number; total: number } | null>(null);
     const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imageUrl, setImageUrl] = useState("");
     const [uploadingImage, setUploadingImage] = useState(false);
     const [imageError, setImageError] = useState("");
     const imageInputRef = useRef<HTMLInputElement | null>(null);
@@ -485,6 +487,37 @@ export function ProviderSpaceDetailsDialog({
             if (imageInputRef.current) imageInputRef.current.value = "";
             await onRefresh(space.spaceId);
             await onUpdated();
+        } catch (error) {
+            setImageError(errorMessage(error));
+        } finally {
+            setUploadingImage(false);
+        }
+    }
+
+    async function handleAddImageUrl(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        let parsedUrl: URL;
+        try {
+            parsedUrl = new URL(imageUrl.trim());
+        } catch {
+            setImageError("Enter a valid HTTP or HTTPS image URL.");
+            return;
+        }
+        if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+            setImageError("Enter a valid HTTP or HTTPS image URL.");
+            return;
+        }
+        setUploadingImage(true);
+        setImageError("");
+        try {
+            await addMyProviderSpaceImage(space.spaceId, imageUrl.trim());
+            setImageUrl("");
+            try {
+                await onRefresh(space.spaceId);
+                await onUpdated();
+            } catch {
+                setImageError("The image was added, but the list could not be refreshed. Reopen this space to see it.");
+            }
         } catch (error) {
             setImageError(errorMessage(error));
         } finally {
@@ -741,6 +774,16 @@ export function ProviderSpaceDetailsDialog({
                     ) : (
                         <p className="mt-2 text-sm text-[#777973]">No images have been added.</p>
                     )}
+                    <form onSubmit={handleAddImageUrl} className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <label htmlFor="space-image-url" className="sr-only">Image URL</label>
+                        <input id="space-image-url" type="url" required maxLength={1000} value={imageUrl}
+                            onChange={(event) => setImageUrl(event.target.value)} placeholder="https://example.com/image.jpg"
+                            className={`${fieldClassName} min-w-0 flex-1`} />
+                        <button type="submit" disabled={uploadingImage || !imageUrl.trim()}
+                            className="h-10 shrink-0 rounded-md border border-[#d8d8d1] px-4 text-sm font-semibold text-[#343630] hover:bg-[#f7f7f3] disabled:opacity-60">
+                            Add image URL
+                        </button>
+                    </form>
                     <form onSubmit={handleUploadImage} className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
                         <label htmlFor="space-image-file" className="sr-only">
                             Choose image from this device

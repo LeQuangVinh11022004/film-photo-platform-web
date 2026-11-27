@@ -5,16 +5,20 @@ import axios from "axios";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { Pagination } from "@/shared/components/Pagination";
 import {
+  cancelProviderBooking,
+  checkInProviderBooking,
+  checkInProviderBookingSegment,
+  checkOutProviderBooking,
+  checkOutProviderBookingSegment,
   getProviderBooking,
   listProviderBookingAllocations,
   listProviderBookings,
   reallocateProviderBookingSchedule,
-  reviewProviderBooking,
 } from "@/features/reservation/api";
 import type {
   ProviderBooking,
   ProviderBookingAllocation,
-  ProviderBookingDecision,
+  ProviderBookingCancellation,
 } from "@/features/reservation";
 import { listMyProviderSpaceAvailability } from "@/features/provider-space/api";
 import type { ProviderSpaceAvailability } from "@/features/provider-space";
@@ -25,8 +29,8 @@ const fieldClassName =
   "h-10 rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#343630] outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
 
 function statusClass(status: string) {
-  if (["APPROVED", "CONFIRMED", "COMPLETED"].includes(status.toUpperCase())) return "bg-[#e5f0e8] text-[#39724b]";
-  if (status.toUpperCase() === "PENDING") return "bg-[#f8edd9] text-[#93651e]";
+  if (["CONFIRMED", "IN_PROGRESS", "COMPLETED"].includes(status.toUpperCase())) return "bg-[#e5f0e8] text-[#39724b]";
+  if (status.toUpperCase() === "AWAITING_DEPOSIT") return "bg-[#f8edd9] text-[#93651e]";
   return "bg-[#f5e4e1] text-[#a34d42]";
 }
 
@@ -99,11 +103,14 @@ export default function ReservationsPage() {
   const [reservations, setReservations] = useState<ProviderBooking[]>([]);
   const [totalReservations, setTotalReservations] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
-  const [approvedCount, setApprovedCount] = useState(0);
+  const [confirmedCount, setConfirmedCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [decisionError, setDecisionError] = useState("");
-  const [savingDecision, setSavingDecision] = useState(false);
+  const [savingAction, setSavingAction] = useState(false);
+  const [actionNeedsRefresh, setActionNeedsRefresh] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
+  const [cancellation, setCancellation] = useState<ProviderBookingCancellation | null>(null);
   const [selectedReservation, setSelectedReservation] = useState<ProviderBooking | null>(null);
   const [allocations, setAllocations] = useState<ProviderBookingAllocation[]>([]);
   const [spaceSlots, setSpaceSlots] = useState<ProviderSpaceAvailability[]>([]);
@@ -115,14 +122,14 @@ export default function ReservationsPage() {
     let cancelled = false;
     Promise.all([
       listProviderBookings({ status: status || undefined, page, pageSize }),
-      listProviderBookings({ status: "PENDING", page: 1, pageSize: 1 }),
-      listProviderBookings({ status: "APPROVED", page: 1, pageSize: 1 }),
-    ]).then(([queue, pending, approved]) => {
+      listProviderBookings({ status: "AWAITING_DEPOSIT", page: 1, pageSize: 1 }),
+      listProviderBookings({ status: "CONFIRMED", page: 1, pageSize: 1 }),
+    ]).then(([queue, pending, confirmed]) => {
       if (cancelled) return;
       setReservations(queue.items);
       setTotalReservations(queue.totalItems);
       setPendingCount(pending.totalItems);
-      setApprovedCount(approved.totalItems);
+      setConfirmedCount(confirmed.totalItems);
       setError("");
     }).catch((requestError: unknown) => {
       if (!cancelled) setError(errorMessage(requestError));
@@ -135,6 +142,9 @@ export default function ReservationsPage() {
   async function openReservation(bookingId: string) {
     setError("");
     setDecisionError("");
+    setActionMessage("");
+    setCancellation(null);
+    setActionNeedsRefresh(false);
     setAllocations([]);
     setSpaceSlots([]);
     setSelectedSlotBySchedule({});
@@ -167,6 +177,7 @@ export default function ReservationsPage() {
     if (!availabilityId) return;
     setReallocatingId(scheduleId);
     setDecisionError("");
+    setActionMessage("");
     try {
       const updatedBooking = await reallocateProviderBookingSchedule(
         selectedReservation.bookingId,
@@ -190,21 +201,42 @@ export default function ReservationsPage() {
     }
   }
 
-  async function handleReview(decision: ProviderBookingDecision) {
+  async function handleBookingAction(action: "check-in" | "check-out" | "cancel", scheduleId?: string) {
     if (!selectedReservation) return;
-    setSavingDecision(true);
+    const confirmation = action === "cancel" ? res.confirmCancel : action === "check-in" ? res.confirmCheckIn : res.confirmCheckOut;
+    if (!window.confirm(confirmation)) return;
+    const bookingId = selectedReservation.bookingId;
+    setSavingAction(true);
     setDecisionError("");
+    setActionMessage("");
     try {
-      const updated = await reviewProviderBooking(selectedReservation.bookingId, decision);
-      setSelectedReservation(updated);
-      const refreshedAllocs = await listProviderBookingAllocations(selectedReservation.bookingId);
-      setAllocations(refreshedAllocs);
-      setLoading(true);
+      if (action === "cancel") {
+        setCancellation(await cancelProviderBooking(bookingId));
+      } else if (action === "check-in") {
+        if (scheduleId) await checkInProviderBookingSegment(bookingId, scheduleId);
+        else await checkInProviderBooking(bookingId);
+      } else {
+        if (scheduleId) await checkOutProviderBookingSegment(bookingId, scheduleId);
+        else await checkOutProviderBooking(bookingId);
+      }
+      setActionMessage(res.actionSucceeded);
+      setActionNeedsRefresh(true);
       setReloadKey((key) => key + 1);
+      try {
+        const [booking, refreshedAllocs] = await Promise.all([
+          getProviderBooking(bookingId),
+          listProviderBookingAllocations(bookingId),
+        ]);
+        setSelectedReservation(booking);
+        setAllocations(refreshedAllocs);
+        setActionNeedsRefresh(false);
+      } catch {
+        setDecisionError(res.refreshFailed);
+      }
     } catch (requestError) {
       setDecisionError(errorMessage(requestError));
     } finally {
-      setSavingDecision(false);
+      setSavingAction(false);
     }
   }
 
@@ -253,14 +285,14 @@ export default function ReservationsPage() {
             helper: "Bookings in your provider account",
           },
           {
-            label: "Pending requests",
+            label: "Awaiting deposit",
             value: pendingCount.toString(),
-            helper: "Bookings waiting for review",
+            helper: "Bookings awaiting deposit payment",
           },
           {
-            label: "Approved bookings",
-            value: approvedCount.toString(),
-            helper: "Bookings accepted by your business",
+            label: "Confirmed bookings",
+            value: confirmedCount.toString(),
+            helper: "Bookings confirmed by the platform",
           },
         ].map((metric) => (
           <article
@@ -308,11 +340,12 @@ export default function ReservationsPage() {
               onChange={(event) => handleStatusChange(event.target.value)}
               className={fieldClassName}>
               <option value="">All statuses</option>
-              <option value="PENDING">Pending</option>
-              <option value="APPROVED">Approved</option>
-              <option value="REJECTED">Rejected</option>
+              <option value="AWAITING_DEPOSIT">Awaiting deposit</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="IN_PROGRESS">In progress</option>
               <option value="CANCELLED">Cancelled</option>
               <option value="COMPLETED">Completed</option>
+              <option value="NO_SHOW">No show</option>
             </select>
           </div>
         </div>
@@ -399,12 +432,12 @@ export default function ReservationsPage() {
       {selectedReservation && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-[#171815]/35 p-4"
-          onClick={() => setSelectedReservation(null)}>
+          onClick={() => { if (!savingAction) setSelectedReservation(null); }}>
           <section
             role="dialog"
             aria-modal="true"
             aria-labelledby="reservation-detail-title"
-            className="w-full max-w-xl rounded-lg border border-[#e0e0da] bg-white p-6 shadow-xl"
+            className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-lg border border-[#e0e0da] bg-white p-6 shadow-xl"
             onClick={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -419,6 +452,7 @@ export default function ReservationsPage() {
               </div>
               <button
                 type="button"
+                disabled={savingAction}
                 onClick={() => setSelectedReservation(null)}
                 aria-label="Close reservation details"
                 className="rounded-md px-2 py-1 text-lg text-[#777973] hover:bg-[#f0f0ec]">
@@ -497,7 +531,7 @@ export default function ReservationsPage() {
                           {new Date(alloc.startAt).toLocaleString()} –{" "}
                           {new Date(alloc.endAt).toLocaleString()}
                         </p>
-                        {isSpaceResource && availableSlots.length > 0 && (
+                        {isSpaceResource && selectedReservation.status.toUpperCase() === "CONFIRMED" && availableSlots.length > 0 && (
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             <select
                               value={selectedSlotBySchedule[alloc.scheduleId] ?? ""}
@@ -523,7 +557,7 @@ export default function ReservationsPage() {
                               type="button"
                               disabled={
                                 !selectedSlotBySchedule[alloc.scheduleId] ||
-                                reallocatingId === alloc.scheduleId
+                                reallocatingId !== null || savingAction || actionNeedsRefresh
                               }
                               onClick={() => void handleReallocate(alloc.scheduleId)}
                               className="h-8 rounded bg-[#39724b] px-3 text-xs font-semibold text-white hover:bg-[#2f603e] disabled:opacity-50">
@@ -533,19 +567,45 @@ export default function ReservationsPage() {
                             </button>
                           </div>
                         )}
+                        {alloc.canCheckInOut && (
+                          <div className="mt-2 flex gap-2">
+                            {alloc.status.toUpperCase() === "CONFIRMED" && !alloc.checkInAt &&
+                              ["CONFIRMED", "IN_PROGRESS"].includes(selectedReservation.status.toUpperCase()) && (
+                              <button type="button" disabled={savingAction || reallocatingId !== null || actionNeedsRefresh}
+                                onClick={() => void handleBookingAction("check-in", allocations.filter((item) => item.canCheckInOut).length === 1 ? undefined : alloc.scheduleId)}
+                                className="rounded bg-[#39724b] px-3 py-1.5 font-semibold text-white hover:bg-[#2f603e] disabled:opacity-50">
+                                {res.checkIn}
+                              </button>
+                            )}
+                            {alloc.status.toUpperCase() === "IN_PROGRESS" && alloc.checkInAt && !alloc.checkOutAt && (
+                              <button type="button" disabled={savingAction || reallocatingId !== null || actionNeedsRefresh}
+                                onClick={() => void handleBookingAction("check-out", allocations.filter((item) => item.canCheckInOut).length === 1 ? undefined : alloc.scheduleId)}
+                                className="rounded bg-[#39724b] px-3 py-1.5 font-semibold text-white hover:bg-[#2f603e] disabled:opacity-50">
+                                {res.checkOut}
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </li>
                     );
                   })}
                 </ul>
               )}
             </div>
+            {actionMessage && <p role="status" className="mt-4 rounded-md border border-[#c6dfcc] bg-[#eef7ef] px-3 py-2 text-sm text-[#39724b]">{actionMessage}</p>}
+            {cancellation && (
+              <dl className="mt-3 space-y-1 text-sm text-[#343630]">
+                <div className="flex justify-between gap-4"><dt>{res.refundStatus}</dt><dd>{cancellation.refundStatus || "—"}</dd></div>
+                <div className="flex justify-between gap-4"><dt>{res.refundAmount}</dt><dd>{formatMoney(cancellation.refundAmount)}</dd></div>
+                <div className="flex justify-between gap-4"><dt>{res.packageUseRestored}</dt><dd>{cancellation.packageUseRestored ? res.yes : res.no}</dd></div>
+              </dl>
+            )}
             {decisionError && <p role="alert" className="mt-4 rounded-md border border-[#e6c3bd] bg-[#fbefed] px-3 py-2 text-sm text-[#9c4339]">{decisionError}</p>}
             <div className="mt-6 flex flex-wrap justify-end gap-2 border-t border-[#eeeeea] pt-4">
-              {selectedReservation.status.toUpperCase() === "PENDING" && <>
-                <button type="button" disabled={savingDecision} onClick={() => void handleReview("REJECTED")} className="h-9 rounded-md border border-[#e6c3bd] px-3 text-sm font-semibold text-[#a34d42] hover:bg-[#fbefed] disabled:opacity-50">{savingDecision ? "Saving…" : "Reject"}</button>
-                <button type="button" disabled={savingDecision} onClick={() => void handleReview("APPROVED")} className="h-9 rounded-md bg-[#39724b] px-3 text-sm font-semibold text-white hover:bg-[#2f603e] disabled:opacity-50">{savingDecision ? "Saving…" : "Approve"}</button>
-              </>}
-              <button type="button" onClick={() => { setSelectedReservation(null); setDecisionError(""); }} className="h-9 rounded-md bg-[#20221f] px-4 text-sm font-semibold text-white hover:bg-[#393b36]">Close</button>
+              {["AWAITING_DEPOSIT", "CONFIRMED"].includes(selectedReservation.status.toUpperCase()) && selectedReservation.sessionStatus.toUpperCase() === "NOT_STARTED" && (
+                <button type="button" disabled={savingAction || reallocatingId !== null || actionNeedsRefresh} onClick={() => void handleBookingAction("cancel")} className="h-9 rounded-md border border-[#e6c3bd] px-3 text-sm font-semibold text-[#a34d42] hover:bg-[#fbefed] disabled:opacity-50">{res.cancelBooking}</button>
+              )}
+              <button type="button" disabled={savingAction} onClick={() => { setSelectedReservation(null); setDecisionError(""); }} className="h-9 rounded-md bg-[#20221f] px-4 text-sm font-semibold text-white hover:bg-[#393b36] disabled:opacity-50">Close</button>
             </div>
           </section>
         </div>

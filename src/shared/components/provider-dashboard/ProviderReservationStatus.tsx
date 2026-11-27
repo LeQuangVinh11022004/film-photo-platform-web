@@ -31,8 +31,10 @@ export function ProviderReservationStatus({
 	const statusLabelMap: Record<string, string> = {
 		Confirmed: s.confirmed,
 		Pending: s.pending,
+		"In progress": s.inProgress,
 		Completed: s.completed,
 		Cancelled: s.cancelled,
+		"No show": s.noShow,
 		Rejected: s.rejected,
 		Other: s.other,
 	};

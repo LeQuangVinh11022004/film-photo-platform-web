@@ -18,6 +18,7 @@ export type AdminProviderApprovalStatus = "APPROVED" | "REJECTED";
 /** Matches backend AdminProviderCreateRequestDTO. */
 export type AdminProviderCreateRequest = {
 	fullName: string;
+	username: string;
 	email: string;
 	password: string;
 	businessName: string;
