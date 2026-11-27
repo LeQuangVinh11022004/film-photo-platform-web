@@ -9,6 +9,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:api-contract": "node scripts/check-api-contract.mjs",
+    "test:dashboard": "node --test scripts/test-dashboard-aggregates.mjs",
     "test:api-log": "node scripts/generate-api-test-log.mjs",
     "update:api-contract": "node scripts/update-api-contract.mjs"
   },

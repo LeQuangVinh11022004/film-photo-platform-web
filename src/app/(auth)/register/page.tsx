@@ -5,14 +5,14 @@ import { useState, type FormEvent } from "react";
 import axios from "axios";
 import { CheckCircle2 } from "lucide-react";
 import { AuthPageLayout } from "@/shared/components/AuthPageLayout";
-import { GoogleAuthButton } from "@/shared/components/GoogleAuthButton";
 import { registerPhotographer } from "@/features/admin-auth";
 
-type FieldKey = "fullName" | "email" | "password";
+type FieldKey = "fullName" | "username" | "email" | "password";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
     fullName: "",
+    username: "",
     email: "",
     password: "",
   });
@@ -55,6 +55,9 @@ export default function RegisterPage() {
     if (!formData.fullName.trim()) {
       clientErrors.fullName = "Please enter your full name.";
     }
+    if (!/^[A-Za-z0-9._-]{3,50}$/.test(formData.username.trim())) {
+      clientErrors.username = "Use 3 to 50 letters, numbers, dots, underscores or hyphens.";
+    }
     if (!formData.email.trim()) {
       clientErrors.email = "Please enter your email address.";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
@@ -78,11 +81,12 @@ export default function RegisterPage() {
     try {
       const result = await registerPhotographer({
         fullName: formData.fullName.trim(),
+        username: formData.username.trim(),
         email: formData.email.trim(),
         password: formData.password,
       });
 
-      if (result && (result.userId || result.role === "PHOTOGRAPHER" || result.success !== false)) {
+      if (result?.userId) {
         setShowSuccessModal(true);
         return;
       }
@@ -99,7 +103,8 @@ export default function RegisterPage() {
             for (const [key, msgs] of Object.entries(errorsObj)) {
               const msg = Array.isArray(msgs) ? msgs[0] : String(msgs);
               const lowerKey = key.toLowerCase();
-              if (lowerKey.includes("email")) serverErrors.email = msg;
+              if (lowerKey.includes("username")) serverErrors.username = msg;
+              else if (lowerKey.includes("email")) serverErrors.email = msg;
               else if (lowerKey.includes("password")) serverErrors.password = msg;
               else if (lowerKey.includes("name")) serverErrors.fullName = msg;
             }
@@ -111,7 +116,8 @@ export default function RegisterPage() {
 
           if (apiMessage) {
             const lowerMsg = apiMessage.toLowerCase();
-            if (lowerMsg.includes("email")) serverErrors.email = apiMessage;
+            if (lowerMsg.includes("username")) serverErrors.username = apiMessage;
+            else if (lowerMsg.includes("email")) serverErrors.email = apiMessage;
             else if (lowerMsg.includes("password")) serverErrors.password = apiMessage;
           }
 
@@ -191,6 +197,13 @@ export default function RegisterPage() {
               </p>
             ) : null}
           </label>
+          <label htmlFor="username" className="block text-sm font-semibold text-[#3b3b38]">
+            Username
+            <input id="username" type="text" autoComplete="username" required maxLength={50}
+              value={formData.username} onChange={(e) => handleFieldChange("username", e.target.value)}
+              placeholder="Enter your username" className={getFieldClassName("username")} />
+            {fieldErrors.username && <p role="alert" className="mt-1 text-xs font-medium text-red-600">{fieldErrors.username}</p>}
+          </label>
           <label htmlFor="email" className="block text-sm font-semibold text-[#3b3b38]">
             Email Address
             <input
@@ -246,7 +259,6 @@ export default function RegisterPage() {
             {submitting ? "Creating account..." : "Create account"}
           </button>
         </form>
-        <GoogleAuthButton />
       </AuthPageLayout>
 
       {showSuccessModal ? (

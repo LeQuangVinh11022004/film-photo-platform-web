@@ -6,7 +6,6 @@ import { useState, type FormEvent } from "react";
 import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
 import { AuthPageLayout } from "@/shared/components/AuthPageLayout";
-import { GoogleAuthButton } from "@/shared/components/GoogleAuthButton";
 import { loginUser } from "@/features/admin-auth/api";
 import { useAuthStore } from "@/store/authStore";
 
@@ -143,7 +142,6 @@ export default function LoginPage() {
           {submitting ? "Signing in..." : "Sign in"}
         </button>
       </form>
-      <GoogleAuthButton />
     </AuthPageLayout>
   );
 }

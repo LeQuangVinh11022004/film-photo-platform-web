@@ -595,7 +595,7 @@ async function main() {
       });
     }
 
-    const existingChems = await req(s3, "List Provider darkroom chemicals", "GET", "/provider/chemicals?page=1&pageSize=20", {
+    await req(s3, "List Provider darkroom chemicals", "GET", "/provider/chemicals?page=1&pageSize=20", {
       token: providerToken,
       expectedStatus: 200,
     });
@@ -611,6 +611,7 @@ async function main() {
         stockUnit: "L",
         minimumStock: 1,
         unitCost: 300000,
+        unitSellingPrice: 350000,
         expiresOn: "2027-06-30",
         status: "ACTIVE",
         statusNote: null,
@@ -634,6 +635,7 @@ async function main() {
         stockUnit: "L",
         minimumStock: 1.5,
         unitCost: 320000,
+        unitSellingPrice: 370000,
         expiresOn: "2027-06-30",
         status: "ACTIVE",
         statusNote: null,
@@ -641,8 +643,7 @@ async function main() {
       expectedStatus: 200,
     });
 
-    const seedChem = existingChems.data.items.find((c) => !c.name.startsWith("Temp ")) || createdChem.data;
-    await req(s3, "Adjust chemical stock (+1 PURCHASE movement)", "POST", `/provider/chemicals/${seedChem.chemicalId}/stock-adjustments`, {
+    await req(s3, "Adjust chemical stock (+1 PURCHASE movement)", "POST", `/provider/chemicals/${chemId}/stock-adjustments`, {
       token: providerToken,
       body: {
         movementType: "PURCHASE",
@@ -653,7 +654,7 @@ async function main() {
       },
       expectedStatus: 200,
     });
-    await req(s3, "Adjust chemical stock (-1 ADJUSTMENT revert)", "POST", `/provider/chemicals/${seedChem.chemicalId}/stock-adjustments`, {
+    await req(s3, "Adjust chemical stock (-1 ADJUSTMENT revert)", "POST", `/provider/chemicals/${chemId}/stock-adjustments`, {
       token: providerToken,
       body: {
         movementType: "ADJUSTMENT",
@@ -785,6 +786,7 @@ async function main() {
         componentType: "DARKROOM",
         resourceId: darkroomId,
         quantity: 1,
+        stepOrder: 1,
         includedDurationMinutes: 180,
         includedChemicalQuantity: null,
         notes: "3 hours darkroom session",
@@ -797,6 +799,7 @@ async function main() {
         componentType: "EQUIPMENT",
         resourceId: eqId,
         quantity: 1,
+        stepOrder: 2,
         includedDurationMinutes: 180,
         includedChemicalQuantity: null,
         notes: "Includes enlarger",
@@ -809,6 +812,7 @@ async function main() {
         componentType: "CHEMICAL",
         resourceId: chemId,
         quantity: 1,
+        stepOrder: 3,
         includedDurationMinutes: null,
         includedChemicalQuantity: 0.5,
         notes: "Includes 0.5L developer",
@@ -821,6 +825,7 @@ async function main() {
         componentType: "SERVICE",
         resourceId: svcId,
         quantity: 1,
+        stepOrder: 4,
         includedDurationMinutes: null,
         includedChemicalQuantity: null,
         notes: "Includes push processing service",

@@ -9,7 +9,7 @@ import type { PagedResponse } from "@/types";
 const PAGE_SIZE = 100;
 const MAX_PAGES = 10;
 const TREND_DAYS = 30;
-const REVENUE_STATUSES = ["CONFIRMED", "COMPLETED"];
+const VALUE_STATUSES = ["CONFIRMED", "IN_PROGRESS", "COMPLETED"];
 
 export type CountItem = { key: string; count: number };
 export type TrendPoint = { date: string; label: string; bookings: number; revenue: number };
@@ -63,16 +63,8 @@ function shortDateLabel(isoDate: string) {
 
 function buildTrend(bookings: AdminBooking[]): TrendPoint[] {
 	const points = new Map<string, TrendPoint>();
-	let anchor = new Date();
+	const anchor = new Date();
 	anchor.setHours(0, 0, 0, 0);
-
-	for (const booking of bookings) {
-		const raw = booking.bookingDate.slice(0, 10);
-		const parsed = new Date(`${raw}T00:00:00`);
-		if (!Number.isNaN(parsed.getTime()) && parsed > anchor) {
-			anchor = parsed;
-		}
-	}
 
 	for (let offset = TREND_DAYS - 1; offset >= 0; offset -= 1) {
 		const date = new Date(anchor);
@@ -84,7 +76,7 @@ function buildTrend(bookings: AdminBooking[]): TrendPoint[] {
 		const point = points.get(booking.bookingDate.slice(0, 10));
 		if (!point) continue;
 		point.bookings += 1;
-		if (booking.status.toUpperCase() !== "CANCELLED") {
+		if (VALUE_STATUSES.includes(booking.status.toUpperCase())) {
 			point.revenue += booking.totalAmount;
 		}
 	}
@@ -94,16 +86,16 @@ function buildTrend(bookings: AdminBooking[]): TrendPoint[] {
 function buildTopProviders(bookings: AdminBooking[]): ProviderRevenue[] {
 	const totals = new Map<string, ProviderRevenue>();
 	for (const booking of bookings) {
-		const name = booking.providerName?.trim() || booking.spaceName?.trim();
+		const name = booking.providerName?.trim();
 		if (!name) continue;
 		const entry = totals.get(name) ?? { name, bookings: 0, revenue: 0 };
 		entry.bookings += 1;
-		if (REVENUE_STATUSES.includes(booking.status.toUpperCase()) || booking.status.toUpperCase() !== "CANCELLED") {
+		if (VALUE_STATUSES.includes(booking.status.toUpperCase())) {
 			entry.revenue += booking.totalAmount;
 		}
 		totals.set(name, entry);
 	}
-	return [...totals.values()].sort((a, b) => b.bookings - a.bookings || b.revenue - a.revenue).slice(0, 5);
+	return [...totals.values()].sort((a, b) => b.revenue - a.revenue || b.bookings - a.bookings).slice(0, 5);
 }
 
 export async function loadAdminDashboardCharts(): Promise<AdminDashboardCharts> {
@@ -114,7 +106,7 @@ export async function loadAdminDashboardCharts(): Promise<AdminDashboardCharts> 
 	]);
 
 	const totalRevenue = bookings.items
-		.filter((b) => b.status.toUpperCase() !== "CANCELLED")
+		.filter((b) => VALUE_STATUSES.includes(b.status.toUpperCase()))
 		.reduce((sum, b) => sum + b.totalAmount, 0);
 
 	return {

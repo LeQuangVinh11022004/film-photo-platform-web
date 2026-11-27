@@ -2,13 +2,12 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import axios from "axios";
-import { Ban, Eye, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
+import { Ban, Eye, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import {
 	createAdminSpace,
 	deleteAdminSpace,
 	getAdminSpaceById,
 	listAdminSpaces,
-	updateAdminSpace,
 	updateAdminSpaceStatus,
 } from "@/features/admin-space/api";
 import type { AdminSpace, AdminSpaceRequest } from "@/features/admin-space/types";
@@ -22,7 +21,8 @@ import type { PagedResponse } from "@/types";
 
 const pageSize = 20;
 const fieldClassName = "h-10 w-full rounded-md border border-[#d8d8d1] bg-white px-3 text-sm text-[#343630] outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15";
-const blankForm: AdminSpaceRequest = { providerId: "", name: "", type: "STUDIO", description: "", address: "", capacity: null, status: "INACTIVE" };
+type SpaceForm = Omit<AdminSpaceRequest, "capacity"> & { capacity: number | null };
+const blankForm: SpaceForm = { providerId: "", name: "", type: "STUDIO", description: "", address: "", capacity: null, status: "INACTIVE" };
 
 function errorMessage(error: unknown) {
 	if (axios.isAxiosError(error)) {
@@ -48,12 +48,11 @@ export default function AdminSpacesPage() {
 	const [saving, setSaving] = useState(false);
 	const [error, setError] = useState("");
 	const [modalOpen, setModalOpen] = useState(false);
-	const [editingSpace, setEditingSpace] = useState<AdminSpace | null>(null);
 	const [selectedSpace, setSelectedSpace] = useState<AdminSpace | null>(null);
 	const [togglingSpaceId, setTogglingSpaceId] = useState<string | null>(null);
 	const [pendingDeleteSpace, setPendingDeleteSpace] = useState<AdminSpace | null>(null);
 	const [deletingSpace, setDeletingSpace] = useState(false);
-	const [form, setForm] = useState<AdminSpaceRequest>(blankForm);
+	const [form, setForm] = useState<SpaceForm>(blankForm);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -73,14 +72,7 @@ export default function AdminSpacesPage() {
 	}, [page, providerId, status, type]);
 
 	function startCreate() {
-		setEditingSpace(null);
 		setForm({ ...blankForm, providerId: providers[0]?.providerId ?? "" });
-		setModalOpen(true);
-	}
-
-	function startEdit(space: AdminSpace) {
-		setEditingSpace(space);
-		setForm({ providerId: space.providerId, name: space.name, type: space.type, description: space.description, address: space.address, capacity: space.capacity, status: space.status.toUpperCase() === "ACTIVE" ? "ACTIVE" : "INACTIVE" });
 		setModalOpen(true);
 	}
 
@@ -126,11 +118,14 @@ export default function AdminSpacesPage() {
 
 	async function handleSubmit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
+		if (form.capacity === null || !Number.isInteger(form.capacity) || form.capacity < 1) {
+			setError("Capacity must be at least 1.");
+			return;
+		}
 		setSaving(true);
 		setError("");
 		try {
-			if (editingSpace) await updateAdminSpace(editingSpace.spaceId, form);
-			else await createAdminSpace(form);
+			await createAdminSpace({ ...form, capacity: form.capacity });
 			setModalOpen(false);
 			await refresh();
 		} catch (requestError) {
@@ -167,11 +162,12 @@ export default function AdminSpacesPage() {
 
 	const items = result?.items ?? [];
 	const displayedItems = items.filter((space) => !type || space.type.toLowerCase().includes(type.trim().toLowerCase()));
-	const setField = <K extends keyof AdminSpaceRequest>(key: K, value: AdminSpaceRequest[K]) => setForm((current) => ({ ...current, [key]: value }));
+	const setField = <K extends keyof SpaceForm>(key: K, value: SpaceForm[K]) => setForm((current) => ({ ...current, [key]: value }));
 
 	return (
 		<div className="mx-auto max-w-375">
 			<PageHeader eyebrow="Admin workspace" title="Creative spaces" description="Review and manage provider space listings." />
+			<p className="mt-3 text-xs text-[#777973]">Editing is temporarily unavailable: the admin API does not return all details required to safely preserve a space. Providers can edit their own spaces.</p>
 			<div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 				<div className="grid gap-2 sm:grid-cols-3">
 					<select aria-label="Filter by space type" value={type} onChange={(event) => { setLoading(true); setType(event.target.value); setPage(1); }} className={fieldClassName}>
@@ -194,7 +190,7 @@ export default function AdminSpacesPage() {
 						<thead className="bg-[#f8f8f5] text-xs font-semibold uppercase text-[#777973]"><tr><th className="px-5 py-3">Space</th><th className="px-4 py-3">Provider</th><th className="px-4 py-3">Type</th><th className="px-4 py-3">Address</th><th className="px-4 py-3">Capacity</th><th className="px-4 py-3">Status</th><th className="px-5 py-3 text-right">Actions</th></tr></thead>
 						<tbody className="divide-y divide-[#eeeeea]">
 							{loading ? <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-[#777973]">Loading spaces…</td></tr> : displayedItems.map((space) => (
-								<tr key={space.spaceId} className="hover:bg-[#fcfcfa]"><td className="max-w-56 px-5 py-3.5"><p className="truncate text-sm font-semibold text-[#292b27]">{space.name}</p><p className="mt-0.5 truncate text-xs text-[#777973]">{space.spaceId}</p></td><td className="px-4 py-3.5 text-sm text-[#4c4e48]">{space.providerBusinessName || space.providerId}</td><td className="px-4 py-3.5 text-sm text-[#686a64]">{space.type}</td><td className="max-w-60 truncate px-4 py-3.5 text-sm text-[#686a64]">{space.address}</td><td className="px-4 py-3.5 text-sm text-[#686a64]">{space.capacity ?? "—"}</td><td className="px-4 py-3.5"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(space.status)}`}>{space.status}</span></td><td className="px-5 py-3.5"><div className="flex justify-end gap-1"><button type="button" title="View details" aria-label={`View ${space.name}`} onClick={() => void viewDetails(space)} className="flex h-9 w-9 items-center justify-center rounded-md text-[#555750] hover:bg-[#f0f0ec]"><Eye size={16} /></button><button type="button" disabled={togglingSpaceId === space.spaceId} title={space.status.toUpperCase() === "ACTIVE" ? "Deactivate space" : "Activate space"} aria-label={`Toggle status for ${space.name}`} onClick={() => void toggleStatus(space)} className="flex h-9 w-9 items-center justify-center rounded-md text-[#39724b] hover:bg-[#e5f0e8] disabled:opacity-50">{space.status.toUpperCase() === "ACTIVE" ? <Ban size={16} /> : <RotateCcw size={16} />}</button><button type="button" title="Edit space" aria-label={`Edit ${space.name}`} onClick={() => startEdit(space)} className="flex h-9 w-9 items-center justify-center rounded-md text-[#555750] hover:bg-[#f0f0ec]"><Pencil size={16} /></button><button type="button" title="Delete space" aria-label={`Delete ${space.name}`} onClick={() => void handleDelete(space)} className="flex h-9 w-9 items-center justify-center rounded-md text-[#a34d42] hover:bg-[#fbefed]"><Trash2 size={16} /></button></div></td></tr>
+								<tr key={space.spaceId} className="hover:bg-[#fcfcfa]"><td className="max-w-56 px-5 py-3.5"><p className="truncate text-sm font-semibold text-[#292b27]">{space.name}</p><p className="mt-0.5 truncate text-xs text-[#777973]">{space.spaceId}</p></td><td className="px-4 py-3.5 text-sm text-[#4c4e48]">{space.providerBusinessName || space.providerId}</td><td className="px-4 py-3.5 text-sm text-[#686a64]">{space.type}</td><td className="max-w-60 truncate px-4 py-3.5 text-sm text-[#686a64]">{space.address}</td><td className="px-4 py-3.5 text-sm text-[#686a64]">{space.capacity ?? "—"}</td><td className="px-4 py-3.5"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(space.status)}`}>{space.status}</span></td><td className="px-5 py-3.5"><div className="flex justify-end gap-1"><button type="button" title="View details" aria-label={`View ${space.name}`} onClick={() => void viewDetails(space)} className="flex h-9 w-9 items-center justify-center rounded-md text-[#555750] hover:bg-[#f0f0ec]"><Eye size={16} /></button><button type="button" disabled={togglingSpaceId === space.spaceId} title={space.status.toUpperCase() === "ACTIVE" ? "Deactivate space" : "Activate space"} aria-label={`Toggle status for ${space.name}`} onClick={() => void toggleStatus(space)} className="flex h-9 w-9 items-center justify-center rounded-md text-[#39724b] hover:bg-[#e5f0e8] disabled:opacity-50">{space.status.toUpperCase() === "ACTIVE" ? <Ban size={16} /> : <RotateCcw size={16} />}</button><button type="button" title="Delete space" aria-label={`Delete ${space.name}`} onClick={() => void handleDelete(space)} className="flex h-9 w-9 items-center justify-center rounded-md text-[#a34d42] hover:bg-[#fbefed]"><Trash2 size={16} /></button></div></td></tr>
 							))}
 							{!loading && displayedItems.length === 0 && <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-[#777973]">No spaces found for these filters.</td></tr>}
 						</tbody>
@@ -232,23 +228,21 @@ export default function AdminSpacesPage() {
 							<button type="button" disabled={togglingSpaceId === selectedSpace.spaceId} onClick={() => void toggleStatus(selectedSpace)} className="inline-flex h-9 items-center gap-2 rounded-md border border-[#d8d8d1] px-3 text-sm font-semibold text-[#343630] hover:bg-[#f7f7f3] disabled:opacity-50">
 								{selectedSpace.status.toUpperCase() === "ACTIVE" ? "Set Inactive" : "Set Active"}
 							</button>
-							<button type="button" onClick={() => startEdit(selectedSpace)} className="inline-flex h-9 items-center gap-2 rounded-md bg-[#39724b] px-3 text-sm font-semibold text-white hover:bg-[#2f603e]">
-								<Pencil size={15} />Edit
-							</button>
 						</div>
 					</section>
 				</div>
 			)}
 
-			{modalOpen && <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#171815]/40 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setModalOpen(false); }}><section role="dialog" aria-modal="true" aria-labelledby="admin-space-form-title" className="my-auto w-full max-w-xl rounded-lg border border-[#e0e0da] bg-white shadow-xl"><div className="flex items-center justify-between border-b border-[#e8e8e2] px-5 py-4"><h2 id="admin-space-form-title" className="text-lg font-semibold text-[#20221f]">{editingSpace ? "Edit space" : "Add space"}</h2><button type="button" onClick={() => setModalOpen(false)} aria-label="Close form" className="flex h-8 w-8 items-center justify-center rounded-md text-[#686a64] hover:bg-[#f0f0ec]"><X size={18} /></button></div><form onSubmit={handleSubmit} className="grid gap-4 p-5 sm:grid-cols-2">
+			{modalOpen && <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#171815]/40 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setModalOpen(false); }}><section role="dialog" aria-modal="true" aria-labelledby="admin-space-form-title" className="my-auto w-full max-w-xl rounded-lg border border-[#e0e0da] bg-white shadow-xl"><div className="flex items-center justify-between border-b border-[#e8e8e2] px-5 py-4"><h2 id="admin-space-form-title" className="text-lg font-semibold text-[#20221f]">Add space</h2><button type="button" onClick={() => setModalOpen(false)} aria-label="Close form" className="flex h-8 w-8 items-center justify-center rounded-md text-[#686a64] hover:bg-[#f0f0ec]"><X size={18} /></button></div><form onSubmit={handleSubmit} className="grid gap-4 p-5 sm:grid-cols-2">
+				{error && <p role="alert" className="text-sm text-[#9c4339] sm:col-span-2">{error}</p>}
 				<label className="grid gap-1.5 text-sm font-medium text-[#454741] sm:col-span-2">Provider<select required value={form.providerId} onChange={(event) => setField("providerId", event.target.value)} className={fieldClassName}><option value="" disabled>Select provider</option>{providers.map((provider) => <option key={provider.providerId} value={provider.providerId}>{provider.businessName || provider.email}</option>)}</select></label>
 				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Name<input required maxLength={200} value={form.name} onChange={(event) => setField("name", event.target.value)} className={fieldClassName} /></label>
 				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Type<select required value={form.type} onChange={(event) => setField("type", event.target.value)} className={fieldClassName}><option value="STUDIO">STUDIO</option><option value="DARKROOM">DARKROOM</option></select></label>
 				<label className="grid gap-1.5 text-sm font-medium text-[#454741] sm:col-span-2">Address<input required maxLength={500} value={form.address} onChange={(event) => setField("address", event.target.value)} className={fieldClassName} /></label>
-				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Capacity<input type="number" min="1" value={form.capacity ?? ""} onChange={(event) => setField("capacity", event.target.value === "" ? null : Number(event.target.value))} className={fieldClassName} /></label>
+				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Capacity<input required type="number" min="1" step="1" value={form.capacity ?? ""} onChange={(event) => setField("capacity", event.target.value === "" ? null : Number(event.target.value))} className={fieldClassName} /></label>
 				<label className="grid gap-1.5 text-sm font-medium text-[#454741]">Status<select value={form.status} onChange={(event) => setField("status", event.target.value as AdminSpaceRequest["status"])} className={fieldClassName}><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select></label>
 				<label className="grid gap-1.5 text-sm font-medium text-[#454741] sm:col-span-2">Description<textarea rows={3} maxLength={1000} value={form.description ?? ""} onChange={(event) => setField("description", event.target.value)} className="rounded-md border border-[#d8d8d1] bg-white px-3 py-2 text-sm outline-none focus:border-[#39724b] focus:ring-2 focus:ring-[#39724b]/15" /></label>
-				<div className="flex justify-end gap-2 border-t border-[#eeeeea] pt-4 sm:col-span-2"><button type="button" onClick={() => setModalOpen(false)} className="h-10 rounded-md border border-[#d8d8d1] px-4 text-sm font-semibold text-[#454741] hover:bg-[#f7f7f3]">Cancel</button><button type="submit" disabled={saving} className="h-10 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white hover:bg-[#2f603e] disabled:opacity-60">{saving ? "Saving…" : editingSpace ? "Save changes" : "Create space"}</button></div>
+				<div className="flex justify-end gap-2 border-t border-[#eeeeea] pt-4 sm:col-span-2"><button type="button" onClick={() => setModalOpen(false)} className="h-10 rounded-md border border-[#d8d8d1] px-4 text-sm font-semibold text-[#454741] hover:bg-[#f7f7f3]">Cancel</button><button type="submit" disabled={saving} className="h-10 rounded-md bg-[#39724b] px-4 text-sm font-semibold text-white hover:bg-[#2f603e] disabled:opacity-60">{saving ? "Saving…" : "Create space"}</button></div>
 				</form></section></div>}
 			{pendingDeleteSpace && <ConfirmDeleteDialog title="Delete this space?" description={`“${pendingDeleteSpace.name}” will be permanently deleted. This action cannot be undone.`} confirming={deletingSpace} error={error || undefined} onCancel={() => { if (!deletingSpace) { setPendingDeleteSpace(null); setError(""); } }} onConfirm={() => void confirmDeleteSpace()} />}
 		</div>

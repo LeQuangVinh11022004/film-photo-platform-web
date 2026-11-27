@@ -5,9 +5,7 @@ import Link from "next/link";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
 import { listMyProviderSpaces } from "@/features/provider-space/api";
-import { listMyProviderEquipment } from "@/features/equipment/api";
 import { listProviderBookings } from "@/features/reservation/api";
-import { listMyProviderServicePackages } from "@/features/service-package/api";
 import { getMyProviderDashboard } from "@/features/provider-dashboard/api";
 import {
 	ProviderMetricCard,
@@ -42,51 +40,43 @@ export default function DashboardPage() {
 	const t = messages.dashboard;
 
 	const [liveTotals, setLiveTotals] = useState<{
-		totalSpaces: number;
-		activeSpaces: number;
-		totalEquipment: number;
-		activeEquipment: number;
-		totalBookings: number;
-		liveRevenue: number;
-		activePackages: number;
+		totalSpaces: number | null;
+		activeSpaces: number | null;
+		totalEquipment: number | null;
+		activeEquipment: number | null;
+		totalBookings: number | null;
+		liveRevenue: number | null;
 	} | null>(null);
 	const [liveStatusDist, setLiveStatusDist] = useState(initialReservationStatus);
 	const [liveUpcoming, setLiveUpcoming] = useState(initialUpcomingReservations);
 	const [liveSpacePerf, setLiveSpacePerf] = useState(initialSpacePerformance);
 	const [loadError, setLoadError] = useState(false);
+	const [bookingsAvailable, setBookingsAvailable] = useState(false);
+	const [bookingsPartial, setBookingsPartial] = useState(false);
 
 	useEffect(() => {
 		let cancelled = false;
 		Promise.allSettled([
 			getMyProviderDashboard(),
 			listMyProviderSpaces({ page: 1, pageSize: 100 }),
-			listMyProviderEquipment({ page: 1, pageSize: 100 }),
 			listProviderBookings({ page: 1, pageSize: 100 }),
-			listMyProviderServicePackages({ status: "ACTIVE", page: 1, pageSize: 1 }),
-		]).then(([dashRes, spacesRes, eqRes, bookingsRes, pkgRes]) => {
+		]).then(([dashRes, spacesRes, bookingsRes]) => {
 			if (cancelled) return;
-			setLoadError([dashRes, spacesRes, eqRes, bookingsRes, pkgRes].some((result) => result.status === "rejected"));
+			setLoadError([dashRes, spacesRes, bookingsRes].some((result) => result.status === "rejected"));
 			const dash = dashRes.status === "fulfilled" ? dashRes.value : null;
 			const spaces = spacesRes.status === "fulfilled" ? spacesRes.value : null;
-			const eq = eqRes.status === "fulfilled" ? eqRes.value : null;
 			const bookings = bookingsRes.status === "fulfilled" ? bookingsRes.value : null;
-			const pkgs = pkgRes.status === "fulfilled" ? pkgRes.value : null;
-
-			const activeSpaces = dash?.activeSpaces ?? (spaces?.items.filter((s) => s.status.toUpperCase() === "ACTIVE").length ?? 0);
-			const activeEq = dash?.activeEquipment ?? (eq?.items.filter((e) => e.status.toUpperCase() === "ACTIVE").length ?? 0);
+			setBookingsAvailable(bookings !== null);
+			setBookingsPartial(bookings !== null && bookings.totalItems > bookings.items.length);
 			const bookingItems = bookings?.items ?? [];
-			const revenue = dash?.revenue ?? bookingItems
-				.filter((b) => b.status.toUpperCase() !== "CANCELLED")
-				.reduce((sum, b) => sum + b.totalAmount, 0);
 
 			setLiveTotals({
-				totalSpaces: dash?.totalSpaces ?? (spaces?.totalItems ?? 0),
-				activeSpaces,
-				totalEquipment: dash?.totalEquipment ?? (eq?.totalItems ?? 0),
-				activeEquipment: activeEq,
-				totalBookings: bookings?.totalItems ?? ((dash?.pendingBookings ?? 0) + (dash?.confirmedBookings ?? 0)),
-				liveRevenue: revenue,
-				activePackages: pkgs?.totalItems ?? 0,
+				totalSpaces: dash?.totalSpaces ?? null,
+				activeSpaces: dash?.activeSpaces ?? null,
+				totalEquipment: dash?.totalEquipment ?? null,
+				activeEquipment: dash?.activeEquipment ?? null,
+				totalBookings: bookings?.totalItems ?? null,
+				liveRevenue: dash?.revenue ?? null,
 			});
 
 			const bySpace = new Map<string, number>();
@@ -160,8 +150,8 @@ export default function DashboardPage() {
 		};
 	}, []);
 
-	const displayRevenue = liveTotals?.liveRevenue ?? 0;
-	const displayBookings = liveTotals?.totalBookings ?? 0;
+	const displayRevenue = liveTotals?.liveRevenue;
+	const displayBookings = liveTotals?.totalBookings;
 
 	return (
 		<div className="mx-auto w-full max-w-375">
@@ -179,49 +169,50 @@ export default function DashboardPage() {
 			>
 				<ProviderMetricCard
 					label={t.metrics.revenue}
-					value={`₫${new Intl.NumberFormat("vi-VN").format(displayRevenue)}`}
+					value={displayRevenue == null ? "—" : `₫${new Intl.NumberFormat("vi-VN").format(displayRevenue)}`}
 					delay={0}
 					href="/provider/reservations"
 				/>
 
 				<ProviderMetricCard
 					label={t.metrics.reservations}
-					value={displayBookings.toLocaleString()}
+					value={displayBookings == null ? "—" : displayBookings.toLocaleString()}
 					delay={80}
 					href="/provider/reservations"
 				/>
 
 				<ProviderMetricCard
 					label={t.metrics.creativeSpaces}
-					value={String(liveTotals?.totalSpaces ?? 0)}
-					change={`${liveTotals?.activeSpaces ?? 0} ${t.metrics.activeSpaces}`}
+					value={liveTotals?.totalSpaces == null ? "—" : String(liveTotals.totalSpaces)}
+					change={liveTotals?.activeSpaces == null ? undefined : `${liveTotals.activeSpaces} ${t.metrics.activeSpaces}`}
 					delay={160}
 					href="/provider/creative-spaces"
 				/>
 
 				<ProviderMetricCard
 					label={t.metrics.equipment}
-					value={String(liveTotals?.totalEquipment ?? 0)}
-					change={`${liveTotals?.activeEquipment ?? 0} ${t.metrics.availableEquipment}`}
+					value={liveTotals?.totalEquipment == null ? "—" : String(liveTotals.totalEquipment)}
+					change={liveTotals?.activeEquipment == null ? undefined : `${liveTotals.activeEquipment} ${t.metrics.availableEquipment}`}
 					delay={240}
 					href="/provider/equipment"
 				/>
 			</section>
 
 			{/* Main analytics */}
-			<section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)]">
+			{bookingsPartial && <p className="mt-4 text-sm text-[#777973]">Reservation charts and upcoming bookings use only the first 100 records returned by the API.</p>}
+			{bookingsAvailable && <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)]">
 				<ProviderReservationStatus
 					data={liveStatusDist}
 					total={liveStatusDist.reduce((total, item) => total + item.value, 0)}
 				/>
-			</section>
+			</section>}
 
 			{/* Space performance + upcoming reservations */}
-			<section className="mt-4 grid gap-4 xl:grid-cols-[minmax(320px,0.8fr)_minmax(0,1.65fr)]">
+			{bookingsAvailable && <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(320px,0.8fr)_minmax(0,1.65fr)]">
 				<ProviderSpacePerformance data={liveSpacePerf} />
 
 				<ProviderUpcomingReservations data={liveUpcoming} />
-			</section>
+			</section>}
 
 			{/* Quick links */}
 			<section className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

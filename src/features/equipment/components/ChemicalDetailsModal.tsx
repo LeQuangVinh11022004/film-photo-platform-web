@@ -31,6 +31,7 @@ export function ChemicalDetailsModal({
     ["Minimum stock", `${chemical.minimumStock} ${chemical.stockUnit}`],
     ["Low-stock alert", chemical.isLowStock ? "YES (Low stock)" : "No"],
     ["Unit cost", formatPrice(chemical.unitCost)],
+    ["Unit selling price", formatPrice(chemical.unitSellingPrice)],
     ["Expires on", chemical.expiresOn || "—"],
     ["Status", chemical.status],
     ["Status note", chemical.statusNote || "—"],

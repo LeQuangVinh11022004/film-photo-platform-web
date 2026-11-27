@@ -145,31 +145,31 @@ export default function AdminDashboardPage() {
 			>
 				<ProviderMetricCard
 					label={t.metricRevenue}
-					value={formatFullCurrency(charts?.totalRevenue ?? 0)}
+					value={charts ? `${charts.partial ? "~" : ""}${formatFullCurrency(charts.totalRevenue)}` : "—"}
 					delay={0}
 					href="/transactions"
 				/>
 
 				<ProviderMetricCard
 					label={t.liveTotalBookings}
-					value={(dashboard?.totalBookings ?? 0).toLocaleString(locale === "vi" ? "vi-VN" : "en-US")}
-					change={`${dashboard?.pendingBookings ?? 0} ${t.statuses.pending.toLowerCase()}`}
+					value={dashboard ? dashboard.totalBookings.toLocaleString(locale === "vi" ? "vi-VN" : "en-US") : "—"}
+					change={dashboard ? `${dashboard.pendingBookings} ${t.statuses.pending.toLowerCase()}` : undefined}
 					delay={80}
 					href="/transactions"
 				/>
 
 				<ProviderMetricCard
 					label={t.metricStudios}
-					value={String(dashboard?.totalSpaces ?? 0)}
-					change={`${dashboard?.activeSpaces ?? 0} ${locale === "vi" ? "hoạt động" : "active"}`}
+					value={dashboard ? String(dashboard.totalSpaces) : "—"}
+					change={dashboard ? `${dashboard.activeSpaces} ${locale === "vi" ? "hoạt động" : "active"}` : undefined}
 					delay={160}
 					href="/spaces"
 				/>
 
 				<ProviderMetricCard
 					label={t.liveTotalUsers}
-					value={(dashboard?.totalUsers ?? 0).toLocaleString(locale === "vi" ? "vi-VN" : "en-US")}
-					change={`${dashboard?.activeUsers ?? 0} ${locale === "vi" ? "hoạt động" : "active"}`}
+					value={dashboard ? dashboard.totalUsers.toLocaleString(locale === "vi" ? "vi-VN" : "en-US") : "—"}
+					change={dashboard ? `${dashboard.activeUsers} ${locale === "vi" ? "hoạt động" : "active"}` : undefined}
 					delay={240}
 					href="/users"
 				/>
