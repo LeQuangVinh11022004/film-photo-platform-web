@@ -237,6 +237,7 @@ export function EquipmentModal({
                 onChange={(event) => setVariant(event.target.value)}
                 placeholder="e.g. 80mm f/2.8 Planar"
                 className={inputClassName}
+                required
               />
             </label>
 
@@ -263,6 +264,7 @@ export function EquipmentModal({
                 onChange={(event) => setRentalPrice(event.target.value)}
                 placeholder="e.g. 350000"
                 className={inputClassName}
+                required
               />
             </label>
 

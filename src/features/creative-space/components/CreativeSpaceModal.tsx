@@ -416,8 +416,9 @@ export function CreativeSpaceModal({
                                 min={1}
                                 value={capacity}
                                 onChange={(event) => setCapacity(event.target.value)}
-                                placeholder="Optional"
+                                placeholder="Max. number of people"
                                 className={inputClassName}
+                                required
                             />
                         </div>
 
@@ -438,6 +439,7 @@ export function CreativeSpaceModal({
                                 onChange={(event) => setHourlyRate(event.target.value)}
                                 placeholder="e.g. 250000 (VND/h)"
                                 className={inputClassName}
+                                required
                             />
                         </div>
 
@@ -480,6 +482,7 @@ export function CreativeSpaceModal({
                                             value={details[field] ?? ""}
                                             onChange={(event) => setDetails((current) => ({ ...current, [field]: event.target.value === "" ? null : Number(event.target.value) }))}
                                             className={inputClassName}
+                                            required
                                         />
                                     </label>
                                 ))}
