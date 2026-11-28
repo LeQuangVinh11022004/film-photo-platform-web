@@ -29,13 +29,15 @@ export type ProviderSpaceDetails = {
     operatingHours: OperatingHours | Record<string, unknown> | string | null;
 };
 
+export type ProviderSpaceAvailabilityStatus = "AVAILABLE" | "BLOCKED" | "CLOSED";
+
 export type ProviderSpaceAvailability = {
 	availabilityId: string;
 	spaceId: string;
 	availableDate: string;
 	startTime: string;
 	endTime: string;
-	status: "AVAILABLE" | "UNAVAILABLE" | string;
+	status: ProviderSpaceAvailabilityStatus | string;
 	price: number | null;
 };
 
@@ -43,7 +45,7 @@ export type ProviderSpaceAvailabilityRequest = {
 	availableDate: string;
 	startTime: string;
 	endTime: string;
-	status: "AVAILABLE" | "UNAVAILABLE";
+	status: ProviderSpaceAvailabilityStatus;
 	price: number | null;
 };
 

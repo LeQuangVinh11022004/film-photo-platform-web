@@ -14,11 +14,10 @@ export async function uploadProviderSpaceImage(spaceId: string, file: File) {
 	}
 
 	const body = new FormData();
-	body.append("file", file);
+	body.append("file", file, file.name);
 	const response = await httpClient.post<ProviderSpaceImage>(
 		`${endpoints.provider.spaces}/${encodeURIComponent(spaceId)}/images/upload`,
 		body,
-		{ headers: { "Content-Type": "multipart/form-data" } },
 	);
 	return response.data;
 }

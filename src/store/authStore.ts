@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { clearAuthToken, setAuthToken } from "@/services/authToken";
+import { clearApiCache } from "@/services/apiCache";
 
 export type UserRole = "provider" | "moderator" | "admin";
 export type AuthUser = { id: string; name: string; email: string; role: UserRole };
@@ -26,16 +27,19 @@ export const useAuthStore = create<AuthState>()(persist((set) => ({
   authErrorCode: null,
   isLoggingOut: false,
   setSession: (token, user, expiresAtUtc) => {
+    clearApiCache();
     if (expiresAtUtc !== undefined) setAuthToken(token, expiresAtUtc);
     else setAuthToken(token);
     set((state) => ({ token, user, authErrorCode: null, isLoggingOut: false, expiresAtUtc: expiresAtUtc === undefined ? state.expiresAtUtc : expiresAtUtc }));
   },
   setAuthError: (authErrorCode) => set({ authErrorCode }),
   clearSession: () => {
+    clearApiCache();
     clearAuthToken();
     set({ token: null, user: null, expiresAtUtc: null, authErrorCode: null });
   },
   startLogout: () => {
+    clearApiCache();
     clearAuthToken();
     set({ token: null, user: null, expiresAtUtc: null, authErrorCode: null, isLoggingOut: true });
   },

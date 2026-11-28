@@ -70,7 +70,9 @@ export function EquipmentModal({
       ? "DARKROOM"
       : "STUDIO";
   const [name, setName] = useState(equipment?.name ?? "");
-  const [category, setCategory] = useState(equipment?.category ?? "Film Camera");
+  const [category, setCategory] = useState(
+    equipment?.category ?? (derivedSpaceType === "DARKROOM" ? "Enlarger" : "Camera"),
+  );
   const [variant, setVariant] = useState(equipment?.variant ?? "");
   const [description, setDescription] = useState(equipment?.description ?? "");
   const [specificationsJson, setSpecificationsJson] = useState(

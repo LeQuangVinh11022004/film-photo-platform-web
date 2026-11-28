@@ -63,7 +63,7 @@ function formatPrice(value: number | null | undefined) {
 function statusTone(status: string | undefined | null) {
   const normalized = (status ?? "").toUpperCase();
   if (normalized === "AVAILABLE") return "bg-[#e5f0e8] text-[#39724b]";
-  if (normalized === "UNAVAILABLE") return "bg-[#f5e4e1] text-[#a34d42]";
+  if (normalized === "BLOCKED" || normalized === "CLOSED") return "bg-[#f5e4e1] text-[#a34d42]";
   return "bg-[#f8edd9] text-[#93651e]";
 }
 
@@ -784,7 +784,8 @@ export function EquipmentAvailabilityModal({
                       className={fieldClassName}
                     >
                       <option value="AVAILABLE">AVAILABLE</option>
-                      <option value="UNAVAILABLE">UNAVAILABLE</option>
+                      <option value="BLOCKED">BLOCKED</option>
+                      <option value="CLOSED">CLOSED</option>
                     </select>
                   </label>
 
@@ -920,7 +921,8 @@ export function EquipmentAvailabilityModal({
                       className={fieldClassName}
                     >
                       <option value="AVAILABLE">AVAILABLE</option>
-                      <option value="UNAVAILABLE">UNAVAILABLE</option>
+                      <option value="BLOCKED">BLOCKED</option>
+                      <option value="CLOSED">CLOSED</option>
                     </select>
                   </label>
 

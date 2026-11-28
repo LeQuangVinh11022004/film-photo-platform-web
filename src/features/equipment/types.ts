@@ -61,7 +61,7 @@ export type ListProviderEquipmentParams = {
 
 export type Equipment = ProviderEquipment;
 
-export type ProviderEquipmentAvailabilityStatus = "AVAILABLE" | "UNAVAILABLE" | string;
+export type ProviderEquipmentAvailabilityStatus = "AVAILABLE" | "BLOCKED" | "CLOSED" | string;
 
 export type ProviderEquipmentAvailability = {
 	availabilityId: string;

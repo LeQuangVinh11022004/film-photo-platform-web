@@ -16,6 +16,26 @@ function formatPrice(value: number | null) {
   return `${value.toLocaleString("vi-VN")} VND`;
 }
 
+function formatSpecifications(raw: string | null | undefined): string {
+  if (!raw || !raw.trim()) return "—";
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const entries = Object.entries(parsed as Record<string, unknown>)
+        .filter(([, v]) => v !== null && v !== undefined && v !== "")
+        .map(([k, v]) => {
+          const label = k.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).trim();
+          const val = Array.isArray(v) ? v.join(", ") : String(v);
+          return `${label}: ${val}`;
+        });
+      return entries.length > 0 ? entries.join(" · ") : raw;
+    }
+  } catch {
+    // Plain text specifications
+  }
+  return raw;
+}
+
 export function EquipmentDetailsModal({
   equipment,
   spaceName,
@@ -35,6 +55,7 @@ export function EquipmentDetailsModal({
     ["Condition", equipment.conditionStatus],
     ["Status", equipment.status],
     ["Status note", equipment.statusNote || "—"],
+    ["Specifications", formatSpecifications(equipment.specificationsJson)],
     ["Description", equipment.description || "—"],
   ];
 
