@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { PageHeader } from "@/shared/components/PageHeader";
 import { Pagination } from "@/shared/components/Pagination";
@@ -20,9 +20,28 @@ import type {
   ProviderBookingAllocation,
   ProviderBookingCancellation,
 } from "@/features/reservation";
-import { listMyProviderSpaceAvailability } from "@/features/provider-space/api";
+import {
+  listMyProviderSpaceAvailability,
+  listMyProviderSpaces,
+} from "@/features/provider-space/api";
 import type { ProviderSpaceAvailability } from "@/features/provider-space";
 import { useProviderLanguage } from "@/shared/providers/ProviderLanguageProvider";
+
+type ReallocationSlotOption = ProviderSpaceAvailability & {
+  spaceName: string;
+  spaceType: string;
+};
+
+function slotCoversAllocation(slot: ProviderSpaceAvailability, alloc: ProviderBookingAllocation) {
+  const startDate = new Date(alloc.startAt);
+  const endDate = new Date(alloc.endAt);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return true;
+  const allocDate = alloc.startAt.slice(0, 10);
+  if (slot.availableDate !== allocDate) return false;
+  const slotStart = new Date(`${slot.availableDate}T${slot.startTime.slice(0, 8)}Z`).getTime();
+  const slotEnd = new Date(`${slot.availableDate}T${slot.endTime.slice(0, 8)}Z`).getTime();
+  return slotStart <= startDate.getTime() && slotEnd >= endDate.getTime();
+}
 
 const pageSize = 20;
 const fieldClassName =
@@ -102,6 +121,7 @@ export default function ReservationsPage() {
   const [reloadKey, setReloadKey] = useState(0);
   const [reservations, setReservations] = useState<ProviderBooking[]>([]);
   const [totalReservations, setTotalReservations] = useState(0);
+  const [allReservationsCount, setAllReservationsCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
   const [confirmedCount, setConfirmedCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -113,7 +133,7 @@ export default function ReservationsPage() {
   const [cancellation, setCancellation] = useState<ProviderBookingCancellation | null>(null);
   const [selectedReservation, setSelectedReservation] = useState<ProviderBooking | null>(null);
   const [allocations, setAllocations] = useState<ProviderBookingAllocation[]>([]);
-  const [spaceSlots, setSpaceSlots] = useState<ProviderSpaceAvailability[]>([]);
+  const [spaceSlots, setSpaceSlots] = useState<ReallocationSlotOption[]>([]);
   const [allocationsLoading, setAllocationsLoading] = useState(false);
   const [reallocatingId, setReallocatingId] = useState<string | null>(null);
   const [selectedSlotBySchedule, setSelectedSlotBySchedule] = useState<Record<string, string>>({});
@@ -122,12 +142,16 @@ export default function ReservationsPage() {
     let cancelled = false;
     Promise.all([
       listProviderBookings({ status: status || undefined, page, pageSize }),
+      status
+        ? listProviderBookings({ page: 1, pageSize: 1 })
+        : Promise.resolve(null),
       listProviderBookings({ status: "AWAITING_DEPOSIT", page: 1, pageSize: 1 }),
       listProviderBookings({ status: "CONFIRMED", page: 1, pageSize: 1 }),
-    ]).then(([queue, pending, confirmed]) => {
+    ]).then(([queue, allQueue, pending, confirmed]) => {
       if (cancelled) return;
       setReservations(queue.items);
       setTotalReservations(queue.totalItems);
+      setAllReservationsCount(allQueue ? allQueue.totalItems : queue.totalItems);
       setPendingCount(pending.totalItems);
       setConfirmedCount(confirmed.totalItems);
       setError("");
@@ -138,6 +162,29 @@ export default function ReservationsPage() {
     });
     return () => { cancelled = true; };
   }, [page, reloadKey, status]);
+
+  async function loadReallocationOptions(bookingDate: string): Promise<ReallocationSlotOption[]> {
+    const spacesResult = await listMyProviderSpaces({ status: "ACTIVE", page: 1, pageSize: 100 });
+    const activeSpaces = spacesResult.items ?? [];
+    const results = await Promise.allSettled(
+      activeSpaces.map(async (space) => {
+        const slots = await listMyProviderSpaceAvailability(space.spaceId, {
+          fromDate: bookingDate,
+          toDate: bookingDate,
+        });
+        return slots.map((slot) => ({
+          ...slot,
+          spaceName: space.name,
+          spaceType: space.type.toUpperCase(),
+        }));
+      }),
+    );
+    const merged: ReallocationSlotOption[] = [];
+    for (const r of results) {
+      if (r.status === "fulfilled") merged.push(...r.value);
+    }
+    return merged;
+  }
 
   async function openReservation(bookingId: string) {
     setError("");
@@ -156,9 +203,9 @@ export default function ReservationsPage() {
       ]);
       setSelectedReservation(booking);
       setAllocations(allocs);
-      if (booking.spaceId) {
+      if (booking.status.toUpperCase() === "CONFIRMED") {
         try {
-          const slots = await listMyProviderSpaceAvailability(booking.spaceId);
+          const slots = await loadReallocationOptions(booking.bookingDate);
           setSpaceSlots(slots);
         } catch (requestError) {
           setDecisionError(`Could not load availability for reallocation: ${errorMessage(requestError)}`);
@@ -185,14 +232,14 @@ export default function ReservationsPage() {
         availabilityId,
       );
       setSelectedReservation(updatedBooking);
+      setSelectedSlotBySchedule((cur) => ({ ...cur, [scheduleId]: "" }));
       const [refreshedAllocs, refreshedSlots] = await Promise.all([
         listProviderBookingAllocations(selectedReservation.bookingId),
-        selectedReservation.spaceId
-          ? listMyProviderSpaceAvailability(selectedReservation.spaceId)
-          : Promise.resolve([]),
+        loadReallocationOptions(updatedBooking.bookingDate),
       ]);
       setAllocations(refreshedAllocs);
       setSpaceSlots(refreshedSlots);
+      setActionMessage("Schedule reallocated successfully.");
       setReloadKey((key) => key + 1);
     } catch (requestError) {
       setDecisionError(errorMessage(requestError));
@@ -240,14 +287,15 @@ export default function ReservationsPage() {
     }
   }
 
-  const normalizedQuery = query.trim().toLowerCase();
-  const filteredReservations = reservations.filter((reservation) => {
-    const matchesQuery =
+  const filteredReservations = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) return reservations;
+    return reservations.filter((reservation) =>
       `${reservation.bookingId} ${reservation.photographerName} ${reservation.packageName ?? ""} ${reservation.spaceName}`
         .toLowerCase()
-        .includes(normalizedQuery);
-    return matchesQuery;
-  });
+        .includes(normalizedQuery),
+    );
+  }, [query, reservations]);
 
   function handleStatusChange(value: string) {
     setLoading(true);
@@ -281,7 +329,7 @@ export default function ReservationsPage() {
         {[
           {
             label: "Total reservations",
-            value: totalReservations.toString(),
+            value: allReservationsCount.toString(),
             helper: "Bookings in your provider account",
           },
           {
@@ -476,6 +524,7 @@ export default function ReservationsPage() {
                 ["End time", displayTime(selectedReservation.endTime)],
                 ["Total amount", formatMoney(selectedReservation.totalAmount)],
                 ["Status", statusLabel(selectedReservation.status)],
+                ["Session status", statusLabel(selectedReservation.sessionStatus || "NOT_STARTED")],
                 ["Created at", formatCreatedAt(selectedReservation.createdAt)],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between gap-4 py-3">
@@ -501,14 +550,18 @@ export default function ReservationsPage() {
               ) : (
                 <ul className="mt-2.5 space-y-2.5">
                   {allocations.map((alloc) => {
-                    const availableSlots = spaceSlots.filter(
-                      (slot) =>
-                        slot.status.toUpperCase() === "AVAILABLE" &&
-                        slot.availabilityId !== alloc.availabilityId,
-                    );
-                    const isSpaceResource = ["STUDIO", "DARKROOM"].includes(
-                      alloc.resourceType.toUpperCase(),
-                    );
+                    const allocType = alloc.resourceType.toUpperCase();
+                    const isSpaceResource = ["STUDIO", "DARKROOM"].includes(allocType);
+                    const availableSlots = isSpaceResource
+                      ? spaceSlots.filter(
+                          (slot) =>
+                            slot.status.toUpperCase() === "AVAILABLE" &&
+                            slot.spaceType === allocType &&
+                            slot.availabilityId !== alloc.availabilityId &&
+                            slot.spaceId !== alloc.resourceId &&
+                            slotCoversAllocation(slot, alloc),
+                        )
+                      : [];
                     return (
                       <li
                         key={alloc.scheduleId}
@@ -524,13 +577,23 @@ export default function ReservationsPage() {
                             <span className="text-[#686a64]">× {alloc.quantity}</span>
                           </div>
                           <span className="font-semibold text-[#343630]">
-                            {alloc.status}
+                            {statusLabel(alloc.status)}
                           </span>
                         </div>
                         <p className="mt-1 text-[#686a64]">
                           {new Date(alloc.startAt).toLocaleString()} –{" "}
                           {new Date(alloc.endAt).toLocaleString()}
                         </p>
+                        {(alloc.checkInAt || alloc.checkOutAt) && (
+                          <div className="mt-1.5 flex flex-wrap gap-3 text-[11px] text-[#39724b]">
+                            {alloc.checkInAt && (
+                              <span>Check-in: {formatCreatedAt(alloc.checkInAt)}</span>
+                            )}
+                            {alloc.checkOutAt && (
+                              <span>Check-out: {formatCreatedAt(alloc.checkOutAt)}</span>
+                            )}
+                          </div>
+                        )}
                         {isSpaceResource && selectedReservation.status.toUpperCase() === "CONFIRMED" && availableSlots.length > 0 && (
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             <select
@@ -543,12 +606,12 @@ export default function ReservationsPage() {
                               }
                               aria-label="Select availability slot to reallocate"
                               className="h-8 flex-1 rounded border border-[#d8d8d1] bg-white px-2 text-xs text-[#343630]">
-                              <option value="">Select available slot to reallocate…</option>
+                              <option value="">Select another {allocType.toLowerCase()} covering this time…</option>
                               {availableSlots.map((slot) => (
                                 <option
                                   key={slot.availabilityId}
                                   value={slot.availabilityId}>
-                                  {slot.availableDate} · {displayTime(slot.startTime)}–
+                                  {slot.spaceName} · {slot.availableDate} {displayTime(slot.startTime)}–
                                   {displayTime(slot.endTime)}
                                 </option>
                               ))}

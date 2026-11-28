@@ -1,8 +1,19 @@
-import axios from "axios";
+import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
 import { API_BASE_URL } from "@/services/config";
 import { clearAuthToken, getAuthToken } from "@/services/authToken";
 import { startApiRequest } from "@/services/loadingState";
 import { useAuthStore } from "@/store/authStore";
+import {
+  buildApiCacheKey,
+  clearApiCache,
+  getCachedApiResponse,
+  getInFlightApiRequest,
+  getTtlForUrl,
+  invalidateCacheForMutation,
+  setCachedApiResponse,
+  setInFlightApiRequest,
+  shouldBypassCache,
+} from "@/services/apiCache";
 
 export const httpClient = axios.create({
   baseURL: API_BASE_URL,
@@ -15,6 +26,9 @@ httpClient.interceptors.request.use((config) => {
   const token = getAuthToken();
   if (token && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+    config.headers.delete("Content-Type");
   }
 
   if (typeof window !== "undefined") releaseByRequest.set(config, startApiRequest());
@@ -30,6 +44,10 @@ function releaseRequest(config: object | undefined) {
 httpClient.interceptors.response.use(
   (response) => {
     releaseRequest(response.config);
+    const method = (response.config.method ?? "get").toUpperCase();
+    if (method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
+      invalidateCacheForMutation(response.config.url);
+    }
     return response;
   },
   (error: unknown) => {
@@ -44,6 +62,7 @@ httpClient.interceptors.response.use(
           return Promise.reject(error);
         }
         if (status === 401) {
+          clearApiCache();
           clearAuthToken();
           useAuthStore.getState().clearSession();
           useAuthStore.getState().setAuthError("401");
@@ -55,3 +74,34 @@ httpClient.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+// Transparent GET response caching + in-flight deduplication
+const rawGet = httpClient.get.bind(httpClient);
+
+httpClient.get = (function cachedGet(
+  url: string,
+  config?: AxiosRequestConfig,
+) {
+  if (shouldBypassCache(config)) {
+    return rawGet(url, config);
+  }
+
+  const cacheKey = buildApiCacheKey(url, config?.params, getAuthToken());
+  const cached = getCachedApiResponse(cacheKey);
+  if (cached) {
+    return Promise.resolve(cached);
+  }
+
+  const inFlight = getInFlightApiRequest(cacheKey);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const requestPromise = rawGet(url, config).then((response) => {
+    setCachedApiResponse(cacheKey, response as AxiosResponse, getTtlForUrl(url));
+    return response as AxiosResponse;
+  });
+
+  setInFlightApiRequest(cacheKey, requestPromise);
+  return requestPromise;
+}) as typeof httpClient.get;

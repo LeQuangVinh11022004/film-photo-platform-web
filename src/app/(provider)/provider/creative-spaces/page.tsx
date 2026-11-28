@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { LayoutGrid, MapPin, Table2 } from "lucide-react";
 import { PageHeader } from "@/shared/components/PageHeader";
@@ -57,9 +57,15 @@ function formatHourlyRate(hourlyRate: number | null | undefined, fallback = "—
 function getSpaceCoverImage(
   images: ProviderSpaceImage[],
 ): ProviderSpaceImage | null {
+  if (!images || images.length === 0) return null;
+  const realImages = images.filter(
+    (image) => image.imageUrl && !image.imageUrl.includes("example.com"),
+  );
+  const pool = realImages.length > 0 ? realImages : images;
   return (
-    images.find((image) => image.imageType?.toUpperCase() === "COVER") ??
-    images[0] ??
+    pool.find((image) => image.imageType?.toUpperCase() === "COVER") ??
+    pool[pool.length - 1] ??
+    pool[0] ??
     null
   );
 }
@@ -162,17 +168,20 @@ export default function CreativeSpacesPage() {
     };
   }, [currentPage, reloadKey, status]);
 
-  const spaces = result?.items ?? [];
+  const spaces = useMemo(() => result?.items ?? [], [result?.items]);
   const trimmedQuery = query.trim().toLowerCase();
   const hasActiveFilter = Boolean(status || trimmedQuery);
-  const filteredSpaces = spaces.filter((space) =>
-    `${space.name} ${space.address} ${space.type} ${space.spaceId}`
-      .toLowerCase()
-      .includes(trimmedQuery),
-  );
-  const totalCapacity = spaces.reduce(
-    (total, space) => total + (space.capacity ?? 0),
-    0,
+  const filteredSpaces = useMemo(() => {
+    if (!trimmedQuery) return spaces;
+    return spaces.filter((space) =>
+      `${space.name} ${space.address} ${space.type} ${space.spaceId}`
+        .toLowerCase()
+        .includes(trimmedQuery),
+    );
+  }, [spaces, trimmedQuery]);
+  const totalCapacity = useMemo(
+    () => spaces.reduce((total, space) => total + (space.capacity ?? 0), 0),
+    [spaces],
   );
 
   function resetFilters() {
@@ -254,8 +263,6 @@ export default function CreativeSpacesPage() {
         spaceModalMode === "edit" && editingSpace
           ? await updateMyProviderSpace(editingSpace.spaceId, data)
           : await createMyProviderSpace(data);
-      setSpaceModalOpen(false);
-      setEditingSpace(null);
       let uploadError = "";
       if (imageFiles && imageFiles.length > 0) {
         const uploadErrors: string[] = [];
@@ -270,6 +277,8 @@ export default function CreativeSpacesPage() {
           uploadError = uploadErrors.join("; ");
         }
       }
+      setSpaceModalOpen(false);
+      setEditingSpace(null);
       await refreshSpaces();
       if (uploadError)
         setError(
@@ -517,6 +526,8 @@ export default function CreativeSpacesPage() {
                               <img
                                 src={providerSpaceImageUrl(coverImage.imageUrl)}
                                 alt={space.name}
+                                loading="lazy"
+                                decoding="async"
                                 onError={(e) => {
                                   e.currentTarget.src = "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80";
                                 }}

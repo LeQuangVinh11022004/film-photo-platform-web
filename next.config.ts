@@ -9,6 +9,11 @@ const apiProxyTarget = (process.env.API_PROXY_TARGET?.trim() || defaultProxyTarg
   .replace(/\/api$/i, "");
 
 const nextConfig: NextConfig = {
+  compress: true,
+  poweredByHeader: false,
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts"],
+  },
   async rewrites() {
     return [
       { source: "/api/:path*", destination: `${apiProxyTarget}/api/:path*` },

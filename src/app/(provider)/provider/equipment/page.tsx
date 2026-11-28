@@ -1583,6 +1583,7 @@ export default function EquipmentPage() {
       {/* Equipment Availability Modal */}
       {managingAvailabilityEquipment && (
         <EquipmentAvailabilityModal
+          key={managingAvailabilityEquipment.equipmentId}
           equipment={managingAvailabilityEquipment}
           spaceName={
             managingAvailabilityEquipment

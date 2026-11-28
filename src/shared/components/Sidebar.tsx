@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -46,7 +47,7 @@ const moderatorLinks = [
   ["Packages", "/moderator/packages"],
 ];
 
-export function Sidebar({ role, collapsed = false, onNavigate }: { role: "provider" | "moderator" | "admin"; collapsed?: boolean; onNavigate?: () => void }) {
+export const Sidebar = memo(function Sidebar({ role, collapsed = false, onNavigate }: { role: "provider" | "moderator" | "admin"; collapsed?: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();
   const { messages: adminMessages } = useAdminLanguage();
   const { displayName: adminDisplayName } = useAdminProfile();
@@ -141,4 +142,4 @@ export function Sidebar({ role, collapsed = false, onNavigate }: { role: "provid
       )}
     </aside>
   );
-}
+});

@@ -569,11 +569,17 @@ export function ProviderSpaceDetailsDialog({
         setFormMode("single");
         setAvailabilityNotice("");
         setEditingAvailabilityId(item.availabilityId);
+        const normalizedStatus = item.status.toUpperCase();
         setForm({
             availableDate: item.availableDate,
             startTime: displayTime(item.startTime),
             endTime: displayTime(item.endTime),
-            status: item.status.toUpperCase() === "UNAVAILABLE" ? "UNAVAILABLE" : "AVAILABLE",
+            status:
+                normalizedStatus === "BLOCKED"
+                    ? "BLOCKED"
+                    : normalizedStatus === "CLOSED"
+                      ? "CLOSED"
+                      : "AVAILABLE",
             price: item.price,
         });
     }
@@ -592,6 +598,10 @@ export function ProviderSpaceDetailsDialog({
 
     async function handleSaveAvailability(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
+        if (form.startTime >= form.endTime) {
+            setAvailabilityError("Start time must be earlier than end time.");
+            return;
+        }
         setSavingAvailability(true);
         setAvailabilityError("");
         setAvailabilityNotice("");
@@ -984,7 +994,8 @@ export function ProviderSpaceDetailsDialog({
                                         className={fieldClassName}
                                     >
                                         <option value="AVAILABLE">Available</option>
-                                        <option value="UNAVAILABLE">Unavailable</option>
+                                        <option value="BLOCKED">Blocked</option>
+                                        <option value="CLOSED">Closed</option>
                                     </select>
                                 </label>
                                 <label className="min-w-0 grid gap-1.5 text-xs font-medium text-[#555750] lg:col-span-3">
@@ -1155,7 +1166,8 @@ export function ProviderSpaceDetailsDialog({
                                         className={fieldClassName}
                                     >
                                         <option value="AVAILABLE">Available</option>
-                                        <option value="UNAVAILABLE">Unavailable</option>
+                                        <option value="BLOCKED">Blocked</option>
+                                        <option value="CLOSED">Closed</option>
                                     </select>
                                 </label>
 
